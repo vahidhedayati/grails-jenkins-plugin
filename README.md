@@ -7,7 +7,7 @@ Grails Jenkins plugin, will interact with jenkins front end html interface using
 
 Dependency, in your conf/BuildConfig.groovy under plugins add:
 ```groovy
-	build ":jenkins:0.1", { export=false } 
+	compile ":jenkins:0.1"
 ```
 
 #### How to use
