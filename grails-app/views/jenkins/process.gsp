@@ -7,7 +7,7 @@
    <title>Grails Jenkins plugin processor</title>
 </head>
 <body>
-${jensjob }
+
 <jenkins:connect
 divId="someId"
 jenserver="${jenserver }"
