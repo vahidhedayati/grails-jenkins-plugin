@@ -55,32 +55,41 @@ class JenkinsEndPoint implements ServletContextListener{
 	public String handleMessage(String message,Session userSession) throws IOException {
 		def job=userSession.getUserProperties().get("job").toString()
 		def server=userSession.getUserProperties().get("server").toString()
-		
+
 		def data=JSON.parse(message)
 		if (data) {
-		def cmd=data.cmd
-		if (cmd.toString().equals('connect')) {
-			jenserver=data.jenserver
-			jensurl=data.jensurl
-			jensuser=data.jensuser
-			jenspass=data.jenspass
-			jensconlog=data.jensconlog ?: '/consoleFull'
-			jensprogressive=data.jensprogressive ?: '/logText/progressiveHtml'
-			jensbuildend=data.jensbuildend  ?: '/build?delay=0sec'
-			jenkinsConnect(userSession)
-		}
-			
-		if (cmd.toString().equals('choose')) {
-			jenschoice=data.jenschoice ?: 'build'
-			switch (jenschoice) {
-				case 'build':
-					buildJob(userSession)
-					break
-					default:
-					//	dosomething
-					userSession.getBasicRemote().sendText(echoJob(server,job) as String)
+			def cmd=data.cmd
+			if (cmd.toString().equals('connect')) {
+				jenserver=data.jenserver
+				jensurl=data.jensurl
+				jensuser=data.jensuser
+				jenspass=data.jenspass
+				jensconlog=data.jensconlog ?: '/consoleFull'
+				jensprogressive=data.jensprogressive ?: '/logText/progressiveHtml'
+				jensbuildend=data.jensbuildend  ?: '/build?delay=0sec'
+				jenkinsConnect(userSession)
+			}
+
+			if (cmd.toString().equals('viewHistory')) {
+				if (data.bid) {
+					def url2=jenserver+data.bid+jensconlog
+					ParseJobConsole(userSession,url2,data.bid)
 				}
-		}
+			}
+			if (cmd.toString().equals('choose')) {
+				jenschoice=data.jenschoice ?: 'build'
+				switch (jenschoice) {
+					case 'build':
+						buildJob(userSession)
+						dashboard(userSession)
+						break
+					case 'dashboard':
+						dashboard(userSession)
+						break
+					default:
+						userSession.getBasicRemote().sendText(echoJob(server,job) as String)
+				}
+			}
 		}
 	}
 
@@ -92,71 +101,63 @@ class JenkinsEndPoint implements ServletContextListener{
 			userSession.getBasicRemote().sendText('JenkinsConnect failed to connect to: '+jenserver)
 		}
 	}
-	
+
 	private String echoJob(String server,String job) {
 		return server
 	}
 
 
-	private void ParseJobConsole(Session userSession,String url,String murl,String bid) {
-			try {
-				// Send user confirmation that you are going to parse Jenkins job
-				userSession.getBasicRemote().sendText("About to parse "+url+"<br>")
-				http = new HTTPBuilder("${url}")
-				http.getClient().getParams().setParameter("http.connection.timeout", new Integer(httpConnTimeOut))
-				http.getClient().getParams().setParameter("http.socket.timeout", new Integer(httpSockTimeOut))
-				if (!jensuser) {
-					http.auth.basic "${jensuser}", "${jenspass}"
-				}
-				def html = http.get([:])
-				//def html = http.get(path :url)
-				boolean start=false
-				boolean start1=false
-
-				// If we have a class of console output then set start1 to true
-				// This means the job has actually finished building and jenkins content is now static
-				if (html."**".findAll{ it.@class.toString().contains("console-output")}) {
-					start1=true
-				}
-
-				// However if we see fetchNext within the html then it is likely to be building
-				// So lets attempt to connect to progressiveHtml page within jenkins
-				if (html."**".findAll{ it.toString().contains("fetchNext")}) {
-					//def nurl=murl+'/'+bid+'/logText/progressiveHtml'
-					def nurl=jenserver+bid+jensprogressive
-					userSession.getBasicRemote().sendText('Still building..Attempting live poll')
-					parseLiveLogs(userSession,nurl)
-					
-					// Sendback liveUrl back through sockets
-					// If user wishes they can interact with it this way
-					// Due to CORS - the method was changed to use
-					// httpbuilder this end to do remoteURL processing
-					def json = new JsonBuilder()
-					json {
-						delegate.liveUrl "${nurl}"
-					}
-					userSession.getBasicRemote().sendText(json.toString())
-
-				}
-
-				//This means job has finished and jenkins has static results showing in /consoleFull
-				if (start1) {
-					html.findAll { it.toString()}.each {
-						if (it.toString().indexOf('Started')>-1) {
-							start=true
-						}
-						if (start)  {
-							userSession.getBasicRemote().sendText(it.toString())
-						}
-						if (it.toString().indexOf('Finished')>-1) {
-							start=false
-						}
-
-					}
-				}
-			}catch(Exception e) {
-				log.error "Problem communicating with ${url}: ${e.message}"
+	private void ParseJobConsole(Session userSession,String url,String bid) {
+		//String murl
+		try {
+			// Send user confirmation that you are going to parse Jenkins job
+			userSession.getBasicRemote().sendText("About to parse "+url+"<br>")
+			http = new HTTPBuilder("${url}")
+			http.getClient().getParams().setParameter("http.connection.timeout", new Integer(httpConnTimeOut))
+			http.getClient().getParams().setParameter("http.socket.timeout", new Integer(httpSockTimeOut))
+			if (!jensuser) {
+				http.auth.basic "${jensuser}", "${jenspass}"
 			}
+			def html = http.get([:])
+			//def html = http.get(path :url)
+			boolean start=false
+			boolean start1=false
+
+			// If we have a class of console output then set start1 to true
+			// This means the job has actually finished building and jenkins content is now static
+			if (html."**".findAll{ it.@class.toString().contains("console-output")}) {
+				start1=true
+			}
+
+			// However if we see fetchNext within the html then it is likely to be building
+			// So lets attempt to connect to progressiveHtml page within jenkins
+			if (html."**".findAll{ it.toString().contains("fetchNext")}) {
+				//def nurl=murl+'/'+bid+'/logText/progressiveHtml'
+				def nurl=jenserver+bid+jensprogressive
+				userSession.getBasicRemote().sendText('Still building..Attempting live poll')
+				parseLiveLogs(userSession,nurl)
+
+				// Sendback liveUrl back through sockets
+				// If user wishes they can interact with it this way
+				// Due to CORS - the method was changed to use
+				// httpbuilder this end to do remoteURL processing
+				def json = new JsonBuilder()
+				json {
+					delegate.liveUrl "${nurl}"
+				}
+				userSession.getBasicRemote().sendText(json.toString())
+
+			}
+
+			//This means job has finished and jenkins has static results showing in /consoleFull
+			if (start1) {
+				html."**".findAll{ it.@class.toString().contains("console-output")}.each {
+					userSession.getBasicRemote().sendText(it.toString())
+				}
+			}
+		}catch(Exception e) {
+			log.error "Problem communicating with ${url}: ${e.message}"
+		}
 	}
 
 	// This is a httpbuilder module put in to imitate the ajaxrequest posted via jenkins
@@ -174,18 +175,18 @@ class JenkinsEndPoint implements ServletContextListener{
 			// this again controlled via the jenkins html page which has it in header or not
 			// goes away once full results are returned
 			while (hasMore) {
-				
+
 				// If there is a text-size header set then create url appender
 				if (csize) {
 					ssize="?start=${csize}"
 				}
 				// Set old size to current size
 				def osize=csize
-				
+
 				// Now get the url which may or may not have current header size
 				http?.request("${nurl}${ssize}",GET,TEXT) { req ->
-					
-					// On success get latest output back from headers 
+
+					// On success get latest output back from headers
 					response.success = { resp, reader ->
 						hasMore=resp.headers.'X-More-Data'
 						csize=resp.headers.'X-Text-Size'
@@ -203,37 +204,42 @@ class JenkinsEndPoint implements ServletContextListener{
 		}
 	}
 
-	
 
 
+	private dashboard(Session userSession) {
+		String url=jenserver+jensurl
+		String consolelog=jensconlog
+		getBuilds(userSession,url)
+	}
 	private buildJob(Session userSession) {
 		String url=jenserver+jensurl
 		def url1=url+jensbuildend
-		def output=getBuildStatus (url)
 		def lastbid=getLastBuild(url)
 		StringBuilder sb=new StringBuilder()
 		String consolelog=jensconlog
 		//String consolelog='/consoleText'
-		sb.append("Before triggering build "+output+"<br> Last Build ID: "+lastbid+"<br>")
+		sb.append("Before triggering Build ID: "+lastbid+"..sleeping for a few seconds<br>")
+		sleep(300)
+		dashboard(userSession)
 		// This kicks off the build
-			try {
-				http = new HTTPBuilder("${url1}")
-				http.getClient().getParams().setParameter("http.connection.timeout", new Integer(httpConnTimeOut))
-				http.getClient().getParams().setParameter("http.socket.timeout", new Integer(httpSockTimeOut))
-				if (!jensuser) {
-					http.auth.basic "${jensuser}", "${jenspass}"
-				}
-				
-				def html = http.get([:])
-				def output1=getBuildStatus(url)
-				def lastbid1=getLastBuild(url)
-				userSession.getBasicRemote().sendText("After trigger build : "+output1+"<br>Current Build ID: "+lastbid1+"<br>")
-				//String url2=url+"/"+lastbid1+consolelog
-				String url2=jenserver+"/"+lastbid1+consolelog
-				ParseJobConsole(userSession,url2,url,lastbid1)
-			} catch (Exception e) {
-				e.printStackTrace()
+		try {
+			http = new HTTPBuilder("${url1}")
+			http.getClient().getParams().setParameter("http.connection.timeout", new Integer(httpConnTimeOut))
+			http.getClient().getParams().setParameter("http.socket.timeout", new Integer(httpSockTimeOut))
+			if (!jensuser) {
+				http.auth.basic "${jensuser}", "${jenspass}"
 			}
+
+			def html = http.get([:])
+			def lastbid1=getLastBuild(url)
+			userSession.getBasicRemote().sendText("Current Build ID: "+lastbid1+"<br>")
+			//String url2=url+"/"+lastbid1+consolelog
+			String url2=jenserver+"/"+lastbid1+consolelog
+			ParseJobConsole(userSession,url2,lastbid1)
+			dashboard(userSession)
+		} catch (Exception e) {
+			e.printStackTrace()
+		}
 		return sb.toString()
 
 	}
@@ -255,7 +261,7 @@ class JenkinsEndPoint implements ServletContextListener{
 				http.getClient().getParams().setParameter("http.socket.timeout", new Integer(httpSockTimeOut))
 				if (!jensuser) {
 					http.auth.basic "${jensuser}", "${jenspass}"
-				}	
+				}
 			}catch (Exception ex){
 				result="Failed error: ${ex}"
 				return result
@@ -286,55 +292,80 @@ class JenkinsEndPoint implements ServletContextListener{
 		return result
 	}
 
-	private def getLastBuild(url) {
-		def bid="";
-		def html=""
+	private def getBuilds(Session userSession,String url) {
 		try {
+			int go=0;
+			def bdate,bid,transaction=''
 			http = new HTTPBuilder(url)
 			http.getClient().getParams().setParameter("http.connection.timeout", new Integer(httpConnTimeOut))
 			http.getClient().getParams().setParameter("http.socket.timeout", new Integer(httpSockTimeOut))
 			if (!jensuser) {
 				http.auth.basic "${jensuser}", "${jenspass}"
 			}
-			 html = http.get([:])
-			//html = http.get( path : url)
+			def html = http.get([:])
+			int counter=0
+			def finalList=[:]
+			def hList=[]
+
+
+			def col1 = html."**".findAll { it.@class.toString().contains("build-details")}
+			.collect {
+				[
+					bid : it.A[0].@href.text(),
+
+					bdate :it.toString().trim()
+				]
+			}
+
+			def col2 = html."**".findAll { it.@class.toString().contains("build-name")}
+			.collect {
+				[
+					bid : it.A[0].@href.text().substring(0,it.A[0].@href.text().indexOf('/console')+1),
+					bstatus : verifyStatus(it.A[0].IMG[0].@class.text().toString()),
+					bimgUrl : it.A[0].IMG[0].@src.text(),
+					jobid : it.toString().trim().replaceAll('[\n|\r|#|\t| ]+', '')
+				]
+			}
+			def combined = (col1 + col2).groupBy { it.bid }.collect { it.value.collectEntries { it } }
+			finalList.put("history",combined)
+			def myMsgj=finalList as JSON
+			userSession.getBasicRemote().sendText(myMsgj.toString())
+
 		}catch(Exception e) {
-			log.error "Problem1 communicating with ${url}: ${e.message}"
+			log.error "Problem communicating with ${url}: ${e.message}"
 		}
+	}
+
+
+	private def verifyStatus(String img) {
+		def output
+		if (img.contains("icon-blue-anime")) {
+			output="building"
+		}else if (img.contains("icon-red")) {
+			output="failed"
+		}else if (img.contains("icon-blue")) {
+			output="passed"
+		}
+
+		return output
+	}
+	private def getLastBuild(String url) {
+		def bid="";
 		try {
 			int go=0;
 			def bdate,transaction=''
+			http = new HTTPBuilder(url)
+			http.getClient().getParams().setParameter("http.connection.timeout", new Integer(httpConnTimeOut))
+			http.getClient().getParams().setParameter("http.socket.timeout", new Integer(httpSockTimeOut))
+			if (!jensuser) {
+				http.auth.basic "${jensuser}", "${jenspass}"
+			}
+			def html = http.get([:])
 			html."**".find { it.@class.toString().contains("build-row no-wrap") || it.@class.toString().contains("pane build-details")}.each {
 				go++
 				if (go==1) {
-					bid= it.A[0].@href.text()
-					/*if (bid&&(bid.indexOf('/')>-1)) {
-						if (bid.endsWith('/')) {
-							bid=bid.substring(0,bid.length()-1)
-						}
-						bid=bid.substring(bid.lastIndexOf('/')+1,bid.length())
-					}*/
+					bid=it.A[0].@href.text()
 					bdate=it.toString().trim()
-					//def out1=it.toString().trim()
-					//out1 = out1.replace("\n", "").replace("\r", "");
-					//out1 = out1.replaceAll("\\s+", " ").trim();
-					//out1 = out1.replace(' #', '').trim();
-					//out1 = out1.replace('#', '').trim();
-					//if (!bid) {
-					//bid=out1.substring(0, out1.indexOf(' '))
-					//}
-					//if (!bid)
-					//if (it.tip model-link inside
-					//if (bdate) {
-					//	bdate=out1.substring(bid.size(), out1.length()).trim()
-					//if (bdate =~ /[^0-9]$/) {
-					//	bdate=bdate.substring(0, bdate.length()-1)
-					//}
-					//}
-					//bid=bid.trim()
-					//if (bid =~ /^[^0-9]/) {
-					//	bid=bid.substring(1,bid.length()).trim()
-					//}
 				}
 			}
 		}catch(Exception e) {
@@ -342,50 +373,4 @@ class JenkinsEndPoint implements ServletContextListener{
 		}
 		return  bid
 	}
-
-
-	private def getBuildStatus (url) {
-		String output
-		String	selection="Built"
-		String rselection="Building"
-		try {
-			http = new HTTPBuilder("${url}")
-			http.getClient().getParams().setParameter("http.connection.timeout", new Integer(httpConnTimeOut))
-			http.getClient().getParams().setParameter("http.socket.timeout", new Integer(httpSockTimeOut))
-			if (!jensuser) {
-				http.auth.basic "${jensuser}", "${jenspass}"
-			}
-			//def html = http.get(path:url)
-			def html = http.get([:])
-			int go=0
-			int go1=0
-			int go2=0
-			html."**".find { it.@class.toString().contains("build-row no-wrap transitive") || it.@class.toString().contains("build-row transitive")}.each {
-				go1=1;
-				output="<font color=red>Currently "+rselection+" :"+it+"</font><br>"
-			}
-			go=0;
-			if (go==0) {
-				html."**".find { it.@class.toString().contains("build-row no-wrap") || it.@class.toString().contains("pane build-details") }.each {
-					go++
-					if (go==1) {
-						it."**".find { it.@class.toString().contains("tip")}.each {
-							go2++
-							if (go2==1) {
-								it."**".find { it.toString()}.each {
-									output=output+"<font color=green>Last "+selection+": "+it+"</font><br>"
-								}
-							}
-						}
-					}
-				}
-			}
-		}catch(Exception e) {
-			log.error "Problem communicating with ${url}: ${e.message}"
-		}
-		if (!output) { output = "No "+selection+" information found!" }
-		return output
-	}
-
-
 }

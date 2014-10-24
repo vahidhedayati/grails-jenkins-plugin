@@ -65,4 +65,6 @@ class JenkinsTagLib {
 	   		out << g.render(contextPath: pluginContextPath, template : '/jenkins/process', model: [divId:divId,jenfullserver:jenfullserver, jensjob:jensjob, jensuser:jensuser,jenspass:jenspass,appname:appname,wshostname:wshostname,jenserver:jenserver,jensurl:jensurl,jensprogressive:jensprogressive, jensbuildend:jensbuildend, jensconlog:jensconlog])
 	   }
    }
+   
+
 }
