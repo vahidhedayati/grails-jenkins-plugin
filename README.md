@@ -10,7 +10,7 @@ So once you had added plugin to your buildconfig, refreshed dependencies upon ru
 http://localhost:8080/yourapp/jenkins
 ```
 
-This will load in the default (Refer to how to use)[index page] which asks a few questions in order for you to interact with an available jenkins server from within your grails application, you can also make a direct call via a taglib provided by the plugin from within your gsps (multiple times to multiple jenkins server all in one go).
+This will load in the default index page (Refer to how to use further down) which asks a few questions in order for you to interact with an available jenkins server from within your grails application, you can also make a direct call via a taglib provided by the plugin from within your gsps (multiple times to multiple jenkins server all in one go).
 
 
 
@@ -36,15 +36,19 @@ Dependency, in your conf/BuildConfig.groovy under plugins add:
 
 
 #### How to use
+So when you access the default index page a variety of questions are presented in form input boxes, this is a further explaination of what is being asked:
 
+Server hostname
 ```
 Server to connect to : so this is the ip or hostname of your jenkins i.e. 10.1.1.2
 ```
 
+Server port
 ```
 Port: i.e. 8080 
 ```
 
+Folder/special folder 
 ```
 folder: this is usually job, so if you have a default jenkins running on 8080, so far we have:
 
@@ -59,6 +63,7 @@ If you have a different setup lets say by default it is
  jenspecial: jenkins
 ````
 
+JobName: Your jenkins job's name
 ```
 jobname: This is your created job on jenkins so for example : my_first_build
 ````
@@ -68,6 +73,7 @@ username and password are optional and need testing from my end, so far its basi
 authentication on jenkins remote end, so you can leave these blank
 ```
 
+The Choice: dashboard(shows history + you can view logs) OR Directly trigger build and watch logs 
 ```
 Choice: 
 	Dashboard (not done yet will hopefully be part of 0.1),
