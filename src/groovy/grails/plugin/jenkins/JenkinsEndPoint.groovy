@@ -95,8 +95,9 @@ class JenkinsEndPoint implements ServletContextListener{
 	}
 
 	private void jenkinsConnect(Session userSession) {
-		
-		def validurl=verifyUrl(stripDouble(jensconurl))
+		def url=stripDouble(jensconurl)
+		println "---- >>> ${url}"
+		def validurl=verifyUrl(url+"/")
 		if (validurl.toString().startsWith('Success')) {
 			userSession.getBasicRemote().sendText('Jenkins plugin connected to: '+jensconurl)
 		}else{
@@ -193,6 +194,7 @@ class JenkinsEndPoint implements ServletContextListener{
 
 				// Now get the url which may or may not have current header size
 				def url=stripDouble(nurl+ssize)
+				println "---|| > $url"
 				http?.request("${url}",GET,TEXT) { req ->
 
 					// On success get latest output back from headers
