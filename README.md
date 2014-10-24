@@ -1,8 +1,21 @@
 jenkins 0.1
 =========
 
-Grails Jenkins plugin, will interact with jenkins front end html interface using HTTPBuilder. Currently has two features:
- 
+
+Grails Jenkins plugin, will interact with jenkins front end html interface using HTTPBuilder. Currently has two features that are by default available via a new controller that the plugin adds to your project:
+
+
+So once you had added plugin to your buildconfig, refreshed dependencies upon run-appp, you will be able to access this plugin via this url:
+```
+http://localhost:8080/yourapp/jenkins
+```
+
+This will load in the default (Refer to how to use)[index page] which asks a few questions in order for you to interact with an available jenkins server from within your grails application, you can also make a direct call via a taglib provided by the plugin from within your gsps (multiple times to multiple jenkins server all in one go).
+
+
+
+The plugin functionality provides two core aspects of the Jenkins product within your grails app:
+
 1. lists current build history on right hand side, if you click on dashboard or trigger a build.
 The build history is being sent back via websockets and is called upon you clicking build + when build completes. The history is as is on Jenkins so if building it will show up building on here. If it passed/failed/cancelled and so forth.
 You can click the specific historical item to view its logs, which again uses HTTPBuilder to grab out build logs and send via websockets back to the web page.
@@ -20,8 +33,9 @@ Dependency, in your conf/BuildConfig.groovy under plugins add:
 ###### Plugin will work with tomcat 7.0.54 + (inc. 8) running java 1.7+
 
 
+
+
 #### How to use
-once installed, you will have a new controller called jenkins, the default index action will load a form which will as a bunch of questions:
 
 ```
 Server to connect to : so this is the ip or hostname of your jenkins i.e. 10.1.1.2
@@ -39,8 +53,10 @@ folder: this is usually job, so if you have a default jenkins running on 8080, s
 If you have a different setup lets say by default it is  
  10.1.1.2:8080/jenkins/job
  
- Then set folder as :
- jenkins/job
+ 
+ Then you will find the jenspecial variable useful, for these situations provide a value in the index page of jenkins if url is like above
+ 
+ jenspecial: jenkins
 ````
 
 ```
@@ -129,6 +145,7 @@ jensport="${jensport}"
 jensuser="${jensuser}"
 jenspass="${jenspass}"
 jensjob="${jensjob}"
+jenspecial="${jenspecial}"
 jensfolder="${jensfolder}"
 jensport="${jensport}"
 />
