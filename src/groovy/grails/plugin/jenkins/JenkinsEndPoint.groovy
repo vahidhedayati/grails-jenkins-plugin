@@ -25,7 +25,7 @@ class JenkinsEndPoint implements ServletContextListener{
 	private int httpConnTimeOut = 10*1000;
 	private int httpSockTimeOut = 30*1000;
 	static final Set<Session> jsessions = Collections.synchronizedSet(new HashSet<Session>())
-	private String jensbuildend,jensprogressive,jensconlog,jensurl,jenserver,jensuser,jenspass,jenschoice=''
+	private String jensbuildend,jensprogressive,jensconlog,jensurl,jenserver,jensuser,jenspass,jenschoice,jensconurl=''
 	HTTPBuilder http = new HTTPBuilder()
 	@Override
 	public void contextInitialized(ServletContextEvent servletContextEvent) {
@@ -63,6 +63,7 @@ class JenkinsEndPoint implements ServletContextListener{
 				jenserver=data.jenserver
 				jensurl=data.jensurl
 				jensuser=data.jensuser
+				jensconurl=data.jensconurl
 				jenspass=data.jenspass
 				jensconlog=data.jensconlog ?: '/consoleFull'
 				jensprogressive=data.jensprogressive ?: '/logText/progressiveHtml'
@@ -94,11 +95,12 @@ class JenkinsEndPoint implements ServletContextListener{
 	}
 
 	private void jenkinsConnect(Session userSession) {
-		def validurl=verifyUrl(jenserver)
+		
+		def validurl=verifyUrl(stripDouble(jensconurl))
 		if (validurl.toString().startsWith('Success')) {
-			userSession.getBasicRemote().sendText('Jenkins plugin connected to: '+jenserver)
+			userSession.getBasicRemote().sendText('Jenkins plugin connected to: '+jensconurl)
 		}else{
-			userSession.getBasicRemote().sendText('JenkinsConnect failed to connect to: '+jenserver)
+			userSession.getBasicRemote().sendText('JenkinsConnect failed to connect to: '+jensconurl)
 		}
 	}
 
@@ -106,12 +108,18 @@ class JenkinsEndPoint implements ServletContextListener{
 		return server
 	}
 
-
+	private stripDouble(String url) {
+		if (url.indexOf('//')>-1) {
+			url=url.replace('//','/')
+		}
+		return url
+	}
 	private void ParseJobConsole(Session userSession,String url,String bid) {
 		//String murl
 		try {
 			// Send user confirmation that you are going to parse Jenkins job
 			userSession.getBasicRemote().sendText("About to parse "+url+"<br>")
+			url=stripDouble(url)
 			http = new HTTPBuilder("${url}")
 			http.getClient().getParams().setParameter("http.connection.timeout", new Integer(httpConnTimeOut))
 			http.getClient().getParams().setParameter("http.socket.timeout", new Integer(httpSockTimeOut))
@@ -184,7 +192,8 @@ class JenkinsEndPoint implements ServletContextListener{
 				def osize=csize
 
 				// Now get the url which may or may not have current header size
-				http?.request("${nurl}${ssize}",GET,TEXT) { req ->
+				def url=stripDouble(nurl+ssize)
+				http?.request("${url}",GET,TEXT) { req ->
 
 					// On success get latest output back from headers
 					response.success = { resp, reader ->
@@ -210,6 +219,7 @@ class JenkinsEndPoint implements ServletContextListener{
 		userSession.getBasicRemote().sendText("\n\n\n\n\nDashboard ");
 		String url=jenserver+jensurl
 		String consolelog=jensconlog
+		url=stripDouble(url)
 		getBuilds(userSession,url)
 	}
 	private buildJob(Session userSession) {

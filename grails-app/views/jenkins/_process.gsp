@@ -34,8 +34,8 @@ display: inline-block;
 float:right;
 width: 25%;
 height: 200px;
-color: #FFF;
-background: #AAA;
+color: #000;
+background: #FFF;
 font-size: 0.8em;
 font-family: monospace;
 position: relative;
@@ -96,7 +96,8 @@ webSocket${divId}.onmessage=function(message) {processMessage${divId}(message);	
 
 function processOpen${divId}(message) {
 	$('#messagesTextarea${divId}').append('Server Connect....\n');
-	webSocket${divId}.send(JSON.stringify({'cmd':'connect','jensuser':"${jensuser }",'jenspass':"${jenspass }",'jenserver':"${jenfullserver }",'jensurl':"${jensurl }",'jensbuildend':"${jensbuildend }",'jensprogressive': "${jensprogressive }", 'jensconlog':"${jensconlog }"}));
+	webSocket${divId}.send(JSON.stringify({'cmd':'connect','jensuser':"${jensuser }",'jensconurl':"${jensconurl }",
+	'jenspass':"${jenspass }",'jenserver':"${jenfullserver }",'jensurl':"${jensurl }",'jensbuildend':"${jensbuildend }",'jensprogressive': "${jensprogressive }", 'jensconlog':"${jensconlog }"}));
 	newBuild("${jenschoice }");
 }
 

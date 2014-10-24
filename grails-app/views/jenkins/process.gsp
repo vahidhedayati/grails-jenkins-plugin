@@ -15,6 +15,7 @@ jensport="${jensport}"
 jensuser="${jensuser}"
 jenspass="${jenspass}"
 jensjob="${jensjob}"
+jenspecial="${jenspecial}"
 jensfolder="${jensfolder}"
 jensport="${jensport}"
 />
