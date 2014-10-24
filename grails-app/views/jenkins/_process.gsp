@@ -35,7 +35,7 @@ float:right;
 width: 25%;
 height: 200px;
 color: #FFF;
-background: #777;
+background: #AAA;
 font-size: 0.8em;
 font-family: monospace;
 position: relative;

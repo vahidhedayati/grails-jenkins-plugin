@@ -216,11 +216,12 @@ class JenkinsEndPoint implements ServletContextListener{
 		String url=jenserver+jensurl
 		def url1=url+jensbuildend
 		def lastbid=getLastBuild(url)
-		StringBuilder sb=new StringBuilder()
+		//StringBuilder sb=new StringBuilder()
 		String consolelog=jensconlog
 		//String consolelog='/consoleText'
-		sb.append("Before triggering Build ID: "+lastbid+"..sleeping for a few seconds<br>")
-		sleep(300)
+		//	sb.append("Before triggering Build ID: "+lastbid+"..sleeping for a few seconds<br>")
+		userSession.getBasicRemote().sendText("\nBefore triggering Build ID: "+lastbid+"\n..sleeping for a few seconds\n\n")
+		sleep(2000)
 		//dashboard(userSession)
 		// This kicks off the build
 		try {
@@ -233,7 +234,7 @@ class JenkinsEndPoint implements ServletContextListener{
 
 			def html = http.get([:])
 			def lastbid1=getLastBuild(url)
-			userSession.getBasicRemote().sendText("\n\n\n\n\nTriggering build\n\n\nCurrent Build ID: "+lastbid1+"<br>")
+			userSession.getBasicRemote().sendText("\nTriggering build\n\n\nCurrent Build ID: "+lastbid1+"<br>")
 			//String url2=url+"/"+lastbid1+consolelog
 			String url2=jenserver+"/"+lastbid1+consolelog
 			dashboard(userSession)
@@ -242,7 +243,7 @@ class JenkinsEndPoint implements ServletContextListener{
 		} catch (Exception e) {
 			e.printStackTrace()
 		}
-		return sb.toString()
+		//return sb.toString()
 
 	}
 
@@ -308,49 +309,97 @@ class JenkinsEndPoint implements ServletContextListener{
 			int counter=0
 			def finalList=[:]
 			def hList=[]
+			def col1
+			def col2
 
+			// Debian ubuntu variants of jenkins has this class method
+			if (html."**".findAll {it.@class.toString().contains("build-details")}) {
+				col1 = html."**".findAll { it.@class.toString().contains("build-details") }
+				.collect {
+					[
+						bid : it.A[0].@href.text(),
+						bdate :it.toString().trim()
+					]
+				}
+				if (html."**".findAll {it.@class.toString().contains("build-name")}) {
+					col2 = html."**".findAll {it.@class.toString().contains("build-name")}.collect {
+						[
+							bid : it.A[0].@href.text().substring(0,it.A[0].@href.text().indexOf('/console')+1),
+							//bstatus : verifyStatus(it.A[0].IMG[0].@class.text().toString()),
+							bstatus : verifyStatus(it.A[0].IMG[0].@src.text().toString()),
+							//bimgUrl : it.A[0].IMG[0].@src.text(),
+							jobid : it.toString().trim().replaceAll('[\n|\r|#|\t| ]+', '')
+						]
+					}
+				}
+			}else{
+				// Going to try parse uglier html styles - provided by a default jenkins install
+				if (html."**".findAll {it.@class.toString().contains("tip model-link")}) {
+					col1 = html."**".findAll { it.@class.toString().contains("tip model-link") }
+					.collect {
+						[
+							bid : it.@href.text(),
+							bdate :it.toString().trim()
+						]
+					}
+				}
 
-			def col1 = html."**".findAll { it.@class.toString().contains("build-details")}
-			.collect {
-				[
-					bid : it.A[0].@href.text(),
+				if (html."**".findAll {it.@class.toString().contains("build-row no-wrap")}) {
+					col2=html."**".findAll {it.@class.toString().contains("build-row no-wrap")}.collect {
+						[
+							bid: verifyBuild(it.TD[0].A.@href.text().toString()),
+							bstatus : verifyStatus(it.TD[0].A.IMG.@src.text().toString()),
+							jobid: verifyJob(it.TD[0].A.@href.text().toString())
+						]
+					}
 
-					bdate :it.toString().trim()
-				]
-			}
+				}
 
-			def col2 = html."**".findAll { it.@class.toString().contains("build-name")}
-			.collect {
-				[
-					bid : it.A[0].@href.text().substring(0,it.A[0].@href.text().indexOf('/console')+1),
-					bstatus : verifyStatus(it.A[0].IMG[0].@class.text().toString()),
-					bimgUrl : it.A[0].IMG[0].@src.text(),
-					jobid : it.toString().trim().replaceAll('[\n|\r|#|\t| ]+', '')
-				]
 			}
 			def combined = (col1 + col2).groupBy { it.bid }.collect { it.value.collectEntries { it } }
 			finalList.put("history",combined)
 			def myMsgj=finalList as JSON
 			userSession.getBasicRemote().sendText(myMsgj.toString())
-
 		}catch(Exception e) {
 			log.error "Problem communicating with ${url}: ${e.message}"
 		}
 	}
 
 
-	private def verifyStatus(String img) {
-		def output
-		if (img.contains("icon-blue-anime")) {
-			output="building"
-		}else if (img.contains("icon-red")) {
-			output="failed"
-		}else if (img.contains("icon-blue")) {
-			output="passed"
+	private def verifyBuild(String bid) {
+		if (bid && (bid.indexOf('/console')>-1)) {
+			bid=bid.substring(0,bid.indexOf('/console')+1)
 		}
+		return bid
+	}
 
+	private def verifyJob(String job) {
+		if (job.indexOf('/')>-1) {
+			job=job.substring(0,job.indexOf('/console'))
+			if (job.endsWith('/')) {
+				job=job.substring(0,job.length()-1)
+			}
+			job=job.substring(job.lastIndexOf('/')+1,job.length())
+		}
+		return job
+	}
+
+	private def verifyStatus(String img) {
+		def output="unknown"
+		if (img.contains("blue_anime")) {
+			output="building"
+		}else if (img.contains("red")) {
+			output="failed"
+		}else if (img.contains("blue")) {
+			output="passed"
+			
+		}else if (img.contains("grey")) {
+			output="Cancelled"
+		}
+			
 		return output
 	}
+
 	private def getLastBuild(String url) {
 		def bid="";
 		try {
@@ -363,13 +412,24 @@ class JenkinsEndPoint implements ServletContextListener{
 				http.auth.basic "${jensuser}", "${jenspass}"
 			}
 			def html = http.get([:])
-			html."**".find { it.@class.toString().contains("build-row no-wrap") || it.@class.toString().contains("pane build-details")}.each {
-				go++
-				if (go==1) {
-					bid=it.A[0].@href.text()
-					bdate=it.toString().trim()
+			if (html."**".findAll {it.@class.toString().contains("build-details")}) {
+				html."**".find { it.@class.toString().contains("build-details")}.each {
+					go++
+					if (go==1) {
+						bid=it.A[0].@href.text()
+						bdate=it.toString().trim()
+					}
+				}
+			}else{
+				html."**".findAll { it.@class.toString().contains("tip model-link") }.each {
+					go++
+					if (go==1) {
+						bid=it.@href.text()
+						bdate=it.toString().trim()
+					}
 				}
 			}
+
 		}catch(Exception e) {
 			log.error "Problem communicating with ${url}: ${e.message}"
 		}
