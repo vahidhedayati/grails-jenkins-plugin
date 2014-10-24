@@ -4,7 +4,7 @@
 	<g:textField name="jenserver" placeholder="Jenkins Hostname/Server IP"/>
 	<g:textField name="jensport" placeholder="Jenkins port"/>
 	<g:textField name="jenspecial" placeholder="special folder i.e. http://ip:port/jenkins so jenkins" value=""/>
-	<g:textField name="jensfolder" placeholder="usually job" value="job"/>
+	<g:textField name="jensfolder" placeholder="usually job"/>
 	<g:textField name="jensjob" placeholder="Jenkins job name"/>
 		<g:textField name="jensuser" placeholder="Jenkins username"/>
 			<g:passwordField name="jenspass" placeholder="Jenkins password"/>

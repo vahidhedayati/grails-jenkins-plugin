@@ -26,7 +26,8 @@ class JenkinsEndPoint implements ServletContextListener{
 	private int httpSockTimeOut = 30*1000;
 	static final Set<Session> jsessions = Collections.synchronizedSet(new HashSet<Session>())
 	private String jensbuildend,jensprogressive,jensconlog,jensurl,jenserver,jensuser,jenspass,jenschoice,jensconurl=''
-	HTTPBuilder http = new HTTPBuilder()
+	HTTPBuilder http 
+	//= new HTTPBuilder()
 	@Override
 	public void contextInitialized(ServletContextEvent servletContextEvent) {
 		final ServerContainer serverContainer =	org.codehaus.groovy.grails.web.context.ServletContextHolder.getServletContext().getAttribute("javax.websocket.server.ServerContainer")
@@ -95,9 +96,8 @@ class JenkinsEndPoint implements ServletContextListener{
 	}
 
 	private void jenkinsConnect(Session userSession) {
-		def url=stripDouble(jensconurl)
-		println "---- >>> ${url}"
-		def validurl=verifyUrl(url+"/")
+		def url=jensconurl
+		def validurl=verifyUrl(url)
 		if (validurl.toString().startsWith('Success')) {
 			userSession.getBasicRemote().sendText('Jenkins plugin connected to: '+jensconurl)
 		}else{
@@ -109,26 +109,11 @@ class JenkinsEndPoint implements ServletContextListener{
 		return server
 	}
 
-	private stripDouble(String url) {
-		if (url.indexOf('//')>-1) {
-			url=url.replace('//','/')
-		}
-		return url
-	}
 	private void ParseJobConsole(Session userSession,String url,String bid) {
-		//String murl
 		try {
 			// Send user confirmation that you are going to parse Jenkins job
-			userSession.getBasicRemote().sendText("About to parse "+url+"<br>")
-			url=stripDouble(url)
-			http = new HTTPBuilder("${url}")
-			http.getClient().getParams().setParameter("http.connection.timeout", new Integer(httpConnTimeOut))
-			http.getClient().getParams().setParameter("http.socket.timeout", new Integer(httpSockTimeOut))
-			if (!jensuser) {
-				http.auth.basic "${jensuser}", "${jenspass}"
-			}
-			def html = http.get([:])
-			//def html = http.get(path :url)
+			userSession.getBasicRemote().sendText("About to parse ${url}\n")		
+			def html = http.get(path :"${url}")
 			boolean start=false
 			boolean start1=false
 
@@ -193,8 +178,8 @@ class JenkinsEndPoint implements ServletContextListener{
 				def osize=csize
 
 				// Now get the url which may or may not have current header size
-				def url=stripDouble(nurl+ssize)
-				println "---|| > $url"
+				def url=nurl+ssize
+				//stripDouble(nurl+ssize)
 				http?.request("${url}",GET,TEXT) { req ->
 
 					// On success get latest output back from headers
@@ -209,66 +194,55 @@ class JenkinsEndPoint implements ServletContextListener{
 					}
 				}
 			}
-
 		}catch(Exception e) {
 			log.error "Problem communicating with ${nurl}: ${e.message}"
 		}
 	}
 
-
-
 	private dashboard(Session userSession) {
-		userSession.getBasicRemote().sendText("\n\n\n\n\nDashboard ");
-		String url=jenserver+jensurl
+		userSession.getBasicRemote().sendText("\nDashboard clicked.");
+		//String url=jenserver+jensurl
+		String url=jensurl
 		String consolelog=jensconlog
-		url=stripDouble(url)
 		getBuilds(userSession,url)
 	}
+	
 	private buildJob(Session userSession) {
-		String url=jenserver+jensurl
+		String url=jensurl
 		def url1=url+jensbuildend
 		def lastbid=getLastBuild(url)
-		//StringBuilder sb=new StringBuilder()
 		String consolelog=jensconlog
 		//String consolelog='/consoleText'
-		//	sb.append("Before triggering Build ID: "+lastbid+"..sleeping for a few seconds<br>")
-		userSession.getBasicRemote().sendText("\nBefore triggering Build ID: "+lastbid+"\n..sleeping for a few seconds\n\n")
-		sleep(2000)
-		//dashboard(userSession)
-		// This kicks off the build
 		try {
-			http = new HTTPBuilder("${url1}")
-			http.getClient().getParams().setParameter("http.connection.timeout", new Integer(httpConnTimeOut))
-			http.getClient().getParams().setParameter("http.socket.timeout", new Integer(httpSockTimeOut))
-			if (!jensuser) {
-				http.auth.basic "${jensuser}", "${jenspass}"
-			}
-
-			def html = http.get([:])
+			triggerBuild(jenserver+url1)
+			userSession.getBasicRemote().sendText("\nBefore triggering Build ID: "+lastbid+"\nAttempting build ${url1}\n..sleeping for a few seconds\n")
+			sleep(2000)
 			def lastbid1=getLastBuild(url)
-			userSession.getBasicRemote().sendText("\nTriggering build\n\n\nCurrent Build ID: "+lastbid1+"<br>")
+			userSession.getBasicRemote().sendText("\nTriggering build\nCurrent Build ID: "+lastbid1+"<br>")
 			//String url2=url+"/"+lastbid1+consolelog
-			String url2=jenserver+"/"+lastbid1+consolelog
+			String url2=stripDouble(lastbid1+consolelog)
 			dashboard(userSession)
 			ParseJobConsole(userSession,url2,lastbid1)
 			dashboard(userSession)
 		} catch (Exception e) {
 			e.printStackTrace()
 		}
-		//return sb.toString()
-
+	}
+	
+	private void triggerBuild(String url) {
+		http = new HTTPBuilder("${url}")
+		http.getClient().getParams().setParameter("http.connection.timeout", new Integer(httpConnTimeOut))
+		http.getClient().getParams().setParameter("http.socket.timeout", new Integer(httpSockTimeOut))
+		if (!jensuser) {
+			http.auth.basic "${jensuser}", "${jenspass}"
+		}
+		def html = http.get([:])
 	}
 
 	private String verifyUrl(def nurl)  {
 		def ret = [:]
 		String result='Failed'
-		if (nurl.toString().indexOf('[')>-1) {
-			return result
-		}
 		try {
-			if (nurl.toString().indexOf(' ')>-1) {
-				nurl=nurl.toString().replace(' ','_')
-			}
 			boolean goahead=true
 			try {
 				http = new HTTPBuilder("${nurl}")
@@ -311,20 +285,12 @@ class JenkinsEndPoint implements ServletContextListener{
 		try {
 			int go=0;
 			def bdate,bid,transaction=''
-			http = new HTTPBuilder(url)
-			http.getClient().getParams().setParameter("http.connection.timeout", new Integer(httpConnTimeOut))
-			http.getClient().getParams().setParameter("http.socket.timeout", new Integer(httpSockTimeOut))
-			if (!jensuser) {
-				http.auth.basic "${jensuser}", "${jenspass}"
-			}
-			def html = http.get([:])
 			int counter=0
 			def finalList=[:]
 			def hList=[]
 			def col1
 			def col2
-
-			// Debian ubuntu variants of jenkins has this class method
+			def html = http.get( path : "${url}")	
 			if (html."**".findAll {it.@class.toString().contains("build-details")}) {
 				col1 = html."**".findAll { it.@class.toString().contains("build-details") }
 				.collect {
@@ -385,45 +351,13 @@ class JenkinsEndPoint implements ServletContextListener{
 		return bid
 	}
 
-	private def verifyJob(String job) {
-		if (job.indexOf('/')>-1) {
-			job=job.substring(0,job.indexOf('/console'))
-			if (job.endsWith('/')) {
-				job=job.substring(0,job.length()-1)
-			}
-			job=job.substring(job.lastIndexOf('/')+1,job.length())
-		}
-		return job
-	}
-
-	private def verifyStatus(String img) {
-		def output="unknown"
-		if (img.contains("blue_anime")) {
-			output="building"
-		}else if (img.contains("red")) {
-			output="failed"
-		}else if (img.contains("blue")) {
-			output="passed"
-			
-		}else if (img.contains("grey")) {
-			output="Cancelled"
-		}
-			
-		return output
-	}
 
 	private def getLastBuild(String url) {
 		def bid="";
 		try {
 			int go=0;
 			def bdate,transaction=''
-			http = new HTTPBuilder(url)
-			http.getClient().getParams().setParameter("http.connection.timeout", new Integer(httpConnTimeOut))
-			http.getClient().getParams().setParameter("http.socket.timeout", new Integer(httpSockTimeOut))
-			if (!jensuser) {
-				http.auth.basic "${jensuser}", "${jenspass}"
-			}
-			def html = http.get([:])
+			def html = http.get(path : "${url}")
 			if (html."**".findAll {it.@class.toString().contains("build-details")}) {
 				html."**".find { it.@class.toString().contains("build-details")}.each {
 					go++
@@ -447,4 +381,38 @@ class JenkinsEndPoint implements ServletContextListener{
 		}
 		return  bid
 	}
+	
+	private String verifyJob(String job) {
+		if (job.indexOf('/')>-1) {
+			job=job.substring(0,job.indexOf('/console'))
+			if (job.endsWith('/')) {
+				job=job.substring(0,job.length()-1)
+			}
+			job=job.substring(job.lastIndexOf('/')+1,job.length())
+		}
+		return job
+	}
+	
+	private String stripDouble(String url) {
+		if (url.indexOf('//')>-1) {
+			url=url.replace('//','/')
+		}
+		return url
+	}
+	
+	private String verifyStatus(String img) {
+		String output="unknown"
+		if (img.contains("blue_anime")) {
+			output="building"
+		}else if (img.contains("red")) {
+			output="failed"
+		}else if (img.contains("blue")) {
+			output="passed"
+			
+		}else if (img.contains("grey")) {
+			output="Cancelled"
+		}
+		return output
+	}
+
 }

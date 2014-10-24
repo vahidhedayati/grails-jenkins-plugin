@@ -11,7 +11,7 @@ class JenkinsTagLib {
 	   def divId=attrs.remove('divId')?.toString()
 	   def jensuser=attrs.remove('jensuser')?.toString()
 	   def jenspass=attrs.remove('jenspass')?.toString()
-	   def jenspecial=attrs.remove('jenspecial')?.toString()
+	   //def jenspecial=attrs.remove('jenspecial')?.toString()
 	   if (!attrs.jensjob) {
 		   throwTagError("Tag [jenkins] is missing required attribute [jensjob]")
 	   }
@@ -36,18 +36,16 @@ class JenkinsTagLib {
 	   // Full url to jenkins server - main url
 	   String jenfullserver=jenurl.toString()
 	   
-	   if (jenspecial) {
-		   jenurl.append('/'+jenspecial)
+	   if (attrs.jenspecial) {
+		   jenurl.append(seperator(attrs?.jenspecial))
 	   }
 	   // Full url to jenkins server - main url
 	   String jensconurl=jenurl.toString()
 	   
-	   
-	   
-	   String jensjob=attrs.jensjob
-	   String jensfolder=attrs.jensfolder ?: 'job'
-	   // Relative UrI to get to folder/job (can now be appended to above) 
-	   String jensurl='/'+jenspecial+'/'+jensfolder+'/'+jensjob+'/'
+	   //String jensjob=attrs.jensjob
+	   //String jensfolder=attrs.jensfolder ?: 'job'
+	   // Relative UrI to get to folder/job (can now be appended to above)
+	   String jensurl=seperator(attrs?.jenspecial)+seperator(attrs?.jensfolder)+seperator(attrs?.jensjob)
 	   
 	   // Configuration uris.
 	   //Progressive page
@@ -67,11 +65,17 @@ class JenkinsTagLib {
 	   
 	   String appname=grailsApplication.metadata['app.name']
 	   if (template) {
-		   out << g.render(template:template, model: [divId:divId,jenfullserver:jenfullserver,jensconurl:jensconurl, jensjob:jensjob, jensuser:jensuser,jenspass:jenspass,appname:appname,wshostname:wshostname,jenserver:jenserver,jensurl:jensurl,jensprogressive:jensprogressive, jensbuildend:jensbuildend, jensconlog:jensconlog])
+		   out << g.render(template:template, model: [divId:divId,jenfullserver:jenfullserver,jensconurl:jensconurl, jensjob:attrs.jensjob, jensuser:jensuser,jenspass:jenspass,appname:appname,wshostname:wshostname,jenserver:jenserver,jensurl:jensurl,jensprogressive:jensprogressive, jensbuildend:jensbuildend, jensconlog:jensconlog])
 	   }else{   
-	   		out << g.render(contextPath: pluginContextPath, template : '/jenkins/process', model: [divId:divId,jenfullserver:jenfullserver,jensconurl:jensconurl, jensjob:jensjob, jensuser:jensuser,jenspass:jenspass,appname:appname,wshostname:wshostname,jenserver:jenserver,jensurl:jensurl,jensprogressive:jensprogressive, jensbuildend:jensbuildend, jensconlog:jensconlog])
+	   		out << g.render(contextPath: pluginContextPath, template : '/jenkins/process', model: [divId:divId,jenfullserver:jenfullserver,jensconurl:jensconurl, jensjob:attrs.jensjob, jensuser:jensuser,jenspass:jenspass,appname:appname,wshostname:wshostname,jenserver:jenserver,jensurl:jensurl,jensprogressive:jensprogressive, jensbuildend:jensbuildend, jensconlog:jensconlog])
 	   }
    }
    
+   private String seperator(def input) {
+	   if ((input) &&(!input.toString().startsWith('/'))) {
+		   input='/'+input
+	   }
+	   return input
+   }
 
 }

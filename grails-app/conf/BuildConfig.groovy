@@ -25,7 +25,6 @@ grails.project.dependency.resolution = {
 	plugins {
 		//build (':rest:0.8') {
 		//	excludes 'commons-beanutil'
-		//	
 		//}
 		build ':release:2.2.1', ':rest-client-builder:1.0.3',  {
 			export = false
