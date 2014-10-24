@@ -207,6 +207,7 @@ class JenkinsEndPoint implements ServletContextListener{
 
 
 	private dashboard(Session userSession) {
+		userSession.getBasicRemote().sendText("\n\n\n\n\nDashboard ");
 		String url=jenserver+jensurl
 		String consolelog=jensconlog
 		getBuilds(userSession,url)
@@ -220,7 +221,7 @@ class JenkinsEndPoint implements ServletContextListener{
 		//String consolelog='/consoleText'
 		sb.append("Before triggering Build ID: "+lastbid+"..sleeping for a few seconds<br>")
 		sleep(300)
-		dashboard(userSession)
+		//dashboard(userSession)
 		// This kicks off the build
 		try {
 			http = new HTTPBuilder("${url1}")
@@ -232,9 +233,10 @@ class JenkinsEndPoint implements ServletContextListener{
 
 			def html = http.get([:])
 			def lastbid1=getLastBuild(url)
-			userSession.getBasicRemote().sendText("Current Build ID: "+lastbid1+"<br>")
+			userSession.getBasicRemote().sendText("\n\n\n\n\nTriggering build\n\n\nCurrent Build ID: "+lastbid1+"<br>")
 			//String url2=url+"/"+lastbid1+consolelog
 			String url2=jenserver+"/"+lastbid1+consolelog
+			dashboard(userSession)
 			ParseJobConsole(userSession,url2,lastbid1)
 			dashboard(userSession)
 		} catch (Exception e) {

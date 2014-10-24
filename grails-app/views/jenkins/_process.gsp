@@ -65,16 +65,7 @@ padding: 12px 12px 12px 12px;
 overflow:auto;
 resize:both;
 }
-.red {
-	background: #FF0000;
-}
-.green {
-	background: #CC00CC;
-}
 
-.blue {
-	background: #FFFFCC;
-}
 
 	</style>
 	<body>
