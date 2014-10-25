@@ -164,6 +164,7 @@ jensjob="${jensjob}"
 jensprefix="${jensprefix}"
 jensfolder="${jensfolder}"
 jensport="${jensport}"
+jenschoice="${jenschoice}" 
 />
 ```
 
