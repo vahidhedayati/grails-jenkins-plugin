@@ -6,7 +6,7 @@ Grails Jenkins plugin, will interact with Jenkins front end html interface using
 
 ### Video
 
-(Grails-jenkins-plugin video youtube)[http://youtu.be/XfsrBAa8aAg]
+[Grails-jenkins-plugin video youtube](http://youtu.be/XfsrBAa8aAg)
 
 ### Walkthrough
 So once you had added plugin to your buildconfig, refreshed dependencies upon run-appp, you will be able to access this plugin via this url:
