@@ -408,9 +408,8 @@ class JenkinsEndPoint implements ServletContextListener{
 			output="failed"
 		}else if (img.contains("blue")) {
 			output="passed"
-			
-		}else if (img.contains("grey")) {
-			output="Cancelled"
+		}else if ((img.contains("grey"))||(img.contains("aborted"))) {
+			output="cancelled"
 		}
 		return output
 	}

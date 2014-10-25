@@ -11,6 +11,7 @@ class JenkinsTagLib {
 	   def divId=attrs.remove('divId')?.toString()
 	   def jensuser=attrs.remove('jensuser')?.toString()
 	   def jenspass=attrs.remove('jenspass')?.toString()
+	   def jenschoice=attrs.remove('jenschoice')?.toString()
 	   //def jensprefix=attrs.remove('jensprefix')?.toString()
 	   if (!attrs.jensjob) {
 		   throwTagError("Tag [jenkins] is missing required attribute [jensjob]")
@@ -66,9 +67,9 @@ class JenkinsTagLib {
 	   
 	   String appname=grailsApplication.metadata['app.name']
 	   if (template) {
-		   out << g.render(template:template, model: [divId:divId,jenfullserver:jenfullserver,jensconurl:jensconurl, jensjob:attrs.jensjob, jensuser:jensuser,jenspass:jenspass,appname:appname,wshostname:wshostname,jenserver:jenserver,jensurl:jensurl,jensprogressive:jensprogressive, jensbuildend:jensbuildend, jensconlog:jensconlog])
+		   out << g.render(template:template, model: [jenschoice:jenschoice, divId:divId,jenfullserver:jenfullserver,jensconurl:jensconurl, jensjob:attrs.jensjob, jensuser:jensuser,jenspass:jenspass,appname:appname,wshostname:wshostname,jenserver:jenserver,jensurl:jensurl,jensprogressive:jensprogressive, jensbuildend:jensbuildend, jensconlog:jensconlog])
 	   }else{   
-	   		out << g.render(contextPath: pluginContextPath, template : '/jenkins/process', model: [divId:divId,jenfullserver:jenfullserver,jensconurl:jensconurl, jensjob:attrs.jensjob, jensuser:jensuser,jenspass:jenspass,appname:appname,wshostname:wshostname,jenserver:jenserver,jensurl:jensurl,jensprogressive:jensprogressive, jensbuildend:jensbuildend, jensconlog:jensconlog])
+	   		out << g.render(contextPath: pluginContextPath, template : '/jenkins/process', model: [jenschoice:jenschoice, divId:divId,jenfullserver:jenfullserver,jensconurl:jensconurl, jensjob:attrs.jensjob, jensuser:jensuser,jenspass:jenspass,appname:appname,wshostname:wshostname,jenserver:jenserver,jensurl:jensurl,jensprogressive:jensprogressive, jensbuildend:jensbuildend, jensconlog:jensconlog])
 	   }
    }
    

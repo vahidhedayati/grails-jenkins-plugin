@@ -66,8 +66,19 @@ overflow:auto;
 resize:both;
 }
 
-
-	</style>
+.red {
+	background: #FFB2B2;
+}
+.green {
+	background: #CCEBCC;
+}
+.orange{
+	background: #FFD6AD;
+}
+.blue {
+	background:#B2E0FF;
+}
+</style>
 	<body>
 <div class="button">
 <a onclick="javascript:newBuild('build');">Trigger a build</a> |<a onclick="javascript:newBuild('dashboard');">Dashboard</a>
@@ -129,11 +140,13 @@ function processMessage${divId}(message) {
 				var cc=entry.bid.substring(0,ci - 1);	
 				var crec=cc.substring(cc.lastIndexOf('/')+1,cc.length);
 				var cclass=''
-					if (entry.bstatus.indexOf('passed')) {
+					if (entry.bstatus.indexOf('passed')>-1) {
 						cclass='green'
-					}else if (entry.bstatus.indexOf('failed')) {
+					}else if (entry.bstatus.indexOf('failed')>-1) {
 						cclass='red'
-					}else if (entry.bstatus.indexOf('failed')) {
+					}else if (entry.bstatus.indexOf('cancelled')>-1) {
+						cclass='orange'
+					}else if (entry.bstatus.indexOf('building')>-1) {
 						cclass='blue'
 					}	
 				sb.push('\n<li ><a class='+cclass+'  onclick="javascript:viewHistory('+wrapIt(entry.bid)+');">'+entry.jobid+' : <small>'+entry.bstatus+' '+entry.bdate+'</small></a>\n</li>');
