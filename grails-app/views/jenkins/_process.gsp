@@ -27,7 +27,19 @@ padding: 12px 12px 12px 12px;
 overflow:auto;
 resize:both;
 }	
-#BuildHistory {
+.BuildHistoryTop {
+display: block;
+float:left;
+color: #000;
+background: #FFF;
+font-size: 0.8em;
+font-family: monospace;
+position: relative;
+overflow:auto;
+resize:both;
+}
+
+.BuildHistory {
 display: inline-block;
 *display:inline;
 *zoom:1;
@@ -42,6 +54,7 @@ position: relative;
 overflow:auto;
 resize:both;
 }
+
 .logconsole-sm {
 
 float:left;
@@ -84,10 +97,13 @@ resize:both;
 <a onclick="javascript:newBuild('build');">Trigger a build</a> |<a onclick="javascript:newBuild('dashboard');">Dashboard</a>
 </div>
 <br/>
-<div id="BuildHistory"></div>
+<div id="BuildHistoryTop${divId}" class="BuildHistoryTop"></div>
+<br/>
+<div id="BuildHistory${divId}" class="BuildHistory"></div>
+
 <pre id="messagesTextarea${divId}" class="logconsole-sm">
 </pre>
-<g:javascript>
+<script>
 
 function wrapIt(value) {
 	return "'"+value+"'"
@@ -112,11 +128,6 @@ function processOpen${divId}(message) {
 	newBuild("${jenschoice }");
 }
 
-function newBuild(choice) {
-	webSocket${divId}.send(JSON.stringify({'cmd': 'choose', 'jenschoice': choice }));
-	scrollToBottom();
-}
-
 function processMessage${divId}(message) {
 	var json;
 	try {
@@ -128,11 +139,21 @@ function processMessage${divId}(message) {
 		var jsonData=JSON.parse(message.data);
 		//$('#connectionCount').html(jsonData.connCount);
 		if (jsonData.liveUrl!=null) {
-			console.log ('Poll page is: '+jsonData.liveUrl);
+			//console.log ('Poll page is: '+jsonData.liveUrl);
 			//pollPage(jsonData.nurl);
 		}
+		if (jsonData.clearPage!=null) {
+			$('#messagesTextarea${divId}').html("");
+		}
+		
+		if (jsonData.historytop!=null) {
+			jsonData.historytop.forEach(function(entry) {
+				$('#BuildHistoryTop${divId}').html(entry.bprogress);
+				
+			});
+		}	
 		if (jsonData.history!=null) {
-			$('#BuildHistory').html("");
+			$('#BuildHistory${divId}').html("");
 			var sb = [];
 			sb.push('<ul>')
 			jsonData.history.forEach(function(entry) {
@@ -142,19 +163,29 @@ function processMessage${divId}(message) {
 				var cclass=''
 					if (entry.bstatus.indexOf('passed')>-1) {
 						cclass='green'
+						sb.push('\n<li class='+cclass+'><a onclick="javascript:viewHistory('+wrapIt(entry.bid)+');">'+entry.jobid+' : <small>'+entry.bstatus+' '+entry.bdate+'</small></a>\n</li>');
+						
 					}else if (entry.bstatus.indexOf('failed')>-1) {
 						cclass='red'
+						sb.push('\n<li class='+cclass+'><a onclick="javascript:viewHistory('+wrapIt(entry.bid)+');">'+entry.jobid+' : <small>'+entry.bstatus+' '+entry.bdate+'</small></a>\n</li>');
+					
 					}else if (entry.bstatus.indexOf('cancelled')>-1) {
 						cclass='orange'
+						sb.push('\n<li class='+cclass+' ><a onclick="javascript:viewHistory('+wrapIt(entry.bid)+');">'+entry.jobid+' : <small>'+entry.bstatus+' '+entry.bdate+'</small></a>\n</li>');
+					
 					}else if (entry.bstatus.indexOf('building')>-1) {
 						cclass='blue'
-					}	
-				sb.push('\n<li ><a class='+cclass+'  onclick="javascript:viewHistory('+wrapIt(entry.bid)+');">'+entry.jobid+' : <small>'+entry.bstatus+' '+entry.bdate+'</small></a>\n</li>');
-
-
+						sb.push('\n<li class='+cclass+'><a onclick="javascript:viewHistory('+wrapIt(entry.bid)+');">'+entry.jobid+' : <small>'+entry.bstatus+' '+entry.bdate+'</small></a>\n');
+						sb.push('\n<a onclick="javascript:stopBuild('+wrapIt(entry.bid)+');"><small>STOP</small></a>\n');
+						
+						sb.push('</li>');
+						//setTimeout(function(){  
+						    updateBuilds(entry.bid)
+						//},600);  
+					}					
 			});
 			sb.push('</ul>')
-			$('#BuildHistory').html(sb.join(""));
+			$('#BuildHistory${divId}').html(sb.join(""));
 		}	
 	}else{
 		$('#messagesTextarea${divId}').append(message.data);
@@ -162,8 +193,23 @@ function processMessage${divId}(message) {
 	}
 }
 
+
+function newBuild(choice) {
+	webSocket${divId}.send(JSON.stringify({'cmd': 'choose', 'jenschoice': choice }));
+	scrollToBottom();
+}
+
+function updateBuilds(jobid) {
+	webSocket${divId}.send(JSON.stringify({'cmd': 'histref', 'bid': jobid }));
+}
+
+function stopBuild(bid) {
+	//console.log('stop Build: '+bid);
+	webSocket${divId}.send(JSON.stringify({'cmd': 'stopBuild', 'bid': bid }));
+}
+
 function viewHistory(bid) {
-	console.log('ViewHistory: '+bid);
+	//console.log('ViewHistory: '+bid);
 	webSocket${divId}.send(JSON.stringify({'cmd': 'viewHistory', 'bid': bid }));
 }
 
@@ -177,7 +223,7 @@ window.onbeforeunload = function() {
 	webSocket.onclose = function() { }
 	webSocket.close();
 }
-</g:javascript>
+</script>
 
 
 
