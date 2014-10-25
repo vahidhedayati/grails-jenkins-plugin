@@ -11,7 +11,7 @@ class JenkinsTagLib {
 	   def divId=attrs.remove('divId')?.toString()
 	   def jensuser=attrs.remove('jensuser')?.toString()
 	   def jenspass=attrs.remove('jenspass')?.toString()
-	   //def jenspecial=attrs.remove('jenspecial')?.toString()
+	   //def jensprefix=attrs.remove('jensprefix')?.toString()
 	   if (!attrs.jensjob) {
 		   throwTagError("Tag [jenkins] is missing required attribute [jensjob]")
 	   }
@@ -36,8 +36,8 @@ class JenkinsTagLib {
 	   // Full url to jenkins server - main url
 	   String jenfullserver=jenurl.toString()
 	   
-	   if (attrs.jenspecial) {
-		   jenurl.append(seperator(attrs?.jenspecial))
+	   if (attrs.jensprefix) {
+		   jenurl.append(seperator(attrs?.jensprefix))
 	   }
 	   // Full url to jenkins server - main url
 	   String jensconurl=jenurl.toString()
@@ -45,7 +45,7 @@ class JenkinsTagLib {
 	   //String jensjob=attrs.jensjob
 	   //String jensfolder=attrs.jensfolder ?: 'job'
 	   // Relative UrI to get to folder/job (can now be appended to above)
-	   String jensurl=seperator(attrs?.jenspecial)+seperator(attrs?.jensfolder)+seperator(attrs?.jensjob)
+	   String jensurl=seperator(attrs?.jensprefix)+seperator(attrs?.jensfolder)+seperator(attrs?.jensjob)
 	   
 	   // Configuration uris.
 	   //Progressive page

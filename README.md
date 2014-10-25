@@ -17,10 +17,10 @@ This will load in the default index page (Refer to how to use further down) whic
 The plugin functionality provides two core aspects of the Jenkins product within your grails app:
 
 1. lists current build history on right hand side, if you click on dashboard or trigger a build.
-The build history is being sent back via websockets and is called upon you clicking build + when build completes. The history is as is on Jenkins so if building it will show up building on here. If it passed/failed/cancelled and so forth.
-You can click the specific historical item to view its logs, which again uses HTTPBuilder to grab out build logs and send via websockets back to the web page.
+The build history is being sent back via WebSockets and is called upon you clicking build + when build completes. The history is as is on Jenkins so if building it will show up building on here. If it passed/failed/cancelled and so forth.
+You can click the specific historical item to view its logs, which again uses HTTPBuilder to grab out build logs and send via WebSockets back to the web page.
 
-2. Trigger a build, this triggers a build and reuses feature to view log, but since this is building, it will trigger liveWatch which grabs the chunks back as jenkins builds it and presents it back via websockets. Its a remake of jenkins does locally through its own console interface but using websockets instead of ajax.
+2. Trigger a build, this triggers a build and reuses feature to view log, but since this is building, it will trigger liveWatch which grabs the chunks back as jenkins builds it and presents it back via WebSockets. Its a remake of jenkins does locally through its own console interface but using WebSockets instead of Ajax.
  
 
 
@@ -36,11 +36,11 @@ Dependency, in your conf/BuildConfig.groovy under plugins add:
 
 
 #### How to use
-So when you access the default index page a variety of questions are presented in form input boxes, this is a further explaination of what is being asked:
+So when you access the default index page a variety of questions are presented in form input boxes, this is a further explanation of what is being asked:
 
 Server hostname
 ```
-Server to connect to : so this is the ip or hostname of your jenkins i.e. 10.1.1.2
+Server to connect to : so this is the IP or HostName of your Jenkins i.e. 10.1.1.2
 ```
 
 Server port
@@ -50,7 +50,7 @@ Port: i.e. 8080
 
 Folder/special folder 
 ```
-folder: this is usually job, so if you have a default jenkins running on 8080, so far we have:
+folder: this is usually job, so if you have a default Jenkins running on 8080, so far we have:
 
 10.1.1.2:8080/job/ 
 
@@ -58,19 +58,19 @@ If you have a different setup lets say by default it is
  10.1.1.2:8080/jenkins/job
  
  
- Then you will find the jenspecial variable useful, for these situations provide a value in the index page of jenkins if url is like above
+ Then you will find the jensprefix variable useful, for these situations provide a value in the index page of Jenkins if url is like above
  
- jenspecial: jenkins
+ jensprefix: jenkins
 ````
 
 JobName: Your jenkins job's name
 ```
-jobname: This is your created job on jenkins so for example : my_first_build
+jobname: This is your created job on Jenkins so for example : my_first_build
 ````
 
 ```
 username and password are optional and need testing from my end, so far its basic 
-authentication on jenkins remote end, so you can leave these blank
+authentication on Jenkins remote end, so you can leave these blank
 ```
 
 The Choice: dashboard(shows history + you can view logs) OR Directly trigger build and watch logs 
@@ -89,28 +89,6 @@ Choice:
 Configure properties by adding following to grails-app/conf/Config.groovy under the "wschat" key:
 
 ```groovy
-
-/* 
-* Jenkins internal consoleLog : default  '/consoleFull'
-*/
-jenkins.consoleLog='/consoleFull'
-// can be overridden via tag lib by definining: jensLog="something" 
-
-
-
-/* 
-* Jenkins internal buildend : default  '/build?delay=0sec'
-*/
-jenkins.buildend='/build?delay=0sec'
-// can be overridden via tag lib : jensbuildend="something"
-
-
-/* 
-* Jenkins internal progressiveuri : default  '/logText/progressiveHtml'
-*/
-jenkins.progressiveuri='Grails Websocket Chat'
-// can be overridden via tag lib : jensprogressive="something"
-
 
 
 /*
@@ -137,6 +115,30 @@ jenkins.timeout=0
 
 
 
+/* 
+* Optional : not required - unless different to defaults
+* Jenkins internal consoleLog : default  '/consoleFull'
+*/
+jenkins.consoleLog='/consoleFull'
+// can be overridden via tag lib by definining: jensLog="something" 
+
+
+
+/* 
+* Optional : not required - unless different to defaults
+* Jenkins internal buildend : default  '/build?delay=0sec'
+*/
+jenkins.buildend='/build?delay=0sec'
+// can be overridden via tag lib : jensbuildend="something"
+
+
+/* 
+* Optional : not required - unless different to defaults
+* Jenkins internal progressiveuri : default  '/logText/progressiveHtml'
+*/
+jenkins.progressiveuri='/logText/progressiveHtml'
+// can be overridden via tag lib : jensprogressive="something"
+
 ```
 
 
@@ -151,7 +153,7 @@ jensport="${jensport}"
 jensuser="${jensuser}"
 jenspass="${jenspass}"
 jensjob="${jensjob}"
-jenspecial="${jenspecial}"
+jensprefix="${jensprefix}"
 jensfolder="${jensfolder}"
 jensport="${jensport}"
 />

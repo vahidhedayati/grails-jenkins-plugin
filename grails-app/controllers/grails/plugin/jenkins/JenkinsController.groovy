@@ -12,10 +12,10 @@ class JenkinsController {
 		String jenspass=params.jenspass
 		String jensjob=params.jensjob
 		String jensfolder=params.jensfolder
-		String jenspecial=params.jenspecial
+		String jensprefix=params.jensprefix
 		String jenschoice=params.jenschoice
 		[jenserver:jenserver,jensport:jensport,jensuser:jensuser,
-		jenspass:jenspass,jenspecial:jenspecial,jensfolder:jensfolder,jensjob:jensjob,jenschoice:jenschoice]
+		jenspass:jenspass,jensprefix:jensprefix,jensfolder:jensfolder,jensjob:jensjob,jenschoice:jenschoice]
 	}
 
 }
