@@ -35,9 +35,10 @@ class JenkinsTagLib {
 	   }
 	   // Full url to jenkins server - main url
 	   String jenfullserver=jenurl.toString()
-	   
+	   String jensprefix=''
 	   if (attrs.jensprefix) {
-		   jenurl.append(seperator(attrs?.jensprefix))
+		   jensprefix=seperator(attrs?.jensprefix)
+		   jenurl.append(jensprefix)
 	   }
 	   // Full url to jenkins server - main url
 	   String jensconurl=jenurl.toString()
@@ -45,7 +46,7 @@ class JenkinsTagLib {
 	   //String jensjob=attrs.jensjob
 	   //String jensfolder=attrs.jensfolder ?: 'job'
 	   // Relative UrI to get to folder/job (can now be appended to above)
-	   String jensurl=seperator(attrs?.jensprefix)+seperator(attrs?.jensfolder)+seperator(attrs?.jensjob)
+	   String jensurl=jensprefix+seperator(attrs?.jensfolder)+seperator(attrs?.jensjob)
 	   
 	   // Configuration uris.
 	   //Progressive page

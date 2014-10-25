@@ -2,9 +2,13 @@ jenkins 0.1
 =========
 
 
-Grails Jenkins plugin, will interact with jenkins front end html interface using HTTPBuilder. Currently has two features that are by default available via a new controller that the plugin adds to your project:
+Grails Jenkins plugin, will interact with Jenkins front end html interface using HTTPBuilder. Currently has two features that are by default available via a new controller that the plugin adds to your project:
 
+### Video
 
+(Grails-jenkins-plugin video youtube)[http://youtu.be/XfsrBAa8aAg]
+
+### Walkthrough
 So once you had added plugin to your buildconfig, refreshed dependencies upon run-appp, you will be able to access this plugin via this url:
 ```
 http://localhost:8080/yourapp/jenkins
@@ -17,10 +21,14 @@ This will load in the default index page (Refer to how to use further down) whic
 The plugin functionality provides two core aspects of the Jenkins product within your grails app:
 
 1. lists current build history on right hand side, if you click on dashboard or trigger a build.
+
+
 The build history is being sent back via WebSockets and is called upon you clicking build + when build completes. The history is as is on Jenkins so if building it will show up building on here. If it passed/failed/cancelled and so forth.
+
+
 You can click the specific historical item to view its logs, which again uses HTTPBuilder to grab out build logs and send via WebSockets back to the web page.
 
-2. Trigger a build, this triggers a build and reuses feature to view log, but since this is building, it will trigger liveWatch which grabs the chunks back as jenkins builds it and presents it back via WebSockets. Its a remake of jenkins does locally through its own console interface but using WebSockets instead of Ajax.
+2. Trigger a build, this triggers a build and reuses feature to view log, but since this is building, it will trigger liveWatch which grabs the chunks back as Jenkins builds it and presents it back via WebSockets. Its a re-make of Jenkins does locally through its own console interface but using WebSockets instead of Ajax.
  
 
 
@@ -177,7 +185,7 @@ You should be able to call it multiple times and provide different divId's for e
 I have tested this against a few variants of jenkins and it works according to these types:
 Default jenkins - more recent/older variants.
 Ubuntu jenkins - (has a dark theme black menu bar) working on this also.
-May still fail on others, please post an issue with specific jenkins version for me to look into.
+May still fail on others, please post an issue with specific Jenkins version for me to look into.
 
 
 
