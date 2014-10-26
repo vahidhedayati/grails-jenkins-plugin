@@ -91,6 +91,10 @@ resize:both;
 .blue {
 	background:#B2E0FF;
 }
+.grey {
+	background:#EEE;
+}
+
 </style>
 	<body>
 <div class="button">
@@ -99,7 +103,11 @@ resize:both;
 <br/>
 <div id="BuildHistoryTop${divId}" class="BuildHistoryTop"></div>
 <br/>
-<div id="BuildHistory${divId}" class="BuildHistory"></div>
+<div class="BuildHistory">
+<div id="BuildHistory1${divId}"></div>
+<div id="BuildHistory${divId}" >
+</div>
+</div>
 
 <pre id="messagesTextarea${divId}" class="logconsole-sm">
 </pre>
@@ -117,8 +125,8 @@ if (!window.WebSocket) {
 
 var webSocket${divId}=new WebSocket("ws://${wshostname}/${appname}/JenkinsEndPoint/${jenserver}/${jensjob}");
 webSocket${divId}.onopen=function(message) {processOpen${divId}(message);};
-// webSocket${divId}.onclose=function(message) {processClose${divId}(message);};
-//webSocket${divId}.onerror=function(message) {processError${divId}(message);};
+webSocket${divId}.onclose=function(message) {processClose${divId}(message);};
+webSocket${divId}.onerror=function(message) {processError${divId}(message);};
 webSocket${divId}.onmessage=function(message) {processMessage${divId}(message);	};
 
 function processOpen${divId}(message) {
@@ -143,46 +151,62 @@ function processMessage${divId}(message) {
 			//pollPage(jsonData.nurl);
 		}
 		if (jsonData.clearPage!=null) {
+			
 			$('#messagesTextarea${divId}').html("");
 		}
 		
 		if (jsonData.historytop!=null) {
 			jsonData.historytop.forEach(function(entry) {
 				$('#BuildHistoryTop${divId}').html(entry.bprogress);
-				
+				updateBuilds(entry.bid)
 			});
 		}	
-		if (jsonData.history!=null) {
-			$('#BuildHistory${divId}').html("");
+
+		if (jsonData.historyQueue!=null) {
 			var sb = [];
-			sb.push('<ul>')
+			sb.push('<ul>');
+			jsonData.historyQueue.forEach(function(entry) {
+				if (entry.bstatus.indexOf('queued')>-1) {
+					cclass='grey'
+					sb.push('\n<li class='+cclass+' >'+entry.jobid+' : <small>has been queued | <a onclick="javascript:cancelQueue('+wrapIt(entry.bid)+');">CANCEL</a></small>\n</li>');
+				}
+			});		
+			sb.push('</ul>')
+			$('#BuildHistory1${divId}').html(sb.join(""));	
+		}
+		if (jsonData.history!=null) {
+			//$('#BuildHistory${divId}').html("");
+			var sb = [];
+			sb.push('<ul>');
 			jsonData.history.forEach(function(entry) {
 				var ci=entry.bid.length;
 				var cc=entry.bid.substring(0,ci - 1);	
 				var crec=cc.substring(cc.lastIndexOf('/')+1,cc.length);
 				var cclass=''
-					if (entry.bstatus.indexOf('passed')>-1) {
+					switch(entry.bstatus) {
+					case 'passed':
 						cclass='green'
 						sb.push('\n<li class='+cclass+'><a onclick="javascript:viewHistory('+wrapIt(entry.bid)+');">'+entry.jobid+' : <small>'+entry.bstatus+' '+entry.bdate+'</small></a>\n</li>');
-						
-					}else if (entry.bstatus.indexOf('failed')>-1) {
+						break;
+					case 'failed':
 						cclass='red'
-						sb.push('\n<li class='+cclass+'><a onclick="javascript:viewHistory('+wrapIt(entry.bid)+');">'+entry.jobid+' : <small>'+entry.bstatus+' '+entry.bdate+'</small></a>\n</li>');
-					
-					}else if (entry.bstatus.indexOf('cancelled')>-1) {
-						cclass='orange'
-						sb.push('\n<li class='+cclass+' ><a onclick="javascript:viewHistory('+wrapIt(entry.bid)+');">'+entry.jobid+' : <small>'+entry.bstatus+' '+entry.bdate+'</small></a>\n</li>');
-					
-					}else if (entry.bstatus.indexOf('building')>-1) {
+						sb.push('\n<li class='+cclass+'><a onclick="javascript:viewHistory('+wrapIt(entry.bid)+');">'+entry.jobid+' : <small>'+entry.bstatus+' '+entry.bdate+'</small></a>\n</li>');						
+						break;
+					case 'building':
 						cclass='blue'
-						sb.push('\n<li class='+cclass+'><a onclick="javascript:viewHistory('+wrapIt(entry.bid)+');">'+entry.jobid+' : <small>'+entry.bstatus+' '+entry.bdate+'</small></a>\n');
-						sb.push('\n<a onclick="javascript:stopBuild('+wrapIt(entry.bid)+');"><small>STOP</small></a>\n');
-						
-						sb.push('</li>');
-						//setTimeout(function(){  
-						    updateBuilds(entry.bid)
-						//},600);  
-					}					
+							sb.push('\n<li class='+cclass+'><a onclick="javascript:viewHistory('+wrapIt(entry.bid)+');">'+entry.jobid+' : <small>'+entry.bstatus+' '+entry.bdate+'</small></a>\n');
+							sb.push('\n<a onclick="javascript:stopBuild('+wrapIt(entry.bid)+');"><small>STOP</small></a>\n');
+							sb.push('</li>');
+							//setTimeout(function(){  
+							    updateBuilds(entry.bid)
+							//},600);			
+						break;
+					case 'cancelled':
+						cclass='orange'
+							sb.push('\n<li class='+cclass+' ><a onclick="javascript:viewHistory('+wrapIt(entry.bid)+');">'+entry.jobid+' : <small>'+entry.bstatus+' '+entry.bdate+'</small></a>\n</li>');
+						break;
+								
+					}			
 			});
 			sb.push('</ul>')
 			$('#BuildHistory${divId}').html(sb.join(""));
@@ -203,6 +227,10 @@ function updateBuilds(jobid) {
 	webSocket${divId}.send(JSON.stringify({'cmd': 'histref', 'bid': jobid }));
 }
 
+function cancelQueue(jobid) {
+	webSocket${divId}.send(JSON.stringify({'cmd': 'cancelJob', 'bid': jobid }));
+}
+
 function stopBuild(bid) {
 	//console.log('stop Build: '+bid);
 	webSocket${divId}.send(JSON.stringify({'cmd': 'stopBuild', 'bid': bid }));
@@ -217,7 +245,14 @@ function scrollToBottom() {
 	$('#messagesTextarea${divId}').scrollTop($('#messagesTextarea${divId}')[0].scrollHeight);
 }
 
+function processClose${divId}(message) {
+	webSocket${divId}.send(JSON.stringify({'cmd': 'choose', 'jenschoice': 'disconnect' }));
+	$('#messagesTextarea${divId}').append("Server Disconnected... \n");
+}
 
+function processError${divId}(message) {
+	$('#messagesTextarea${divId}').append(" Error.... \n");
+}
 window.onbeforeunload = function() {
 	webSocket.send("DISCO:-");
 	webSocket.onclose = function() { }
