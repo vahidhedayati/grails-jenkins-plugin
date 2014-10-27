@@ -313,7 +313,7 @@ function processError${divId}(message) {
 	$('#messagesTextarea${divId}').append(" Error.... \n");
 }
 window.onbeforeunload = function() {
-	webSocket${divId}.send("DISCO:-");
+	webSocket${divId}.send(JSON.stringify({'cmd': 'choose', 'jenschoice': 'disconnect' }));
 	webSocket${divId}.onclose = function() { }
 	webSocket${divId}.close();
 }

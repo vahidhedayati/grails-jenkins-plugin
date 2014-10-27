@@ -4,9 +4,17 @@ jenkins 0.1
 
 Grails Jenkins plugin, will interact with Jenkins front end html interface using HTTPBuilder. Currently has two features that are by default available via a new controller that the plugin adds to your project:
 
+
+Dependency, in your conf/BuildConfig.groovy under plugins add:
+```groovy
+	compile ":jenkins:0.1"
+```
+
+
 ### Video
 
 [Grails-jenkins-plugin video youtube](http://youtu.be/XfsrBAa8aAg)
+
 
 ### Walkthrough
 So once you had added plugin to your buildconfig, refreshed dependencies upon run-appp, you will be able to access this plugin via this url:
@@ -40,10 +48,6 @@ You are also able to stop a runnning build job or a future queued item using thi
 
 
 
-Dependency, in your conf/BuildConfig.groovy under plugins add:
-```groovy
-	compile ":jenkins:0.1"
-```
 
 ###### Plugin will work with tomcat 7.0.54 + (inc. 8) running java 1.7+
 
