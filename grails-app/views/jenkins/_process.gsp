@@ -281,7 +281,6 @@ function newBuild${divId}(choice) {
 
 function updateBuilds${divId}() {
 	if (hidebuildTimer!="yes") { 
-		console.log('histref ');
 		webSocket${divId}.send(JSON.stringify({'cmd': 'histref', 'bid': '0' }));
 	}
 }
