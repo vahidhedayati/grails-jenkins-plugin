@@ -14,7 +14,13 @@ class JenkinsController {
 		String jensfolder=params.jensfolder
 		String jensprefix=params.jensprefix
 		String jenschoice=params.jenschoice
-		[jenserver:jenserver,jensport:jensport,jensuser:jensuser,
+		
+		def hideButtons=grailsApplication.config.jenkins.hideButtons ?: 'no'
+		def hideTriggerButton=grailsApplication.config.jenkins.hideTriggerButton ?: 'no'
+		def hideDashBoardButton=grailsApplication.config.jenkins.hideDashBoardButton ?: 'no'
+		def hideBuildTimer=grailsApplication.config.jenkins.hideBuildTimer ?: 'no'
+		
+		[hideButtons:hideButtons,hideTriggerButton:hideTriggerButton, hideDashBoardButton:hideDashBoardButton, hideBuildTimer:hideBuildTimer,jenserver:jenserver,jensport:jensport,jensuser:jensuser,
 		jenspass:jenspass,jensprefix:jensprefix,jensfolder:jensfolder,jensjob:jensjob,jenschoice:jenschoice]
 	}
 

@@ -78,7 +78,10 @@ padding: 12px 12px 12px 12px;
 overflow:auto;
 resize:both;
 }
-
+.redfont { 
+ color: #0000FF;
+ font-size: 0.8em;
+}
 .red {
 	background: #FFB2B2;
 }
@@ -97,11 +100,22 @@ resize:both;
 
 </style>
 	<body>
-<div class="button">
-<a onclick="javascript:newBuild('build');">Trigger a build</a> |<a onclick="javascript:newBuild('dashboard');">Dashboard</a>
-</div>
-<br/>
-<div id="BuildHistoryTop${divId}" class="BuildHistoryTop"></div>
+	
+	<g:if test="${((!hideButtons) || (!hideButtons.toLowerCase().equals('yes')))}">	
+		<div class="container">
+			<g:if test="${((!hideTriggerButton) || (!hideTriggerButton.toLowerCase().equals('yes')))}">	
+				<a onclick="javascript:newBuild('build');">Trigger a build</a> 
+			</g:if>
+			<g:if test="${((!hideDashBoardButton) || (!hideDashBoardButton.toLowerCase().equals('yes')))}">	
+				<a onclick="javascript:newBuild('dashboard');">Dashboard</a>
+			</g:if>
+		</div>
+	</g:if>	
+	
+		<g:if test="${((!hideBuildTimer) || (!hideBuildTimer.toLowerCase().equals('yes')))}">	
+		
+		</g:if>
+
 <br/>
 <div class="BuildHistory">
 <div id="BuildHistory1${divId}"></div>
@@ -111,11 +125,14 @@ resize:both;
 
 <pre id="messagesTextarea${divId}" class="logconsole-sm">
 </pre>
+
 <script>
 
 function wrapIt(value) {
 	return "'"+value+"'"
 }
+
+var hidebuildTimer="${hideBuildTimer}";
 
 if (!window.WebSocket) {
 	var msg = "Your browser does not have WebSocket support";
@@ -131,7 +148,7 @@ webSocket${divId}.onmessage=function(message) {processMessage${divId}(message);	
 
 function processOpen${divId}(message) {
 	$('#messagesTextarea${divId}').append('Server Connect....\n');
-	webSocket${divId}.send(JSON.stringify({'cmd':'connect','jensuser':"${jensuser }",'jensconurl':"${jensconurl }",
+	webSocket${divId}.send(JSON.stringify({'cmd':'connect','jensuser':"${jensuser }",'jensconurl':"${jensconurl }",'hideBuildTimer':"${hideBuildTimer }",
 	'jenspass':"${jenspass }",'jenserver':"${jenfullserver }",'jensurl':"${jensurl }",'jensbuildend':"${jensbuildend }",'jensprogressive': "${jensprogressive }", 'jensconlog':"${jensconlog }"}));
 	newBuild("${jenschoice }");
 }
@@ -158,7 +175,8 @@ function processMessage${divId}(message) {
 		if (jsonData.historytop!=null) {
 			jsonData.historytop.forEach(function(entry) {
 				$('#BuildHistoryTop${divId}').html(entry.bprogress);
-				updateBuilds(entry.bid)
+				//updateBuilds(entry.bid)
+				updateBuilds()
 			});
 		}	
 
@@ -196,9 +214,11 @@ function processMessage${divId}(message) {
 						cclass='blue'
 							sb.push('\n<li class='+cclass+'><a onclick="javascript:viewHistory('+wrapIt(entry.bid)+');">'+entry.jobid+' : <small>'+entry.bstatus+' '+entry.bdate+'</small></a>\n');
 							sb.push('\n<a onclick="javascript:stopBuild('+wrapIt(entry.bid)+');"><small>STOP</small></a>\n');
+							sb.push('<br/><small><span id="BuildHistoryTop${divId}" class="redfont"></span></small>\n');
 							sb.push('</li>');
 							//setTimeout(function(){  
-							    updateBuilds(entry.bid)
+							    //updateBuilds(entry.bid)
+							    updateBuilds();
 							//},600);			
 						break;
 					case 'cancelled':
@@ -223,8 +243,11 @@ function newBuild(choice) {
 	scrollToBottom();
 }
 
-function updateBuilds(jobid) {
-	webSocket${divId}.send(JSON.stringify({'cmd': 'histref', 'bid': jobid }));
+function updateBuilds() {
+	if (hidebuildTimer!="yes") { 
+		console.log('histref ');
+		webSocket${divId}.send(JSON.stringify({'cmd': 'histref', 'bid': '0' }));
+	}
 }
 
 function cancelQueue(jobid) {

@@ -19,7 +19,10 @@ jensprefix="${jensprefix}"
 jensfolder="${jensfolder}"
 jensport="${jensport}"
 jenschoice="${jenschoice}"
-
+hideButtons="${hideButtons }"
+hideTriggerButton="${hideTriggerButton }"
+hideDashBoardButton="${hideDashBoardButton }"
+hideBuildTimer="${hideBuildTimer }"
 />
 </body>
 </html>

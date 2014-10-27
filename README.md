@@ -29,6 +29,13 @@ The build history is being sent back via WebSockets and is called upon you click
 You can click the specific historical item to view its logs, which again uses HTTPBuilder to grab out build logs and send via WebSockets back to the web page.
 
 2. Trigger a build, this triggers a build and reuses feature to view log, but since this is building, it will trigger liveWatch which grabs the chunks back as Jenkins builds it and presents it back via WebSockets. Its a re-make of Jenkins does locally through its own console interface but using WebSockets instead of Ajax.
+
+It also displays estimated time for build and how long it has been running.
+
+All modes are now captured / building/success/failed/queued/cancelled.
+
+You are also able to stop a runnning build job or a future queued item using this plugin.
+
  
 
 
@@ -147,6 +154,37 @@ jenkins.buildend='/build?delay=0sec'
 jenkins.progressiveuri='/logText/progressiveHtml'
 // can be overridden via tag lib : jensprogressive="something"
 
+
+/* 
+* Optional : not required - unless different to defaults
+* Jenkins hide build/dashboard buttons : default  'no'
+* choices : no/yes
+*/
+
+jenkins.hideButtons='no'
+
+/* 
+* Optional : not required - unless different to defaults
+* Jenkins hide build button : default  'no'
+* choices : no/yes
+*/
+jenkins.hideTriggerButton='no'
+
+/* 
+* Optional : not required - unless different to defaults
+* Jenkins hide dashboard/buildhistory button : default  'no'
+* choices : no/yes
+*/
+jenkins.hideDashBoardButton='no'
+
+
+/* 
+* Optional : not required - unless different to defaults
+* Jenkins hide active estimated time for build to finish : default  'no' 
+* choices : no/yes
+*/
+jenkins.hideBuildTimer='no'
+  
 ```
 
 
@@ -164,13 +202,17 @@ jensjob="${jensjob}"
 jensprefix="${jensprefix}"
 jensfolder="${jensfolder}"
 jensport="${jensport}"
-jenschoice="${jenschoice}" 
+jenschoice="${jenschoice}"
+
 />
 ```
 
 Optional override taglibs: (Refer to above Config.groovy to understand what these are:) 
 ```gsp
-
+hideButtons="${hideButtons }"
+hideTriggerButton="${hideTriggerButton }"
+hideDashBoardButton="${hideDashBoardButton }"
+hideBuildTimer="${hideBuildTimer }"
 jensLog="something" 
 wshostname="something"
 jensprogressive="something"
