@@ -130,7 +130,7 @@ GSP Page for build.gsp
  Then on the same page if this valus equals yes to call taglibs: results below:
 
 
-[Output from dual builds](https://raw.githubusercontent.com/vahidhedayati/grails-jenkins-plugin/master/documentation/double-build.jpg)
+![Output from dual builds](https://raw.githubusercontent.com/vahidhedayati/grails-jenkins-plugin/master/documentation/double-build.jpg)
 
 
 
