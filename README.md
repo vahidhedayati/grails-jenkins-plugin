@@ -51,51 +51,7 @@ Dependency, in your conf/BuildConfig.groovy under plugins add:
 
 
 #### How to use
-So when you access the default index page a variety of questions are presented in form input boxes, this is a further explanation of what is being asked:
-
-Server hostname
-```
-Server to connect to : so this is the IP or HostName of your Jenkins i.e. 10.1.1.2
-```
-
-Server port
-```
-Port: i.e. 8080 
-```
-
-Folder/special folder 
-```
-folder: this is usually job, so if you have a default Jenkins running on 8080, so far we have:
-
-10.1.1.2:8080/job/ 
-
-If you have a different setup lets say by default it is  
- 10.1.1.2:8080/jenkins/job
- 
- 
- Then you will find the jensprefix variable useful, for these situations provide a value in the index page of Jenkins if url is like above
- 
- jensprefix: jenkins
-````
-
-JobName: Your jenkins job's name
-```
-jobname: This is your created job on Jenkins so for example : my_first_build
-````
-
-```
-username and password are optional and need testing from my end, so far its basic 
-authentication on Jenkins remote end, so you can leave these blank
-```
-
-The Choice: dashboard(shows history + you can view logs) OR Directly trigger build and watch logs 
-```
-Choice: 
-	Dashboard (not done yet will hopefully be part of 0.1),
-	Build - this works and should trigger a remote build followed by a tailing or live 
-	log watch of current build that it triggered via your grails app
-```
-
+![Connection details](https://raw.githubusercontent.com/vahidhedayati/grails-jenkins-plugin/master/documentation/connect.jpg)
 
 ##### Example : Using taglib to make multiple calls to jenkins:
 

@@ -6,6 +6,41 @@
 		<title><g:message code="jenkins.title.label" args="[entityName]" default="Jenkins Plugin" /></title>
 	</head>
  <STYLE type="text/css">
+ .jbutton {
+	border: 1px solid rgba(0,0,0,0.2);
+	box-sizing: content-box !important;
+	color: #333;
+	width: auto;
+	display: inline-block;
+    *zoom: 1;
+    *display: inline;
+	padding: 0.01em 0.02em;
+	text-align: center;
+	/*text-shadow: 0 0 5px rgba(0,0,0,0.2), 0 0 1px rgba(0,0,0,0.4);*/
+	text-decoration: none;
+
+	white-space: normal;
+	outline: none; 
+	/* Transition */
+	-moz-transition: all 200ms ease 0ms !important;
+	-o-transition: all 200ms ease 0ms !important;
+	-webkit-transition: all 200ms ease 0ms !important;
+	/* Background Color */
+	background: none repeat scroll 0 0 rgba(255,255,255,0.04);
+	/* Border Rounding */
+	border-radius: 3px;
+	-moz-border-radius: 3px;
+	-webkit-border-radius: 3px;
+	/* Background Clipping */
+	-moz-background-clip: padding;
+	-webkit-background-clip: padding;
+	background-clip: padding-box;
+	/* Shadow */
+	box-shadow: 0 0 3px rgba(255,255,255,0.25) inset, 0 0 1px rgba(255,255,255,0.2), 0 10px 10px rgba(255,255,255,0.08) inset;
+	-moz-box-shadow: 0 0 3px rgba(255,255,255,0.25) inset, 0 0 1px rgba(255,255,255,0.2), 0 10px 10px rgba(255,255,255,0.08) inset;
+	-webkit-box-shadow: 0 0 3px rgba(255,255,255,0.25) inset, 0 0 1px rgba(255,255,255,0.2), 0 10x 10px rgba(255,255,255,0.08) inset;
+	box-shadow: 0 0 3px rgba(255,255,255,0.25) inset, 0 0 1px rgba(255,255,255,0.2), 0 10px 10px rgba(255,255,255,0.08) inset;
+}
 .logconsole-lg {
 width: 95%;
 height: 500px;
@@ -105,11 +140,12 @@ resize:both;
 	<h3>${jenschoice } : ${jensjob} on ${jenserver }</h3>
 	<g:if test="${((!hideButtons) || (!hideButtons.toLowerCase().equals('yes')))}">	
 		<div class="container">
-			<g:if test="${((!hideTriggerButton) || (!hideTriggerButton.toLowerCase().equals('yes')))}">	
-				<a onclick="javascript:newBuild${divId}('build');">Trigger a build</a> 
+			<g:if test="${((!hideTriggerButton) || (!hideTriggerButton.toLowerCase().equals('yes')))}">
+				
+				<a class="jbutton" onclick="javascript:newBuild${divId}('build');">Trigger a build</a> 
 			</g:if>
 			<g:if test="${((!hideDashBoardButton) || (!hideDashBoardButton.toLowerCase().equals('yes')))}">	
-				<a onclick="javascript:newBuild${divId}('dashboard');">Dashboard</a>
+				<a class="jbutton" onclick="javascript:newBuild${divId}('dashboard');">Dashboard</a>
 			</g:if>
 		</div>
 	</g:if>	
