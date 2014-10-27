@@ -102,6 +102,7 @@ resize:both;
 	<body>
 	<div style="clear:both;"></div>
 	<br/><p></p>
+	<h3>${jenschoice } : ${jensjob} on ${jenserver }</h3>
 	<g:if test="${((!hideButtons) || (!hideButtons.toLowerCase().equals('yes')))}">	
 		<div class="container">
 			<g:if test="${((!hideTriggerButton) || (!hideTriggerButton.toLowerCase().equals('yes')))}">	
