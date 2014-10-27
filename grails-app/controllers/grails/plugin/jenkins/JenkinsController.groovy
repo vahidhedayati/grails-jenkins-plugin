@@ -3,7 +3,17 @@ package grails.plugin.jenkins
 
 class JenkinsController {
 	
-	def index() { }
+	def grailsApplication
+	
+	def index() { 
+		def hideLoginPage=grailsApplication.config.jenkins.hideLoginPage
+		
+		if (hideLoginPage && hideLoginPage.toLowerCase().equals('yes')) {
+			render "Index page disabled"
+			return
+		}
+		
+	}
 	
 	def process() {		
 		String jenserver=params.jenserver

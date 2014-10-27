@@ -163,6 +163,13 @@ jenkins.wshostname=System.getProperty('SERVERURL')+":8080"
 */
 jenkins.timeout=0
 
+/* 
+* Optional : not required - unless different to defaults
+* Jenkins hide Login Pag: default  'no'
+* choices : no/yes
+* Choose if default index page from plugin can be loaded
+*/
+jenkins.hideLoginPage='no'
 
 
 
