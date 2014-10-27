@@ -10,46 +10,31 @@ Dependency, in your conf/BuildConfig.groovy under plugins add:
 	compile ":jenkins:0.1"
 ```
 
+###### Plugin will work with tomcat 7.0.54 + (inc. 8) running java 1.7+
+
 
 ### Video
-
 [Grails-jenkins-plugin video youtube](http://youtu.be/XfsrBAa8aAg)
 
 
 ### Walkthrough
-So once you had added plugin to your buildconfig, refreshed dependencies upon run-appp, you will be able to access this plugin via this url:
+once plugin dependency added to  BuildConfig, refreshed dependencies upon run-appp, you will be able to access this plugin via this url:
 ```
 http://localhost:8080/yourapp/jenkins
 ```
 
-This will load in the default index page (Refer to how to use further down) which asks a few questions in order for you to interact with an available jenkins server from within your grails application, you can also make a direct call via a taglib provided by the plugin from within your gsps (multiple times to multiple jenkins server all in one go).
-
+This will load in the default index page which asks a few questions in order for you to interact with the given jenkins server/job. This can either be re-used or just make a direct connection using <jenkins:connect within your gsp.
 
 
 The plugin functionality provides two core aspects of the Jenkins product within your grails app:
 
-1. lists current build history on right hand side, if you click on dashboard or trigger a build.
-
-
-The build history is being sent back via WebSockets and is called upon you clicking build + when build completes. The history is as is on Jenkins so if building it will show up building on here. If it passed/failed/cancelled and so forth.
-
-
-You can click the specific historical item to view its logs, which again uses HTTPBuilder to grab out build logs and send via WebSockets back to the web page.
-
-2. Trigger a build, this triggers a build and reuses feature to view log, but since this is building, it will trigger liveWatch which grabs the chunks back as Jenkins builds it and presents it back via WebSockets. Its a re-make of Jenkins does locally through its own console interface but using WebSockets instead of Ajax.
-
-It also displays estimated time for build and how long it has been running.
-
-All modes are now captured / building/success/failed/queued/cancelled.
-
-You are also able to stop a runnning build job or a future queued item using this plugin.
-
+##### lists current build history items on right hand side
+The build history info is sent via websockets. If you click an item it will display its log. It displays status of job whether it passed/failed/canelled/building or queued. If building it will additionally show running time and estimated time according to Jenkins. You can click stop to send a stop to backend jenkins which will stop the build. Scheduled future builds will appeared as queued and you can also cancel them.
  
 
+##### Build
+This triggers a build and attempts to parse job output, since it is building the results by default are returned via Ajax, it uses websockets instead to grab ready chunks of log output and display back on your page.
 
-
-
-###### Plugin will work with tomcat 7.0.54 + (inc. 8) running java 1.7+
 
 
 
@@ -212,6 +197,8 @@ jenschoice="${jenschoice}"
 
 Optional override taglibs: (Refer to above Config.groovy to understand what these are:) 
 ```gsp
+<jenkins:connect
+....
 hideButtons="${hideButtons }"
 hideTriggerButton="${hideTriggerButton }"
 hideDashBoardButton="${hideDashBoardButton }"
@@ -219,19 +206,17 @@ hideBuildTimer="${hideBuildTimer }"
 jensLog="something" 
 wshostname="something"
 jensprogressive="something"
-jensLog="something" 
+jensLog="something"
+/> 
 
  ```
  
-So long as you provide the above values from within a gsp page it should load in the results back on the page..
+So long as you provide the above values from within a gsp page it should load in the results back on the page.
 
 
-You should be able to call it multiple times and provide different divId's for each call - to get multiple builds on one gsp page - not tried it myself.
+You should be able to call it multiple times and provide different divId's for each call - to get multiple builds on one gsp page.
 
-I have tested this against a few variants of jenkins and it works according to these types:
-Default jenkins - more recent/older variants.
-Ubuntu jenkins - (has a dark theme black menu bar) working on this also.
-May still fail on others, please post an issue with specific Jenkins version for me to look into.
+Tested on recent/older variants of Jenkins. May still fail on others, please post an issue with specific Jenkins version for me to look into.
 
 
 
