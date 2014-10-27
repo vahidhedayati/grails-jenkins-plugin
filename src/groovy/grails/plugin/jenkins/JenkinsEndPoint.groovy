@@ -93,8 +93,6 @@ class JenkinsEndPoint implements ServletContextListener{
 				}
 			}
 			if (cmd.toString().equals('histref')) {
-				//dashboard(userSession)
-				println "----- ${hideBuildTimer}"
 				if (!hideBuildTimer.equals('yes')) {
 					livedashboard(userSession)
 				}
@@ -278,7 +276,7 @@ class JenkinsEndPoint implements ServletContextListener{
 		String consolelog=jensconlog
 		//String consolelog='/consoleText'
 		try {
-			userSession.getBasicRemote().sendText("Triggering build:-------> "+jenserver+url1+"<------------")
+			//userSession.getBasicRemote().sendText("Triggering build:-------> "+jenserver+url1+"<------------")
 			//triggerBuild(jenserver+url1)
 			jobControl(userSession, jenserver+url1,url)
 			userSession.getBasicRemote().sendText("\nBefore triggering Build ID: "+lastbid+"\nAttempting build ${url1}\n..sleeping for a few seconds\n")
@@ -390,7 +388,6 @@ class JenkinsEndPoint implements ServletContextListener{
 		
 			}	
 				finalList.put("historytop",col3)
-				println "${finalList.toString()}"
 				userSession.getBasicRemote().sendText((finalList as JSON).toString())
 			
 		}catch(Exception e) {
