@@ -100,14 +100,15 @@ resize:both;
 
 </style>
 	<body>
-	
+	<div style="clear:both;"></div>
+	<br/><p></p>
 	<g:if test="${((!hideButtons) || (!hideButtons.toLowerCase().equals('yes')))}">	
 		<div class="container">
 			<g:if test="${((!hideTriggerButton) || (!hideTriggerButton.toLowerCase().equals('yes')))}">	
-				<a onclick="javascript:newBuild('build');">Trigger a build</a> 
+				<a onclick="javascript:newBuild${divId}('build');">Trigger a build</a> 
 			</g:if>
 			<g:if test="${((!hideDashBoardButton) || (!hideDashBoardButton.toLowerCase().equals('yes')))}">	
-				<a onclick="javascript:newBuild('dashboard');">Dashboard</a>
+				<a onclick="javascript:newBuild${divId}('dashboard');">Dashboard</a>
 			</g:if>
 		</div>
 	</g:if>	
@@ -118,7 +119,6 @@ resize:both;
 
 <br/>
 <div class="BuildHistory">
-<div id="BuildHistory1${divId}"></div>
 <div id="BuildHistory${divId}" >
 </div>
 </div>
@@ -150,7 +150,7 @@ function processOpen${divId}(message) {
 	$('#messagesTextarea${divId}').append('Server Connect....\n');
 	webSocket${divId}.send(JSON.stringify({'cmd':'connect','jensuser':"${jensuser }",'jensconurl':"${jensconurl }",'hideBuildTimer':"${hideBuildTimer }",
 	'jenspass':"${jenspass }",'jenserver':"${jenfullserver }",'jensurl':"${jensurl }",'jensbuildend':"${jensbuildend }",'jensprogressive': "${jensprogressive }", 'jensconlog':"${jensconlog }"}));
-	newBuild("${jenschoice }");
+	newBuild${divId}("${jenschoice }");
 }
 
 function processMessage${divId}(message) {
@@ -168,7 +168,6 @@ function processMessage${divId}(message) {
 			//pollPage(jsonData.nurl);
 		}
 		if (jsonData.clearPage!=null) {
-			
 			$('#messagesTextarea${divId}').html("");
 		}
 		
@@ -176,7 +175,7 @@ function processMessage${divId}(message) {
 			jsonData.historytop.forEach(function(entry) {
 				$('#BuildHistoryTop${divId}').html(entry.bprogress);
 				//updateBuilds(entry.bid)
-				updateBuilds()
+				updateBuilds${divId}()
 			});
 		}	
 
@@ -186,7 +185,7 @@ function processMessage${divId}(message) {
 			jsonData.historyQueue.forEach(function(entry) {
 				if (entry.bstatus.indexOf('queued')>-1) {
 					cclass='grey'
-					sb.push('\n<li class='+cclass+' >'+entry.jobid+' : <small>has been queued | <a onclick="javascript:cancelQueue('+wrapIt(entry.bid)+');">CANCEL</a></small>\n</li>');
+					sb.push('\n<li class='+cclass+' >'+entry.jobid+' : <small>has been queued | <a onclick="javascript:cancelQueue${divId}('+wrapIt(entry.bid)+');">CANCEL</a></small>\n</li>');
 				}
 			});		
 			sb.push('</ul>')
@@ -204,26 +203,26 @@ function processMessage${divId}(message) {
 					switch(entry.bstatus) {
 					case 'passed':
 						cclass='green'
-						sb.push('\n<li class='+cclass+'><a onclick="javascript:viewHistory('+wrapIt(entry.bid)+');">'+entry.jobid+' : <small>'+entry.bstatus+' '+entry.bdate+'</small></a>\n</li>');
+						sb.push('\n<li class='+cclass+'><a onclick="javascript:viewHistory${divId}('+wrapIt(entry.bid)+');">'+entry.jobid+' : <small>'+entry.bstatus+' '+entry.bdate+'</small></a>\n</li>');
 						break;
 					case 'failed':
 						cclass='red'
-						sb.push('\n<li class='+cclass+'><a onclick="javascript:viewHistory('+wrapIt(entry.bid)+');">'+entry.jobid+' : <small>'+entry.bstatus+' '+entry.bdate+'</small></a>\n</li>');						
+						sb.push('\n<li class='+cclass+'><a onclick="javascript:viewHistory${divId}('+wrapIt(entry.bid)+');">'+entry.jobid+' : <small>'+entry.bstatus+' '+entry.bdate+'</small></a>\n</li>');						
 						break;
 					case 'building':
 						cclass='blue'
-							sb.push('\n<li class='+cclass+'><a onclick="javascript:viewHistory('+wrapIt(entry.bid)+');">'+entry.jobid+' : <small>'+entry.bstatus+' '+entry.bdate+'</small></a>\n');
-							sb.push('\n<a onclick="javascript:stopBuild('+wrapIt(entry.bid)+');"><small>STOP</small></a>\n');
+							sb.push('\n<li class='+cclass+'><a onclick="javascript:viewHistory${divId}('+wrapIt(entry.bid)+');">'+entry.jobid+' : <small>'+entry.bstatus+' '+entry.bdate+'</small></a>\n');
+							sb.push('\n<a onclick="javascript:stopBuild${divId}('+wrapIt(entry.bid)+');"><small>STOP</small></a>\n');
 							sb.push('<br/><small><span id="BuildHistoryTop${divId}" class="redfont"></span></small>\n');
 							sb.push('</li>');
 							//setTimeout(function(){  
 							    //updateBuilds(entry.bid)
-							    updateBuilds();
+							    updateBuilds${divId}();
 							//},600);			
 						break;
 					case 'cancelled':
 						cclass='orange'
-							sb.push('\n<li class='+cclass+' ><a onclick="javascript:viewHistory('+wrapIt(entry.bid)+');">'+entry.jobid+' : <small>'+entry.bstatus+' '+entry.bdate+'</small></a>\n</li>');
+							sb.push('\n<li class='+cclass+' ><a onclick="javascript:viewHistory${divId}('+wrapIt(entry.bid)+');">'+entry.jobid+' : <small>'+entry.bstatus+' '+entry.bdate+'</small></a>\n</li>');
 						break;
 								
 					}			
@@ -233,38 +232,38 @@ function processMessage${divId}(message) {
 		}	
 	}else{
 		$('#messagesTextarea${divId}').append(message.data);
-		scrollToBottom();
+		scrollToBottom${divId}();
 	}
 }
 
 
-function newBuild(choice) {
+function newBuild${divId}(choice) {
 	webSocket${divId}.send(JSON.stringify({'cmd': 'choose', 'jenschoice': choice }));
-	scrollToBottom();
+	scrollToBottom${divId}();
 }
 
-function updateBuilds() {
+function updateBuilds${divId}() {
 	if (hidebuildTimer!="yes") { 
 		console.log('histref ');
 		webSocket${divId}.send(JSON.stringify({'cmd': 'histref', 'bid': '0' }));
 	}
 }
 
-function cancelQueue(jobid) {
+function cancelQueue${divId}(jobid) {
 	webSocket${divId}.send(JSON.stringify({'cmd': 'cancelJob', 'bid': jobid }));
 }
 
-function stopBuild(bid) {
+function stopBuild${divId}(bid) {
 	//console.log('stop Build: '+bid);
 	webSocket${divId}.send(JSON.stringify({'cmd': 'stopBuild', 'bid': bid }));
 }
 
-function viewHistory(bid) {
+function viewHistory${divId}(bid) {
 	//console.log('ViewHistory: '+bid);
 	webSocket${divId}.send(JSON.stringify({'cmd': 'viewHistory', 'bid': bid }));
 }
 
-function scrollToBottom() {
+function scrollToBottom${divId}() {
 	$('#messagesTextarea${divId}').scrollTop($('#messagesTextarea${divId}')[0].scrollHeight);
 }
 
@@ -277,9 +276,9 @@ function processError${divId}(message) {
 	$('#messagesTextarea${divId}').append(" Error.... \n");
 }
 window.onbeforeunload = function() {
-	webSocket.send("DISCO:-");
-	webSocket.onclose = function() { }
-	webSocket.close();
+	webSocket${divId}.send("DISCO:-");
+	webSocket${divId}.onclose = function() { }
+	webSocket${divId}.close();
 }
 </script>
 

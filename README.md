@@ -97,6 +97,42 @@ Choice:
 ```
 
 
+##### Example : Using taglib to make multiple calls to jenkins:
+
+Controller:
+ExampleController.groovy:
+```groovy
+	def build() { 
+		def goahead=params.goahead
+		[goahead:goahead]	
+	}
+```
+
+GSP Page for build.gsp
+```gsp
+
+
+<g:form method="post">
+	<input type="hidden" name="goahead" value="yes">
+	<input type="submit" value="Build Jenkins job">
+</g:form>
+
+<g:if test="${goahead.equals('yes') }">
+	<jenkins:connect divId="firstId" jenserver="localhost" jensport="9090" jensuser="" jenspass="" 
+	jensjob="my_build" jensprefix="" jensfolder="job" jenschoice="build" hideButtons="no" hideBuildTimer="no" />
+
+	<jenkins:connect divId="secondId" jenserver="localhost" jensport="9090" jensuser="" jenspass="" 
+	jensjob="my_build2" jensprefix="" jensfolder="job" jenschoice="build" hideButtons="no" hideBuildTimer="no"/>
+</g:if>
+```
+ So we have a button that asks to trigger build - if when clicked - its a self posting form that sets goahead=yes
+ 
+ Then on the same page if this valus equals yes to call taglibs: results below:
+
+
+![Output from dual builds](https://raw.github.com/vahidhedayati/grails-jenkins-plugin/master/documentation/double-build.png)
+
+
 
 
 # Config.groovy variables required:
