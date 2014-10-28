@@ -224,6 +224,3 @@ javax.websocket.DeploymentException: Multiple Endpoints may not be deployed to t
 	at javax.websocket.server.ServerContainer$addEndpoint.call(Unknown Source)
 ```	
 This does appear to be a warning and endpoint still works fine, and happens in tomcat... 7 + 8
-
-# Current Bug(s)
-If previous job has failed, current build will appear in red in Jenkins and causes plugin to also show build as failure, need to revisit parsing for this feature to work.
