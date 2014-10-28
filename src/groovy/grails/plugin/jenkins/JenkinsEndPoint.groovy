@@ -73,7 +73,7 @@ class JenkinsEndPoint implements ServletContextListener{
 				jensconlog=data.jensconlog ?: '/consoleFull'
 				jensprogressive=data.jensprogressive ?: '/logText/progressiveHtml'
 				jensbuildend=data.jensbuildend  ?: '/build?delay=0sec'
-//				hideBuildTimer=data.hideBuildTimer  ?: 'no'
+				//				hideBuildTimer=data.hideBuildTimer  ?: 'no'
 				jenkinsConnect(userSession)
 			}
 
@@ -93,12 +93,12 @@ class JenkinsEndPoint implements ServletContextListener{
 				}
 			}
 			/*
-			if (cmd.toString().equals('histref')) {
-				if (!hideBuildTimer.equals('yes')) {
-					livedashboard(userSession)
-				}
-			}
-			*/
+			 if (cmd.toString().equals('histref')) {
+			 if (!hideBuildTimer.equals('yes')) {
+			 livedashboard(userSession)
+			 }
+			 }
+			 */
 			if (cmd.toString().equals('cancelJob')) {
 				if (data.bid) {
 					cancelJob(userSession,data.bid)
@@ -121,7 +121,7 @@ class JenkinsEndPoint implements ServletContextListener{
 						break
 					default:
 						disconnect(userSession)
-						//userSession.getBasicRemote().sendText(echoJob(server,job) as String)
+					//userSession.getBasicRemote().sendText(echoJob(server,job) as String)
 				}
 			}
 		}
@@ -180,19 +180,19 @@ class JenkinsEndPoint implements ServletContextListener{
 			// So lets attempt to connect to progressiveHtml page within jenkins
 
 			if (html."**".find{ it.toString().contains("fetchNext")}) {
-				
-				// Get api output for the job				
+
+				// Get api output for the job
 				def apiurl=bid+jensApi
 				parseApi(userSession,apiurl)
-				
+
 				def nurl=jenserver+bid+jensprogressive
 				userSession.getBasicRemote().sendText('Attempting live poll')
 				//This hogs websocket connection - so lets background it
 				def asyncProcess = new Thread({parseLiveLogs(userSession,nurl)} as Runnable )
 				asyncProcess.start()
 				//parseLiveLogs(userSession,nurl)
-				
-				
+
+
 				// Sendback liveUrl back through sockets
 				// If user wishes they can interact with it this way
 				// Due to CORS - the method was changed to use
@@ -277,11 +277,10 @@ class JenkinsEndPoint implements ServletContextListener{
 		getBuilds(userSession,jensurl)
 	}
 	/*
-	private livedashboard(Session userSession) {
-		getLiveBuilds(userSession,jensurl)
-
-	}
-	*/
+	 private livedashboard(Session userSession) {
+	 getLiveBuilds(userSession,jensurl)
+	 }
+	 */
 	private buildJob(Session userSession) {
 		String url=jensurl
 		def url1=url+jensbuildend
@@ -290,27 +289,23 @@ class JenkinsEndPoint implements ServletContextListener{
 		String consolelog=jensconlog
 		//String consolelog='/consoleText'
 		try {
-			userSession.getBasicRemote().sendText("\nBefore triggering Build ID: "+currentBuild+"\n..waiting\n")			
+			userSession.getBasicRemote().sendText("\nBefore triggering Build ID: "+currentBuild+"\n..waiting\n")
 			jobControl(userSession, jenserver+url1,url)
 			dashboard(userSession)
 			def lastbid1=getLastBuild(url)
 			def newBuild=currentJob(lastbid1)
 			boolean go=false
 			int a=0
-			while (go==false) {
+			while ((go==false)&&(a<11)) {
 				a++
 				newBuild=currentJob(lastbid1)
 				userSession.getBasicRemote().sendText(".")
-				if (a==10) {
-					go=true
-				}
 				sleep(100)
 				if (newBuild > currentBuild) {
 					go=true
 				}
-				
-				}
-			if (go && (a<10) ) {
+			}
+			if (go) {
 				userSession.getBasicRemote().sendText("\nBuild triggered successfully\nNew Build ID: "+newBuild+"\n")
 				//String url2=url+"/"+lastbid1+consolelog
 				String url2=stripDouble(lastbid1+consolelog)
@@ -321,7 +316,7 @@ class JenkinsEndPoint implements ServletContextListener{
 				dashboard(userSession)
 				userSession.getBasicRemote().sendText("\nBuild trigger failed\n")
 			}
-			
+
 		} catch (Exception e) {
 			e.printStackTrace()
 		}
@@ -385,42 +380,40 @@ class JenkinsEndPoint implements ServletContextListener{
 		}
 		return result
 	}
-/*
-	private def getLiveBuilds(Session userSession,String url) {
-		try {
-			def finalList=[:]
-			def col3
-			def html = http.get( path : "${url}")
-			def bn=html."**".findAll {it.@class.toString().contains("build-name")}
-			if (bn) {
-				if (html."**".find {it.@class.toString().contains("progress-bar")}) {
-					col3 = html."**".find {it.@class.toString().contains("progress-bar")}.collect {
-						[
-							bid :verifyBuild(it.@href.text()),
-							bprogress : it.@tooltip.text()
-						]
-					}
-				}
-			}else{
-				bn=html."**".find {it.@class.toString().contains("progress-bar ")}
-				if (bn) {
-					col3 = bn.collect {
-						[
-							bid :verifyBuild(it.@href.text()),
-							bprogress : it.@tooltip.text()
-						]
-					}
-				}
-
-			}
-			finalList.put("historytop",col3)
-			userSession.getBasicRemote().sendText((finalList as JSON).toString())
-
-		}catch(Exception e) {
-			log.error "Problem communicating with ${url}: ${e.message}"
-		}
-	}
-*/	
+	/*
+	 private def getLiveBuilds(Session userSession,String url) {
+	 try {
+	 def finalList=[:]
+	 def col3
+	 def html = http.get( path : "${url}")
+	 def bn=html."**".findAll {it.@class.toString().contains("build-name")}
+	 if (bn) {
+	 if (html."**".find {it.@class.toString().contains("progress-bar")}) {
+	 col3 = html."**".find {it.@class.toString().contains("progress-bar")}.collect {
+	 [
+	 bid :verifyBuild(it.@href.text()),
+	 bprogress : it.@tooltip.text()
+	 ]
+	 }
+	 }
+	 }else{
+	 bn=html."**".find {it.@class.toString().contains("progress-bar ")}
+	 if (bn) {
+	 col3 = bn.collect {
+	 [
+	 bid :verifyBuild(it.@href.text()),
+	 bprogress : it.@tooltip.text()
+	 ]
+	 }
+	 }
+	 }
+	 finalList.put("historytop",col3)
+	 userSession.getBasicRemote().sendText((finalList as JSON).toString())
+	 }catch(Exception e) {
+	 log.error "Problem communicating with ${url}: ${e.message}"
+	 }
+	 }
+	 */	
 
 	private def getBuilds(Session userSession,String url) {
 		try {
@@ -463,7 +456,7 @@ class JenkinsEndPoint implements ServletContextListener{
 						]
 					}
 				}
-				
+
 			}else{
 				// Going to try parse older html styles - provided by a default jenkins install
 				bd=html."**".findAll {it.@class.toString().contains("tip model-link")}
@@ -547,7 +540,7 @@ class JenkinsEndPoint implements ServletContextListener{
 		}
 		job=job.substring(job.lastIndexOf('/')+1,job.length())
 		//if (job.isNumber()) {
-			return job as int
+		return job as int
 		//}
 		//return 0
 	}
