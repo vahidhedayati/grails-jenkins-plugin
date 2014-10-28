@@ -156,11 +156,13 @@ resize:both;
 
 <br/>
 
-<div id="BuildEstimation${divId}"></div>
+
 <div class="BuildHistory">
-<div id="BuildHistory${divId}" >
+<div id="BuildHistory1${divId}" ></div>
+<div id="BuildHistory${divId}" ></div>
 </div>
-</div>
+
+
 
 <pre id="messagesTextarea${divId}" class="logconsole-sm">
 </pre>
@@ -244,10 +246,19 @@ function processMessage${divId}(message) {
 			var sb = [];
 			sb.push('<ul>');
 			jsonData.historyQueue.forEach(function(entry) {
-				if (entry.bstatus.indexOf('queued')>-1) {
-					cclass='grey'
-					sb.push('\n<li class='+cclass+' >'+entry.jobid+' : <small>has been queued | <a onclick="javascript:cancelQueue${divId}('+wrapIt(entry.bid)+');">CANCEL</a></small>\n</li>');
-				}
+				switch(entry.bstatus) {
+					case 'queued':
+						cclass='grey'
+						sb.push('\n<li class='+cclass+' >'+entry.jobid+' : <small>has been queued | <a onclick="javascript:cancelQueue${divId}('+wrapIt(entry.bid)+');">CANCEL</a></small>\n</li>');			
+						break;
+					case 'building':
+						//cclass='blue'
+						///sb.push('\n<li class='+cclass+'><a onclick="javascript:viewHistory${divId}('+wrapIt(entry.bid)+');">'+entry.jobid+' : <small>'+entry.bstatus+'</small></a>\n');
+						//sb.push('\n<a onclick="javascript:stopBuild${divId}('+wrapIt(entry.bid)+');"><small>STOP</small></a>\n');
+						
+						//sb.push('</li>');			
+						break;	
+					}	
 			});		
 			sb.push('</ul>')
 			$('#BuildHistory1${divId}').html(sb.join(""));	
@@ -265,6 +276,10 @@ function processMessage${divId}(message) {
 					case 'passed':
 						cclass='green'
 						sb.push('\n<li class='+cclass+'><a onclick="javascript:viewHistory${divId}('+wrapIt(entry.bid)+');">'+entry.jobid+' : <small>'+entry.bstatus+' '+entry.bdate+'</small></a>\n</li>');
+						break;
+					case 'queued':
+						cclass='grey'
+						sb.push('\n<li class='+cclass+' >'+entry.jobid+' : <small>has been queued | <a onclick="javascript:cancelQueue${divId}('+wrapIt(entry.bid)+');">CANCEL</a></small>\n</li>');			
 						break;
 					case 'failed':
 						cclass='red'
@@ -304,12 +319,10 @@ function processMessage${divId}(message) {
 
 
 function cdtd${divId}() {
-	
 	var future = new Date(iDate${divId});
 	var now = new Date();
 	var timeDiff = future.getTime() - now.getTime();
 	var timer;
-	console.log('--- '+timeDiff)
 	if (timeDiff <= 0) {
 		newBuild${divId}('dashboard');
 	    clearTimeout(timer);

@@ -218,7 +218,6 @@ class JenkinsEndPoint implements ServletContextListener{
 
 	def parseApi(Session userSession,String uri) {
 		http.get( path: uri ) { resp, json ->
-			//println resp.status
 			userSession.getBasicRemote().sendText(json.toString())
 		}
 
@@ -234,6 +233,7 @@ class JenkinsEndPoint implements ServletContextListener{
 			def csize
 			def consoleAnnotator
 			String ssize=''
+			
 			// So while hasMore is true -
 			// this again controlled via the jenkins html page which has it in header or not
 			// goes away once full results are returned
@@ -305,17 +305,18 @@ class JenkinsEndPoint implements ServletContextListener{
 					go=true
 				}
 			}
+			dashboard(userSession)
 			if (go) {
-				userSession.getBasicRemote().sendText("\nBuild triggered successfully\nNew Build ID: "+newBuild+"\n")
+				userSession.getBasicRemote().sendText("New Build ID: "+newBuild+"\nAttempting to parse logs:\n")
 				//String url2=url+"/"+lastbid1+consolelog
 				String url2=stripDouble(lastbid1+consolelog)
-				dashboard(userSession)
+				//dashboard(userSession)
 				parseJobConsole(userSession,url2,lastbid1)
-				dashboard(userSession)
+				//dashboard(userSession)
 			}else{
-				dashboard(userSession)
 				userSession.getBasicRemote().sendText("\nBuild trigger failed\n")
 			}
+			dashboard(userSession)
 
 		} catch (Exception e) {
 			e.printStackTrace()
@@ -429,7 +430,7 @@ class JenkinsEndPoint implements ServletContextListener{
 					[
 						bid :verifyBuild(it.@href.text()),
 						bstatus : verifyStatus(it.@href.text().toString()),
-						jobid : verifyQueueId(it.@href.text().toString())
+						jobid :  verifyJob(it.@href.text().toString())
 					]
 				}
 			}
@@ -479,16 +480,19 @@ class JenkinsEndPoint implements ServletContextListener{
 					}
 				}
 			}
-			if (col1&&col2) {
-				def combined = (col1 + col2).groupBy { it.bid }.collect { it.value.collectEntries { it } }
-				finalList.put("history",combined)
-				userSession.getBasicRemote().sendText((finalList as JSON).toString())
-			}
 			if (col3) {
 				finalList=[:]
 				finalList.put("historyQueue",col3)
 				userSession.getBasicRemote().sendText((finalList as JSON).toString())
 			}
+			if (col1&&col2) {
+				def combined = (col1 + col2).groupBy { it.bid }.collect { it.value.collectEntries { it } }
+				finalList=[:]
+				finalList.put("history",combined)
+				userSession.getBasicRemote().sendText((finalList as JSON).toString())
+			}
+			
+			
 		}catch(Exception e) {
 			log.error "Problem communicating with ${url}: ${e.message}"
 		}
@@ -496,9 +500,11 @@ class JenkinsEndPoint implements ServletContextListener{
 
 
 	private def verifyBuild(String bid) {
-		if (bid && (bid.indexOf('/console')>-1)) {
+		if (bid && bid.endsWith('/console')) {
 			bid=bid.substring(0,bid.indexOf('/console')+1)
-		}
+		}else if (bid&& bid.endsWith('/stop')) {
+			bid=bid.substring(0,bid.indexOf('/stop')+1)
+		}	
 		return bid
 	}
 
@@ -545,22 +551,22 @@ class JenkinsEndPoint implements ServletContextListener{
 		//return 0
 	}
 	private String verifyJob(String job) {
-		if (job.indexOf('/')>-1) {
-			job=job.substring(0,job.indexOf('/console'))
-			if (job.endsWith('/')) {
-				job=job.substring(0,job.length()-1)
-			}
+		if (job.endsWith('/')) {
+			job=job.substring(0,job.length()-1)
+		}
+		if (job.indexOf('=')>-1) {
+			job=job.substring(job.indexOf('=')+1,job.length())
+		}else if (job.endsWith('/console')) {
+			job=job.substring(0,job.indexOf('/console'))	
+			job=job.substring(job.lastIndexOf('/')+1,job.length())
+		}else if (job.endsWith('/stop')) {
+			job=job.substring(0,job.indexOf('/stop'))
 			job=job.substring(job.lastIndexOf('/')+1,job.length())
 		}
 		return job
 	}
 
-	private String  verifyQueueId(String job) {
-		if (job.indexOf('=')>-1) {
-			job=job.substring(job.indexOf('=')+1,job.length())
-		}
-		return job
-	}
+
 
 	private String stripDouble(String url) {
 		if (url.indexOf('//')>-1) {
@@ -578,7 +584,7 @@ class JenkinsEndPoint implements ServletContextListener{
 
 	private String verifyStatus(String img) {
 		String output="unknown"
-		if (img.contains("blue_anime")||(img.contains("aborted_anime"))) {
+		if (img.contains("blue_anime")||(img.contains("aborted_anime"))||(img.contains("job"))&&(img.contains("stop"))) {
 			output="building"
 		}else if (img.contains("red")) {
 			output="failed"
