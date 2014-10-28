@@ -69,14 +69,14 @@ class JenkinsTagLib {
 	   String hideButtons=attrs.hideButtons ?: grailsApplication.config.jenkins.hideButtons ?: 'no'
 	   String hideTriggerButton=attrs.hideTriggerButton ?: grailsApplication.config.jenkins.hideTriggerButton ?: 'no'
 	   String hideDashBoardButton=attrs.hideDashBoardButton ?: grailsApplication.config.jenkins.hideDashBoardButton ?: 'no'
-	   String hideBuildTimer=attrs.hideBuildTimer ?: grailsApplication.config.jenkins.hideBuildTimer ?: 'no'
+	  // String hideBuildTimer=attrs.hideBuildTimer ?: grailsApplication.config.jenkins.hideBuildTimer ?: 'no'
 	   
 	   
 	   String appname=grailsApplication.metadata['app.name']
 	   if (template) {
-		   out << g.render(template:template, model: [hideButtons:hideButtons,hideTriggerButton:hideTriggerButton, hideDashBoardButton:hideDashBoardButton, hideBuildTimer:hideBuildTimer,jenschoice:jenschoice, divId:divId,jenfullserver:jenfullserver,jensconurl:jensconurl, jensjob:attrs.jensjob, jensuser:jensuser,jenspass:jenspass,appname:appname,wshostname:wshostname,jenserver:jenserver,jensurl:jensurl,jensprogressive:jensprogressive, jensbuildend:jensbuildend, jensconlog:jensconlog])
+		   out << g.render(template:template, model: [hideButtons:hideButtons,hideTriggerButton:hideTriggerButton, hideDashBoardButton:hideDashBoardButton, jenschoice:jenschoice, divId:divId,jenfullserver:jenfullserver,jensconurl:jensconurl, jensjob:attrs.jensjob, jensuser:jensuser,jenspass:jenspass,appname:appname,wshostname:wshostname,jenserver:jenserver,jensurl:jensurl,jensprogressive:jensprogressive, jensbuildend:jensbuildend, jensconlog:jensconlog])
 	   }else{   
-	   		out << g.render(contextPath: pluginContextPath, template : '/jenkins/process', model: [hideButtons:hideButtons,hideTriggerButton:hideTriggerButton, hideDashBoardButton:hideDashBoardButton, hideBuildTimer:hideBuildTimer,jenschoice:jenschoice, divId:divId,jenfullserver:jenfullserver,jensconurl:jensconurl, jensjob:attrs.jensjob, jensuser:jensuser,jenspass:jenspass,appname:appname,wshostname:wshostname,jenserver:jenserver,jensurl:jensurl,jensprogressive:jensprogressive, jensbuildend:jensbuildend, jensconlog:jensconlog])
+	   		out << g.render(contextPath: pluginContextPath, template : '/jenkins/process', model: [hideButtons:hideButtons,hideTriggerButton:hideTriggerButton, hideDashBoardButton:hideDashBoardButton, jenschoice:jenschoice, divId:divId,jenfullserver:jenfullserver,jensconurl:jensconurl, jensjob:attrs.jensjob, jensuser:jensuser,jenspass:jenspass,appname:appname,wshostname:wshostname,jenserver:jenserver,jensurl:jensurl,jensprogressive:jensprogressive, jensbuildend:jensbuildend, jensconlog:jensconlog])
 	   }
    }
    

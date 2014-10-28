@@ -155,6 +155,8 @@ resize:both;
 		</g:if>
 
 <br/>
+
+<div id="BuildEstimation${divId}"></div>
 <div class="BuildHistory">
 <div id="BuildHistory${divId}" >
 </div>
@@ -163,8 +165,10 @@ resize:both;
 <pre id="messagesTextarea${divId}" class="logconsole-sm">
 </pre>
 
-<script>
 
+<script>
+var iDate${divId}='';
+var jed${divId}=0;
 function wrapIt(value) {
 	return "'"+value+"'"
 }
@@ -214,8 +218,28 @@ function processMessage${divId}(message) {
 				//updateBuilds(entry.bid)
 				updateBuilds${divId}()
 			});
-		}	
-
+		}
+		if (jsonData.buildNumber!=null) {
+			$('#BuildNumber${divId}').html(jsonData.buildNumber);
+		}
+		
+		if (jsonData.estimatedDuration!=null) {
+			if (jsonData.estimatedDuration=="N/A") {
+				$('#BuildEstimation${divId}').html(jsonData.estimatedDuration);
+			}else{
+				jed${divId}=jsonData.estimatedDuration;
+			}
+		}
+		
+		if (jsonData.timestamp!=null) {
+			var timeObject = new Date(jsonData.timestamp) 
+			timeObject = new Date(timeObject .getTime() +jed${divId});
+			cdtd${divId}();
+			console.log('Estimated completion time: '+timeObject);
+			iDate${divId}=timeObject;
+			newBuild${divId}('dashboard');
+		}
+		
 		if (jsonData.historyQueue!=null) {
 			var sb = [];
 			sb.push('<ul>');
@@ -250,11 +274,16 @@ function processMessage${divId}(message) {
 						cclass='blue'
 							sb.push('\n<li class='+cclass+'><a onclick="javascript:viewHistory${divId}('+wrapIt(entry.bid)+');">'+entry.jobid+' : <small>'+entry.bstatus+' '+entry.bdate+'</small></a>\n');
 							sb.push('\n<a onclick="javascript:stopBuild${divId}('+wrapIt(entry.bid)+');"><small>STOP</small></a>\n');
-							sb.push('<br/><small><span id="BuildHistoryTop${divId}" class="redfont"></span></small>\n');
+							sb.push('<br/><small><span id="BuildEstimation${divId}" class="redfont">');
+							sb.push('<div class="jbutton">Estimated Time:');
+							sb.push('<span id="hoursBox${divId}"></span>:');
+							sb.push('<span id="minsBox${divId}"></span>:');
+							sb.push('<span id="secsBox${divId}"></span>  Sec</div>');
+							sb.push('</span></small>\n');
 							sb.push('</li>');
 							//setTimeout(function(){  
 							    //updateBuilds(entry.bid)
-							    updateBuilds${divId}();
+							 //   updateBuilds${divId}();
 							//},600);			
 						break;
 					case 'cancelled':
@@ -274,16 +303,44 @@ function processMessage${divId}(message) {
 }
 
 
+function cdtd${divId}() {
+	
+	var future = new Date(iDate${divId});
+	var now = new Date();
+	var timeDiff = future.getTime() - now.getTime();
+	var timer;
+	console.log('--- '+timeDiff)
+	if (timeDiff <= 0) {
+		newBuild${divId}('dashboard');
+	    clearTimeout(timer);
+	}
+	var seconds = Math.floor(timeDiff / 1000);
+	var minutes = Math.floor(seconds / 60);
+	var hours = Math.floor(minutes / 60);
+	var days = Math.floor(hours / 24);
+	hours %= 24;
+	    minutes %= 60;
+	    seconds %= 60;
+	//document.getElementById("daysBox${divId}").innerHTML = days;
+	document.getElementById("hoursBox${divId}").innerHTML = hours;
+	document.getElementById("minsBox${divId}").innerHTML = minutes;
+	document.getElementById("secsBox${divId}").innerHTML = seconds;
+	timer = setTimeout('cdtd${divId}()',1000);
+}
+
+
 function newBuild${divId}(choice) {
 	webSocket${divId}.send(JSON.stringify({'cmd': 'choose', 'jenschoice': choice }));
 	scrollToBottom${divId}();
 }
 
+/*
 function updateBuilds${divId}() {
 	if (hidebuildTimer!="yes") { 
 		webSocket${divId}.send(JSON.stringify({'cmd': 'histref', 'bid': '0' }));
 	}
 }
+*/
 
 function cancelQueue${divId}(jobid) {
 	webSocket${divId}.send(JSON.stringify({'cmd': 'cancelJob', 'bid': jobid }));

@@ -21,7 +21,6 @@ jenschoice="${jenschoice}"
 hideButtons="${hideButtons }"
 hideTriggerButton="${hideTriggerButton }"
 hideDashBoardButton="${hideDashBoardButton }"
-hideBuildTimer="${hideBuildTimer }"
 />
 </body>
 </html>

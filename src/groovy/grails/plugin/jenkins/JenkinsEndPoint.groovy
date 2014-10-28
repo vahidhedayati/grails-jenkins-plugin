@@ -28,8 +28,8 @@ class JenkinsEndPoint implements ServletContextListener{
 	private int httpConnTimeOut = 10*1000;
 	private int httpSockTimeOut = 30*1000;
 	static final Set<Session> jsessions = Collections.synchronizedSet(new HashSet<Session>())
-	private String jensbuildend,jensprogressive,jensconlog,jensurl,jenserver,jensuser,jenspass,jenschoice,jensconurl,hideBuildTimer=''
-	//private String jensApi='/api/json' //?pretty=true
+	private String jensbuildend,jensprogressive,jensconlog,jensurl,jenserver,jensuser,jenspass,jenschoice,jensconurl=''
+	private String jensApi='/api/json'
 	HTTPBuilder http
 
 	@Override
@@ -73,7 +73,7 @@ class JenkinsEndPoint implements ServletContextListener{
 				jensconlog=data.jensconlog ?: '/consoleFull'
 				jensprogressive=data.jensprogressive ?: '/logText/progressiveHtml'
 				jensbuildend=data.jensbuildend  ?: '/build?delay=0sec'
-				hideBuildTimer=data.hideBuildTimer  ?: 'no'
+//				hideBuildTimer=data.hideBuildTimer  ?: 'no'
 				jenkinsConnect(userSession)
 			}
 
@@ -92,12 +92,13 @@ class JenkinsEndPoint implements ServletContextListener{
 					dashboard(userSession)
 				}
 			}
+			/*
 			if (cmd.toString().equals('histref')) {
 				if (!hideBuildTimer.equals('yes')) {
 					livedashboard(userSession)
 				}
 			}
-
+			*/
 			if (cmd.toString().equals('cancelJob')) {
 				if (data.bid) {
 					cancelJob(userSession,data.bid)
@@ -119,7 +120,8 @@ class JenkinsEndPoint implements ServletContextListener{
 						disconnect(userSession)
 						break
 					default:
-						userSession.getBasicRemote().sendText(echoJob(server,job) as String)
+						disconnect(userSession)
+						//userSession.getBasicRemote().sendText(echoJob(server,job) as String)
 				}
 			}
 		}
@@ -178,15 +180,19 @@ class JenkinsEndPoint implements ServletContextListener{
 			// So lets attempt to connect to progressiveHtml page within jenkins
 
 			if (html."**".find{ it.toString().contains("fetchNext")}) {
-				//def nurl=murl+'/'+bid+'/logText/progressiveHtml'
+				
+				// Get api output for the job				
+				def apiurl=bid+jensApi
+				parseApi(userSession,apiurl)
+				
 				def nurl=jenserver+bid+jensprogressive
 				userSession.getBasicRemote().sendText('Attempting live poll')
-
 				//This hogs websocket connection - so lets background it
 				def asyncProcess = new Thread({parseLiveLogs(userSession,nurl)} as Runnable )
 				asyncProcess.start()
-
-
+				//parseLiveLogs(userSession,nurl)
+				
+				
 				// Sendback liveUrl back through sockets
 				// If user wishes they can interact with it this way
 				// Due to CORS - the method was changed to use
@@ -210,6 +216,13 @@ class JenkinsEndPoint implements ServletContextListener{
 		}
 	}
 
+	def parseApi(Session userSession,String uri) {
+		http.get( path: uri ) { resp, json ->
+			//println resp.status
+			userSession.getBasicRemote().sendText(json.toString())
+		}
+
+	}
 	// This is a httpbuilder module put in to imitate the ajaxrequest posted via jenkins
 	// fetchNext javascript function, it grabs the current size returned from header:
 	// X-Text-Size and pushes it back as start={value}
@@ -263,33 +276,52 @@ class JenkinsEndPoint implements ServletContextListener{
 	private dashboard(Session userSession) {
 		getBuilds(userSession,jensurl)
 	}
-
+	/*
 	private livedashboard(Session userSession) {
-			getLiveBuilds(userSession,jensurl)
-	
-	}
+		getLiveBuilds(userSession,jensurl)
 
+	}
+	*/
 	private buildJob(Session userSession) {
 		String url=jensurl
 		def url1=url+jensbuildend
 		def lastbid=getLastBuild(url)
+		int currentBuild=currentJob(lastbid)
 		String consolelog=jensconlog
 		//String consolelog='/consoleText'
 		try {
-			//userSession.getBasicRemote().sendText("Triggering build:-------> "+jenserver+url1+"<------------")
-			//triggerBuild(jenserver+url1)
+			userSession.getBasicRemote().sendText("\nBefore triggering Build ID: "+currentBuild+"\n..waiting\n")			
 			jobControl(userSession, jenserver+url1,url)
-			userSession.getBasicRemote().sendText("\nBefore triggering Build ID: "+lastbid+"\nAttempting build ${url1}\n..sleeping for a few seconds\n")
-			sleep(2000)
+			dashboard(userSession)
 			def lastbid1=getLastBuild(url)
-			userSession.getBasicRemote().sendText("\nTriggering build\nCurrent Build ID: "+lastbid1+"<br>")
-			//String url2=url+"/"+lastbid1+consolelog
-			String url2=stripDouble(lastbid1+consolelog)
-			dashboard(userSession)
-			if (!lastbid1.equals(lastbid)) {
+			def newBuild=currentJob(lastbid1)
+			boolean go=false
+			int a=0
+			while (go==false) {
+				a++
+				newBuild=currentJob(lastbid1)
+				userSession.getBasicRemote().sendText(".")
+				if (a==10) {
+					go=true
+				}
+				sleep(100)
+				if (newBuild > currentBuild) {
+					go=true
+				}
+				
+				}
+			if (go && (a<10) ) {
+				userSession.getBasicRemote().sendText("\nBuild triggered successfully\nNew Build ID: "+newBuild+"\n")
+				//String url2=url+"/"+lastbid1+consolelog
+				String url2=stripDouble(lastbid1+consolelog)
+				dashboard(userSession)
 				parseJobConsole(userSession,url2,lastbid1)
+				dashboard(userSession)
+			}else{
+				dashboard(userSession)
+				userSession.getBasicRemote().sendText("\nBuild trigger failed\n")
 			}
-			dashboard(userSession)
+			
 		} catch (Exception e) {
 			e.printStackTrace()
 		}
@@ -353,17 +385,10 @@ class JenkinsEndPoint implements ServletContextListener{
 		}
 		return result
 	}
-
+/*
 	private def getLiveBuilds(Session userSession,String url) {
 		try {
-
-			int go=0;
-			def bdate,bid,transaction=''
-			int counter=0
 			def finalList=[:]
-			def hList=[]
-			def col1
-			def col2
 			def col3
 			def html = http.get( path : "${url}")
 			def bn=html."**".findAll {it.@class.toString().contains("build-name")}
@@ -377,38 +402,34 @@ class JenkinsEndPoint implements ServletContextListener{
 					}
 				}
 			}else{
-			if (html."**".find {it.@class.toString().contains("progress-bar ")}) {
-				col3 = html."**".find {it.@class.toString().contains("progress-bar ")}.collect {
-					[
-						bid :verifyBuild(it.@href.text()),
-						bprogress : it.@tooltip.text()
-					]
+				bn=html."**".find {it.@class.toString().contains("progress-bar ")}
+				if (bn) {
+					col3 = bn.collect {
+						[
+							bid :verifyBuild(it.@href.text()),
+							bprogress : it.@tooltip.text()
+						]
+					}
 				}
+
 			}
-		
-			}	
-				finalList.put("historytop",col3)
-				userSession.getBasicRemote().sendText((finalList as JSON).toString())
-			
+			finalList.put("historytop",col3)
+			userSession.getBasicRemote().sendText((finalList as JSON).toString())
+
 		}catch(Exception e) {
 			log.error "Problem communicating with ${url}: ${e.message}"
 		}
 	}
+*/	
 
 	private def getBuilds(Session userSession,String url) {
 		try {
-			int go=0;
-			def bdate,bid,transaction=''
-			int counter=0
 			def finalList=[:]
 			def hList=[]
-			def col1
-			def col2
-			def col3
+			def col1,col2,col3
 			def html = http.get( path : "${url}")
 
-
-
+			// Both jenkins old/new
 			def sbn=html."**".findAll {it.@class.toString().contains("stop-button-link")}
 			if (sbn) {
 				col3 = sbn.collect {
@@ -420,7 +441,7 @@ class JenkinsEndPoint implements ServletContextListener{
 				}
 			}
 
-
+			// New jenkins
 			def bd=html."**".findAll {it.@class.toString().contains("build-details")}
 			if (bd) {
 				col1 = bd.collect {
@@ -429,7 +450,6 @@ class JenkinsEndPoint implements ServletContextListener{
 						bdate :it.toString().trim()
 					]
 				}
-
 
 				def bn=html."**".findAll {it.@class.toString().contains("build-name")}
 				if (bn) {
@@ -443,31 +463,29 @@ class JenkinsEndPoint implements ServletContextListener{
 						]
 					}
 				}
+				
 			}else{
 				// Going to try parse older html styles - provided by a default jenkins install
-				if (html."**".findAll {it.@class.toString().contains("tip model-link")}) {
-					col1 = html."**".findAll { it.@class.toString().contains("tip model-link") }
-					.collect {
+				bd=html."**".findAll {it.@class.toString().contains("tip model-link")}
+				if (bd) {
+					col1 = bd.collect {
 						[
 							bid : it.@href.text(),
 							bdate :it.toString().trim()
 						]
 					}
 				}
-
-				if (html."**".findAll {it.@class.toString().contains("build-row no-wrap")}) {
-					col2=html."**".findAll {it.@class.toString().contains("build-row no-wrap")}.collect {
+				def bn=html."**".findAll {it.@class.toString().contains("build-row no-wrap")}
+				if (bn) {
+					col2=bn.collect {
 						[
 							bid: verifyBuild(it.TD[0].A.@href.text().toString()),
 							bstatus : verifyStatus(it.TD[0].A.IMG.@src.text().toString()),
 							jobid: verifyJob(it.TD[0].A.@href.text().toString()).replaceAll("\\s","")
 						]
 					}
-
 				}
-
 			}
-
 			if (col1&&col2) {
 				def combined = (col1 + col2).groupBy { it.bid }.collect { it.value.collectEntries { it } }
 				finalList.put("history",combined)
@@ -498,8 +516,9 @@ class JenkinsEndPoint implements ServletContextListener{
 			int go=0;
 			def bdate,transaction=''
 			def html = http.get(path : "${url}")
-			if (html."**".findAll {it.@class.toString().contains("build-details")}) {
-				html."**".find { it.@class.toString().contains("build-details")}.each {
+			def bd=html."**".findAll {it.@class.toString().contains("build-details")}
+			if (bd) {
+				bd.each {
 					go++
 					if (go==1) {
 						bid=it.A[0].@href.text()
@@ -507,7 +526,8 @@ class JenkinsEndPoint implements ServletContextListener{
 					}
 				}
 			}else{
-				html."**".find { it.@class.toString().contains("tip model-link") }.each {
+				bd=html."**".find { it.@class.toString().contains("tip model-link") }
+				bd.each {
 					go++
 					if (go==1) {
 						bid=it.@href.text()
@@ -515,13 +535,22 @@ class JenkinsEndPoint implements ServletContextListener{
 					}
 				}
 			}
-
 		}catch(Exception e) {
 			log.error "Problem communicating with ${url}: ${e.message}"
 		}
 		return  bid
 	}
 
+	private int currentJob(String job) {
+		if (job.endsWith('/')) {
+			job=job.substring(0,job.length()-1)
+		}
+		job=job.substring(job.lastIndexOf('/')+1,job.length())
+		//if (job.isNumber()) {
+			return job as int
+		//}
+		//return 0
+	}
 	private String verifyJob(String job) {
 		if (job.indexOf('/')>-1) {
 			job=job.substring(0,job.indexOf('/console'))

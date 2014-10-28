@@ -29,7 +29,7 @@ This will load in the default index page which asks a few questions in order for
 The plugin functionality provides two core aspects of the Jenkins product within your grails app:
 
 ##### lists current build history items on right hand side
-The build history info is sent via websockets. If you click an item it will display its log. It displays status of job whether it passed/failed/canelled/building or queued. If building it will additionally show running time and estimated time according to Jenkins. You can click stop to send a stop to backend jenkins which will stop the build. Scheduled future builds will appeared as queued and you can also cancel them.
+The build history info is sent via websockets. If you click an item it will display its log. It displays status of job whether it passed/failed/canelled/building or queued. If building it will additionally show running time and estimated time according to Jenkins, this was initially achieved by parsing page over and over, now moved locally as a javascript that works out difference of estimated time according to jobid/api/json estimateTime value set per jenkins job. You can click stop to send a stop to backend jenkins which will stop the build. Scheduled future builds will appeared as queued and you can also cancel them.
  
 
 ##### Build
@@ -165,13 +165,6 @@ jenkins.hideTriggerButton='no'
 */
 jenkins.hideDashBoardButton='no'
 
-
-/* 
-* Optional : not required - unless different to defaults
-* Jenkins hide active estimated time for build to finish : default  'no' 
-* choices : no/yes
-*/
-jenkins.hideBuildTimer='no'
   
 ```
 
@@ -202,7 +195,6 @@ Optional override taglibs: (Refer to above Config.groovy to understand what thes
 hideButtons="${hideButtons }"
 hideTriggerButton="${hideTriggerButton }"
 hideDashBoardButton="${hideDashBoardButton }"
-hideBuildTimer="${hideBuildTimer }"
 jensLog="something" 
 wshostname="something"
 jensprogressive="something"
@@ -231,3 +223,5 @@ javax.websocket.DeploymentException: Multiple Endpoints may not be deployed to t
 ```	
 This does appear to be a warning and endpoint still works fine, and happens in tomcat... 7 + 8
 
+# Current Bug(s)
+If previous job has failed, current build will appear in red in Jenkins and causes plugin to also show build as failure, need to revisit parsing for this feature to work.
