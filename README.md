@@ -14,8 +14,9 @@ Dependency, in your conf/BuildConfig.groovy under plugins add:
 
 
 ### Video
-[Grails-jenkins-plugin video youtube](http://youtu.be/XfsrBAa8aAg)
-[Part 2: update showing multiple builds](https://www.youtube.com/watch?v=CKv3TqWq4AQ)
+![Grails-jenkins-plugin video youtube](http://youtu.be/XfsrBAa8aAg)
+
+![Part 2: update showing multiple builds](https://www.youtube.com/watch?v=CKv3TqWq4AQ)
 
 
 ### Walkthrough
