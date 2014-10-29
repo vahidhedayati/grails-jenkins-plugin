@@ -102,7 +102,7 @@ function toggleBlock(caller,called,calltext) {
 	
 	<div  class="fieldcontain">
 	<div id="jensuser" style="display: none;"><div class="message" role="status">
-		username: HttpBuilder Basic auth username - untested - Leave blank
+		username: If Jenkins can authenticate/requires it if not leave token blank
 	</div></div>
 	<label for="Username">Username</label>
 		<g:textField name="jensuser" placeholder="Jenkins username"/><a id="jensuserHeader"><i>Help?</i></a>
@@ -113,10 +113,10 @@ function toggleBlock(caller,called,calltext) {
 
 	<div  class="fieldcontain">
 	<div id="jenspass" style="display: none;"><div class="message" role="status">
-		username: HttpBuilder Basic auth password - untested - Leave blank
+		password: Your apiToken from http://your_jenkins:{port}/user/username/configure
 	</div></div>
 	<label>Password</label>
-	<g:passwordField name="jenspass" placeholder="Jenkins password"/><a id="jenspassHeader"><i>Help?</i></a>
+	<g:passwordField name="jenspass" placeholder="Jenkins API Token"/><a id="jenspassHeader"><i>Help?</i></a>
 	<g:javascript>
 	toggleBlock('#jenspassHeader','#jenspass','');
 	</g:javascript>
