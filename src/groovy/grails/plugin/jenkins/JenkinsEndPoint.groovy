@@ -32,8 +32,8 @@ class JenkinsEndPoint implements ServletContextListener{
 	static final Set<Session> jsessions = Collections.synchronizedSet(new HashSet<Session>())
 	private String jensbuildend,jensprogressive,jensconlog,jensurl,jenserver,jensuser,jenspass,jenschoice,jensconurl=''
 	private String jensApi='/api/json'
-	//HTTPBuilder http
-	def http
+
+	RESTClient http
 
 	@Override
 	public void contextInitialized(ServletContextEvent servletContextEvent) {
@@ -63,7 +63,6 @@ class JenkinsEndPoint implements ServletContextListener{
 	public String handleMessage(String message,Session userSession) throws IOException {
 		//def job=userSession.getUserProperties().get("job").toString()
 		//def server=userSession.getUserProperties().get("server").toString()
-
 		def data=JSON.parse(message)
 		if (data) {
 			def cmd=data.cmd
@@ -82,21 +81,14 @@ class JenkinsEndPoint implements ServletContextListener{
 			if (cmd.toString().equals('viewHistory')) {
 				if (data.bid) {
 					clearPage(userSession)
-					def url2=jenserver+data.bid+jensconlog
+					String url2=jenserver+data.bid+jensconlog
 					parseJobConsole(userSession,url2,data.bid)
 				}
 			}
 
 			if (cmd.toString().equals('stopBuild')) {
 				if (data.bid) {
-					def url2=jenserver+stripDouble(data.bid+'/stop')
-					//jobControl(userSession,url2,data.bid)
 					jobControl(userSession,stripDouble(data.bid+'/stop'),data.bid)
-
-					//def asyncProcess = new Thread({jobControl(userSession,stripDouble(data.bid+'/stop'),data.bid)} as Runnable )
-					//asyncProcess.start()
-
-
 					dashboard(userSession)
 				}
 			}
@@ -125,10 +117,7 @@ class JenkinsEndPoint implements ServletContextListener{
 	}
 
 	private void cancelJob(Session userSession,String bid){
-		def url=jenserver
 		jobControl(userSession,bid,bid)
-		//def asyncProcess = new Thread({jobControl(userSession,bid,bid)} as Runnable )
-		//asyncProcess.start()
 	}
 
 	private void disconnect(Session userSession) {
@@ -145,8 +134,7 @@ class JenkinsEndPoint implements ServletContextListener{
 	}
 
 	private void jenkinsConnect(Session userSession) {
-		def url=jensconurl
-		def validurl=verifyUrl(url)
+		def validurl=verifyUrl(jensconurl)
 		if (validurl.toString().startsWith('Success')) {
 			userSession.getBasicRemote().sendText('Jenkins plugin connected to: '+jensconurl)
 		}else{
@@ -161,66 +149,48 @@ class JenkinsEndPoint implements ServletContextListener{
 
 
 	private void parseJobConsole(Session userSession,String url,String bid) {
-		try {
-			// Send user confirmation that you are going to parse Jenkins job
-			userSession.getBasicRemote().sendText("\nAbout to parse ${url}\n")
-			/*
-			 def http1  = new RESTClient("${jenserver}")
-			 if (jensuser&&jenspass) {
-			 http1.headers['Authorization'] = 'Basic '+"${jensuser}:${jenspass}".bytes.encodeBase64().toString()
-			 }
-			 HttpResponseDecorator html1= http1.get(path: "${url}")
-			 */
-
-			HttpResponseDecorator html1=httpConn('get',jenserver,url,jensuser,jenspass)
-
-			//HttpResponseDecorator html1= http1.get([:])
-			def html=html1?.data
-			boolean start=false
-			boolean start1=false
-			// If we have a class of console output then set start1 to true
-			// This means the job has actually finished building and jenkins content is now static
-			if (html."**".findAll{ it.@class.toString().contains("console-output")}) {
-				start1=true
-			}
-
-			// However if we see fetchNext within the html then it is likely to be building
-			// So lets attempt to connect to progressiveHtml page within jenkins
-			if (html."**".find{ it.toString().contains("fetchNext") ||it.@id.toString().contains("out")}) {
-
-				// Get api output for the job
-				def apiurl=bid+jensApi
-				parseApi(userSession,apiurl)
-
-				def nurl=bid+jensprogressive
-
-				//This hogs websocket connection - so lets background it
-				def asyncProcess = new Thread({parseLiveLogs(userSession,nurl)} as Runnable )
-				asyncProcess.start()
-				//parseLiveLogs(userSession,nurl)
-
-
-				// Sendback liveUrl back through sockets
-				// If user wishes they can interact with it this way
-				// Due to CORS - the method was changed to use
-				// httpbuilder this end to do remoteURL processing
-				def json = new JsonBuilder()
-				json {
-					delegate.liveUrl "${nurl}"
-				}
-
-				userSession.getBasicRemote().sendText(json.toString())
-			}
-
-			//This means job has finished and jenkins has static results showing in /consoleFull
-			if (start1) {
-				html."**".findAll{ it.@class.toString().contains("console-output")}.each {
-					userSession.getBasicRemote().sendText(it.toString())
-				}
-			}
-		}catch(Exception e) {
-			log.error "Problem communicating with ${url}: ${e.message}"
+		// Send user confirmation that you are going to parse Jenkins job
+		userSession.getBasicRemote().sendText("\nAbout to parse ${url}\n")
+		HttpResponseDecorator html1=httpConn('get',jenserver,url,jensuser,jenspass)
+		def html=html1?.data
+		boolean start,start1=false
+		// If we have a class of console output then set start1 to true
+		// This means the job has actually finished building and jenkins content is now static
+		if (html."**".findAll{ it.@class.toString().contains("console-output")}) {
+			start1=true
 		}
+
+		// However if we see fetchNext within the html then it is likely to be building
+		// So lets attempt to connect to progressiveHtml page within jenkins
+		if (html."**".find{ it.toString().contains("fetchNext") ||it.@id.toString().contains("out")}) {
+
+			// Get api output for the job
+			parseApi(userSession,bid+jensApi)
+
+			//This hogs websocket connection - so lets background it
+			def asyncProcess = new Thread({parseLiveLogs(userSession,bid+jensprogressive)} as Runnable )
+			asyncProcess.start()
+			//parseLiveLogs(userSession,nurl)
+
+
+			// Sendback liveUrl back through sockets
+			// If user wishes they can interact with it this way
+			// Due to CORS - the method was changed to use
+			// httpbuilder this end to do remoteURL processing
+			def json = new JsonBuilder()
+			json {
+				delegate.liveUrl "${nurl}"
+			}
+			userSession.getBasicRemote().sendText(json.toString())
+		}
+
+		//This means job has finished and jenkins has static results showing in /consoleFull
+		if (start1) {
+			html."**".findAll{ it.@class.toString().contains("console-output")}.each {
+				userSession.getBasicRemote().sendText(it.toString())
+			}
+		}
+
 	}
 
 	/*
@@ -241,60 +211,47 @@ class JenkinsEndPoint implements ServletContextListener{
 	 *relevant chunk
 	 */
 	def parseLiveLogs(Session userSession,String nurl) {
-		try {
-			boolean hasMore=true
-			def csize
-			def consoleAnnotator
-			String ssize=''
+		boolean hasMore=true
+		def csize,consoleAnnotator
+		String ssize=''
+		userSession.getBasicRemote().sendText("Attempting live poll")
+		def http1  =httpConn(jenserver,jensuser,jenspass)
 
-			userSession.getBasicRemote().sendText("Attempting live poll")
-			/*
-			 def http1  = new RESTClient("${jenserver}")
-			 if (jensuser&&jenspass) {
-			 http1.headers['Authorization'] = 'Basic '+"${jensuser}:${jenspass}".bytes.encodeBase64().toString()
-			 }
-			 */
-			def http1  =httpConn(jenserver,jensuser,jenspass)
+		// while hasMore is true -
+		// jenkins html page defined as header values
+		// goes away once full results are returned
+		while (hasMore) {
+			// If there is a text-size header set then create url appender
+			if (csize) {
+				ssize="?start=${csize}"
+			}
+			// Set old size to current size
+			def osize=csize
 
-			// while hasMore is true -
-			// this again controlled via the jenkins html page which has it in header or not
-			// goes away once full results are returned
-			while (hasMore) {
-				// If there is a text-size header set then create url appender
-				if (csize) {
-					ssize="?start=${csize}"
-				}
-				// Set old size to current size
-				def osize=csize
-
-				// Now get the url which may or may not have current header size
-				def url=nurl+ssize
-				http1?.request("${jenserver}${url}",GET,TEXT) { req ->
-					// On success get latest output back from headers
-					if (jensuser&&jenspass) {
-						headers.'Authorization' =
-								"Basic ${"${jensuser}:${jenspass}".bytes.encodeBase64().toString()}"
-				}
-				response.failure = { resp, reader ->
-					//if (reader.text.contains('Invalid password')) {
-					hasMore=false
-					//}
-				}
-				response.success = { resp, reader ->
-
-					hasMore=resp.headers.'X-More-Data'
-					csize=resp.headers.'X-Text-Size'
-					consoleAnnotator=resp.headers.'X-ConsoleAnnotator'
-					// If the current size is there and larger than osize value send to websocket
-					if (csize && csize > osize) {
-						userSession.getBasicRemote().sendText(reader.text as String)
-					}
+			// Now get the url which may or may not have current header size
+			def url=nurl+ssize
+			http1?.request("${jenserver}${url}",GET,TEXT) { req ->
+				// On success get latest output back from headers
+				if (jensuser&&jenspass) {
+					headers.'Authorization' =
+							"Basic ${"${jensuser}:${jenspass}".bytes.encodeBase64().toString()}"
+			}
+			response.failure = { resp, reader ->
+				//if (reader.text.contains('Invalid password')) {//}
+				hasMore=false
+			}
+			response.success = { resp, reader ->
+				hasMore=resp.headers.'X-More-Data'
+				csize=resp.headers.'X-Text-Size'
+				consoleAnnotator=resp.headers.'X-ConsoleAnnotator'
+				// If the current size is there and larger than osize value send to websocket
+				if (csize && csize > osize) {
+					userSession.getBasicRemote().sendText(reader.text as String)
 				}
 			}
 		}
-	}catch(Exception e) {
-		log.error "Problem communicating with ${nurl}: ${e.message}"
 	}
+
 }
 
 private dashboard(Session userSession) {
@@ -346,21 +303,8 @@ private buildJob(Session userSession) {
 }
 
 private void jobControl(Session userSession,String url,String bid) {
-	try {
-		//userSession.getBasicRemote().sendText("About to control ${url}\n")
-		/*
-		 * 
-		 def http1  = new RESTClient("${jenserver}${url}")
-		 if (jensuser&&jenspass) {
-		 http1.headers['Authorization'] = 'Basic '+"${jensuser}:${jenspass}".bytes.encodeBase64().toString()
-		 }
-		 http1.post([:])
-		 */
-		HttpResponseDecorator html1=httpConn('post',jenserver+url,jensuser,jenspass)
+	HttpResponseDecorator html1=httpConn('post',jenserver+url,jensuser,jenspass)
 
-	}catch (Exception ex){
-		log.debug("Failed error: ${ex}")
-	}
 }
 
 
@@ -370,12 +314,6 @@ private String verifyUrl(def nurl)  {
 	try {
 		boolean goahead=true
 		try {
-			/*
-			 http  = new RESTClient("${jenserver}")
-			 if (jensuser&&jenspass) {
-			 http.headers['Authorization'] = 'Basic '+"${jensuser}:${jenspass}".bytes.encodeBase64().toString()
-			 }
-			 */
 			http=httpConn(jenserver,jensuser,jenspass)
 		}catch (Exception ex){
 			result="Failed error: ${ex}"
@@ -583,50 +521,63 @@ private String seperator(def input) {
 }
 
 private RESTClient httpConn(String host,String user,String key) {
-	def http = new RESTClient("${host}")
-	if (user&&key) {
-		http.client.addRequestInterceptor(new HttpRequestInterceptor() {
+	try {
+		RESTClient http = new RESTClient("${host}")
+		if (user&&key) {
+			http.client.addRequestInterceptor(new HttpRequestInterceptor() {
 
-					void process(HttpRequest httpRequest, HttpContext httpContext) {
+						void process(HttpRequest httpRequest, HttpContext httpContext) {
 
-						httpRequest.addHeader('Authorization', 'Basic ' + "${user}:${key}".bytes.encodeBase64().toString())
+							httpRequest.addHeader('Authorization', 'Basic ' + "${user}:${key}".bytes.encodeBase64().toString())
 
-					}
-				})
+						}
+					})
+		}
+		return http
+	}catch (Exception ex){
+		log.debug("Failed error: ${ex}")
 	}
-	return http
 }
 private HttpResponseDecorator httpConn(String type, String host,String uri,String user,String key) {
-	def http = new RESTClient("${host}")
-	if (user&&key) {
-		http.client.addRequestInterceptor(new HttpRequestInterceptor() {
-					void process(HttpRequest httpRequest, HttpContext httpContext) {
-						httpRequest.addHeader('Authorization', 'Basic ' + "${user}:${key}".bytes.encodeBase64().toString())
-					}
-				})
-	}
-	if (type.equals('get')) {
-		return http.get(path: "${uri}")
-	}else{
-		return http.post(path: "${uri}")
+	try {
+		RESTClient http = new RESTClient("${host}")
+		if (user&&key) {
+			http.client.addRequestInterceptor(new HttpRequestInterceptor() {
+						void process(HttpRequest httpRequest, HttpContext httpContext) {
+							httpRequest.addHeader('Authorization', 'Basic ' + "${user}:${key}".bytes.encodeBase64().toString())
+						}
+					})
+		}
+		if (type.equals('get')) {
+			return http.get(path: "${uri}")
+		}else{
+			return http.post(path: "${uri}")
+		}
+	}catch(Exception e) {
+		log.error "Problem communicating with ${uri}: ${e.message}"
 	}
 }
 
 private HttpResponseDecorator httpConn(String type,String url,String user,String key) {
-	def http = new RESTClient("${url}")
-	if (user&&key) {
-		http.client.addRequestInterceptor(new HttpRequestInterceptor() {
-					void process(HttpRequest httpRequest, HttpContext httpContext) {
-						httpRequest.addHeader('Authorization', 'Basic ' + "${user}:${key}".bytes.encodeBase64().toString())
+	try {
+		RESTClient http = new RESTClient("${url}")
+		if (user&&key) {
+			http.client.addRequestInterceptor(new HttpRequestInterceptor() {
+						void process(HttpRequest httpRequest, HttpContext httpContext) {
+							httpRequest.addHeader('Authorization', 'Basic ' + "${user}:${key}".bytes.encodeBase64().toString())
 
-					}
-				})
+						}
+					})
+		}
+		if (type.equals('get')) {
+			return http.get([:])
+		}else{
+			return http.post([:])
+		}
+	}catch(Exception e) {
+		log.error "Problem communicating with ${url}: ${e.message}"
 	}
-	if (type.equals('get')) {
-		return http.get([:])
-	}else{
-		return http.post([:])
-	}
+
 
 }
 
