@@ -138,6 +138,7 @@ resize:both;
 	<div style="clear:both;"></div>
 	<br/><p></p>
 	<h3>${jenschoice } : ${jensjob} on ${jenserver }</h3>
+
 	<g:if test="${((!hideButtons) || (!hideButtons.toLowerCase().equals('yes')))}">	
 		<div class="container">
 			<g:if test="${((!hideTriggerButton) || (!hideTriggerButton.toLowerCase().equals('yes')))}">
@@ -155,7 +156,7 @@ resize:both;
 		</g:if>
 
 <br/>
-
+	<h6>Current user: <div id="jenkinsUser${divId}"></h6>
 
 <div class="BuildHistory">
 <div id="BuildHistory1${divId}" ></div>
@@ -224,6 +225,15 @@ function processMessage${divId}(message) {
 		if (jsonData.buildNumber!=null) {
 			$('#BuildNumber${divId}').html(jsonData.buildNumber);
 		}
+		if (jsonData.actions!=null) {
+			jsonData.actions.forEach(function(entry) {
+				if (entry.causes!=null) {
+					entry.causes.forEach(function(en) {
+						$('#jenkinsUser${divId}').html(en.userName);
+					});
+				}
+			});
+		}		
 		
 		if (jsonData.estimatedDuration!=null) {
 			if (jsonData.estimatedDuration=="N/A") {

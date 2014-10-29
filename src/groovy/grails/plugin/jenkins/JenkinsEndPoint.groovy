@@ -32,6 +32,8 @@ class JenkinsEndPoint implements ServletContextListener{
 	static final Set<Session> jsessions = Collections.synchronizedSet(new HashSet<Session>())
 	private String jensbuildend,jensprogressive,jensconlog,jensurl,jenserver,jensuser,jenspass,jenschoice,jensconurl=''
 	private String jensApi='/api/json'
+	private String userbase='/user/'
+	private String userend='/configure'
 
 	RESTClient http
 
@@ -137,6 +139,10 @@ class JenkinsEndPoint implements ServletContextListener{
 		def validurl=verifyUrl(jensconurl)
 		if (validurl.toString().startsWith('Success')) {
 			userSession.getBasicRemote().sendText('Jenkins plugin connected to: '+jensconurl)
+			// try to get apiToken if only user has provided
+			if (jensuser &&(!jenspass)) {
+				jenspass=returnToken(jensuser)
+			}
 		}else{
 			userSession.getBasicRemote().sendText('JenkinsConnect failed to connect to: '+jensconurl)
 		}
@@ -145,7 +151,6 @@ class JenkinsEndPoint implements ServletContextListener{
 	private String echoJob(String server,String job) {
 		return server
 	}
-
 
 
 	private void parseJobConsole(Session userSession,String url,String bid) {
@@ -193,6 +198,7 @@ class JenkinsEndPoint implements ServletContextListener{
 
 	}
 
+	
 	/*
 	 * Parse Jenkins API url - grab all but only using a few json values
 	 *  to calculate estimated duration of build
@@ -220,6 +226,7 @@ class JenkinsEndPoint implements ServletContextListener{
 		// while hasMore is true -
 		// jenkins html page defined as header values
 		// goes away once full results are returned
+		
 		while (hasMore) {
 			// If there is a text-size header set then create url appender
 			if (csize) {
@@ -233,8 +240,7 @@ class JenkinsEndPoint implements ServletContextListener{
 			http1?.request("${jenserver}${url}",GET,TEXT) { req ->
 				// On success get latest output back from headers
 				if (jensuser&&jenspass) {
-					headers.'Authorization' =
-							"Basic ${"${jensuser}:${jenspass}".bytes.encodeBase64().toString()}"
+					headers.'Authorization' ="Basic ${"${jensuser}:${jenspass}".bytes.encodeBase64().toString()}"
 			}
 			response.failure = { resp, reader ->
 				//if (reader.text.contains('Invalid password')) {//}
@@ -251,7 +257,6 @@ class JenkinsEndPoint implements ServletContextListener{
 			}
 		}
 	}
-
 }
 
 private dashboard(Session userSession) {
@@ -304,9 +309,7 @@ private buildJob(Session userSession) {
 
 private void jobControl(Session userSession,String url,String bid) {
 	HttpResponseDecorator html1=httpConn('post',jenserver+url,jensuser,jenspass)
-
 }
-
 
 private String verifyUrl(def nurl)  {
 	def ret = [:]
@@ -427,15 +430,6 @@ private def getBuilds(Session userSession,String url) {
 }
 
 
-private def verifyBuild(String bid) {
-	if (bid && bid.endsWith('/console')) {
-		bid=bid.substring(0,bid.indexOf('/console')+1)
-	}else if (bid&& bid.endsWith('/stop')) {
-		bid=bid.substring(0,bid.indexOf('/stop')+1)
-	}
-	return bid
-}
-
 
 private def getLastBuild(String url) {
 	def bid=""
@@ -444,7 +438,6 @@ private def getLastBuild(String url) {
 		int go=0;
 		HttpResponseDecorator html1= http.get(path: "${url}")
 		def html=html1?.data
-
 		def bd=html."**".findAll {it.@class.toString().contains("build-details")}
 		if (bd) {
 			bd.each {
@@ -468,6 +461,105 @@ private def getLastBuild(String url) {
 		log.error "Problem communicating with ${url}: ${e.message}"
 	}
 	return  bid
+}
+
+
+
+private String returnToken(String user) {
+	String url=userbase+user+userend
+	def token
+	int go=0;
+	try {
+	RESTClient http1 = new RESTClient("${jenserver}")
+	HttpResponseDecorator html1= http1.get(path: "${url}")
+	def html=html1?.data
+	def bd=html."**".findAll {it.@id.toString().contains("apiToken")}
+	if (bd) {
+		bd.each {
+			go++
+			if (go==1) {
+				token=it.@value.text()
+			}
+		}
+	}
+	}catch (Exception ex){
+	 log.info "Failed error: ${ex}"
+	}
+	return token
+}
+
+
+private RESTClient httpConn(String host,String user,String key) {
+	try {
+		RESTClient http = new RESTClient("${host}")
+		if (user&&key) {
+			http.client.addRequestInterceptor(new HttpRequestInterceptor() {
+						void process(HttpRequest httpRequest, HttpContext httpContext) {
+							httpRequest.addHeader('Authorization', 'Basic ' + "${user}:${key}".bytes.encodeBase64().toString())
+
+						}
+					})
+		}
+		return http
+	}catch (Exception ex){
+		log.debug("Failed error: ${ex}")
+	}
+}
+
+private HttpResponseDecorator httpConn(String type, String host,String uri,String user,String key) {
+	try {
+		RESTClient http = new RESTClient("${host}")
+		if (user&&key) {
+			http.client.addRequestInterceptor(new HttpRequestInterceptor() {
+						void process(HttpRequest httpRequest, HttpContext httpContext) {
+							httpRequest.addHeader('Authorization', 'Basic ' + "${user}:${key}".bytes.encodeBase64().toString())
+						}
+					})
+		}
+		if (type.equals('get')) {
+			return http.get(path: "${uri}")
+		}else{
+			return http.post(path: "${uri}")
+		}
+	}catch(Exception e) {
+		log.error "Problem communicating with ${uri}: ${e.message}"
+	}
+}
+
+private HttpResponseDecorator httpConn(String type,String url,String user,String key) {
+	try {
+		RESTClient http = new RESTClient("${url}")
+		if (user&&key) {
+			http.client.addRequestInterceptor(new HttpRequestInterceptor() {
+						void process(HttpRequest httpRequest, HttpContext httpContext) {
+							httpRequest.addHeader('Authorization', 'Basic ' + "${user}:${key}".bytes.encodeBase64().toString())
+						}
+					})
+		}
+		if (type.equals('get')) {
+			return http.get([:])
+		}else{
+			return http.post([:])
+		}
+	}catch(Exception e) {
+		log.error "Problem communicating with ${url}: ${e.message}"
+	}
+}
+
+private String verifyStatus(String img) {
+	String output="unknown"
+	if (img.contains("blue_anime")||(img.contains("aborted_anime"))||(img.contains("job"))&&(img.contains("stop"))) {
+		output="building"
+	}else if (img.contains("red")) {
+		output="failed"
+	}else if (img.contains("blue")) {
+		output="passed"
+	}else if ((img.contains("queue"))||(img.contains("cancelItem"))) {
+		output="queued"
+	}else if ((img.contains("grey"))||(img.contains("aborted"))) {
+		output="cancelled"
+	}
+	return output
 }
 
 private int currentJob(String job) {
@@ -501,6 +593,14 @@ private String verifyJob(String job) {
 	return
 }
 
+private def verifyBuild(String bid) {
+	if (bid && bid.endsWith('/console')) {
+		bid=bid.substring(0,bid.indexOf('/console')+1)
+	}else if (bid&& bid.endsWith('/stop')) {
+		bid=bid.substring(0,bid.indexOf('/stop')+1)
+	}
+	return bid
+}
 
 
 private String stripDouble(String url) {
@@ -520,81 +620,5 @@ private String seperator(def input) {
 	return input
 }
 
-private RESTClient httpConn(String host,String user,String key) {
-	try {
-		RESTClient http = new RESTClient("${host}")
-		if (user&&key) {
-			http.client.addRequestInterceptor(new HttpRequestInterceptor() {
-
-						void process(HttpRequest httpRequest, HttpContext httpContext) {
-
-							httpRequest.addHeader('Authorization', 'Basic ' + "${user}:${key}".bytes.encodeBase64().toString())
-
-						}
-					})
-		}
-		return http
-	}catch (Exception ex){
-		log.debug("Failed error: ${ex}")
-	}
-}
-private HttpResponseDecorator httpConn(String type, String host,String uri,String user,String key) {
-	try {
-		RESTClient http = new RESTClient("${host}")
-		if (user&&key) {
-			http.client.addRequestInterceptor(new HttpRequestInterceptor() {
-						void process(HttpRequest httpRequest, HttpContext httpContext) {
-							httpRequest.addHeader('Authorization', 'Basic ' + "${user}:${key}".bytes.encodeBase64().toString())
-						}
-					})
-		}
-		if (type.equals('get')) {
-			return http.get(path: "${uri}")
-		}else{
-			return http.post(path: "${uri}")
-		}
-	}catch(Exception e) {
-		log.error "Problem communicating with ${uri}: ${e.message}"
-	}
-}
-
-private HttpResponseDecorator httpConn(String type,String url,String user,String key) {
-	try {
-		RESTClient http = new RESTClient("${url}")
-		if (user&&key) {
-			http.client.addRequestInterceptor(new HttpRequestInterceptor() {
-						void process(HttpRequest httpRequest, HttpContext httpContext) {
-							httpRequest.addHeader('Authorization', 'Basic ' + "${user}:${key}".bytes.encodeBase64().toString())
-
-						}
-					})
-		}
-		if (type.equals('get')) {
-			return http.get([:])
-		}else{
-			return http.post([:])
-		}
-	}catch(Exception e) {
-		log.error "Problem communicating with ${url}: ${e.message}"
-	}
-
-
-}
-
-private String verifyStatus(String img) {
-	String output="unknown"
-	if (img.contains("blue_anime")||(img.contains("aborted_anime"))||(img.contains("job"))&&(img.contains("stop"))) {
-		output="building"
-	}else if (img.contains("red")) {
-		output="failed"
-	}else if (img.contains("blue")) {
-		output="passed"
-	}else if ((img.contains("queue"))||(img.contains("cancelItem"))) {
-		output="queued"
-	}else if ((img.contains("grey"))||(img.contains("aborted"))) {
-		output="cancelled"
-	}
-	return output
-}
 
 }

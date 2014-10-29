@@ -233,6 +233,13 @@ With this information now login using the front end using the username and the t
 
 At the moment its buggy with authentications 
 
+##### The plugin will attempt to grab the user authToken from the given server, if it can successfully retrieve this without authentication then the userToken is automatically set.
+
+So if you simply provide a username, the plugin will try do the rest.
+
+Whilst building if the current user has got authenticated then the user will appear above build logs.
+
+
 # whilst running in PROD:
 
 Whilst running this plugin on a tomcat server from an application that calls plugin, I have seen:
