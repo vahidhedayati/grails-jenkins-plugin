@@ -323,22 +323,26 @@ function cdtd${divId}() {
 	var now = new Date();
 	var timeDiff = future.getTime() - now.getTime();
 	var timer;
+	var go=1;
 	if (timeDiff <= 0) {
 		newBuild${divId}('dashboard');
 	    clearTimeout(timer);
+	    go=0;
 	}
-	var seconds = Math.floor(timeDiff / 1000);
-	var minutes = Math.floor(seconds / 60);
-	var hours = Math.floor(minutes / 60);
-	var days = Math.floor(hours / 24);
-	hours %= 24;
-	    minutes %= 60;
-	    seconds %= 60;
-	//document.getElementById("daysBox${divId}").innerHTML = days;
-	document.getElementById("hoursBox${divId}").innerHTML = hours;
-	document.getElementById("minsBox${divId}").innerHTML = minutes;
-	document.getElementById("secsBox${divId}").innerHTML = seconds;
-	timer = setTimeout('cdtd${divId}()',1000);
+	if (go==1) {
+		var seconds = Math.floor(timeDiff / 1000);
+		var minutes = Math.floor(seconds / 60);
+		var hours = Math.floor(minutes / 60);
+		var days = Math.floor(hours / 24);
+		hours %= 24;
+		    minutes %= 60;
+		    seconds %= 60;
+		//document.getElementById("daysBox${divId}").innerHTML = days;
+		document.getElementById("hoursBox${divId}").innerHTML = hours;
+		document.getElementById("minsBox${divId}").innerHTML = minutes;
+		document.getElementById("secsBox${divId}").innerHTML = seconds;
+		timer = setTimeout('cdtd${divId}()',1000);
+	}
 }
 
 
