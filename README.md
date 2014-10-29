@@ -214,6 +214,24 @@ Tested on recent/older variants of Jenkins. May still fail on others, please pos
 
 
 
+
+### Authenticated Jenkins howto:
+
+First thing first, you need to enable authentication on Jenkins, our systems uses AD plugin and connects a user through to AD.
+Once a user has logged in then goto:
+
+1. Your Jenkins server:
+
+http://your_jenkins:port/user/USERID/configure
+
+Click on show API Token (This is an example token)
+9a997cc1a954ac3a5ac59ea97c17a851
+
+
+With this information now login using the front end using the username and the token as the password - this now triggers builds as the user.
+
+At the moment its buggy with authentications 
+
 # whilst running in PROD:
 
 Whilst running this plugin on a tomcat server from an application that calls plugin, I have seen:
