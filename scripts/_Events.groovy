@@ -11,13 +11,6 @@ eventWebXmlEnd = {String tmpfile ->
 		   )
         }
     }
-	root.appendNode {
-		'listener' {
-			'listener-class' (
-				'grails.plugin.jenkins.JenkinsEndPoint'
-			)
-		 }
-	 }
     webXmlFile.text = new StreamingMarkupBuilder().bind {
         mkp.declareNamespace(
                 "": "http://java.sun.com/xml/ns/javaee")
