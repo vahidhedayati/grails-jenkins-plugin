@@ -218,6 +218,15 @@ Tested on recent/older variants of Jenkins. May still fail on others, please pos
 
 ### Authenticated Jenkins howto:
 
+Once you have configured global security of some form on your Jenkins server. Authentication should work via Jenkins so long as you either provide just the username to the initial form, or via the taglib call.
+
+##### The plugin will attempt to grab the user authToken from the given server, if it can successfully retrieve this without authentication then the userToken is automatically set.
+
+So if you simply provide a username, the plugin will try do the rest.
+
+Whilst building if the current user has got authenticated then the user will appear above build logs.
+
+##### To manually define authToken per user(known as jenspass)
 First thing first, you need to enable authentication on Jenkins, our systems uses AD plugin and connects a user through to AD.
 Once a user has logged in then goto:
 
@@ -228,16 +237,7 @@ http://your_jenkins:port/user/USERID/configure
 Click on show API Token (This is an example token)
 9a997cc1a954ac3a5ac59ea97c17a851
 
-
 With this information now login using the front end using the username and the token as the password - this now triggers builds as the user.
-
-At the moment its buggy with authentications 
-
-##### The plugin will attempt to grab the user authToken from the given server, if it can successfully retrieve this without authentication then the userToken is automatically set.
-
-So if you simply provide a username, the plugin will try do the rest.
-
-Whilst building if the current user has got authenticated then the user will appear above build logs.
 
 
 # whilst running in PROD:
