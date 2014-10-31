@@ -1,8 +1,6 @@
 import groovy.xml.StreamingMarkupBuilder
 
-
 eventWebXmlEnd = {String tmpfile ->
-	
     def root = new XmlSlurper().parse(webXmlFile)
     root.appendNode {
        'listener' {

@@ -1,6 +1,4 @@
 
-
-
 class JenkinsGrailsPlugin {
 	def version = "0.1"
 	def grailsVersion = "2.0 > *"
@@ -12,10 +10,5 @@ class JenkinsGrailsPlugin {
 	def issueManagement = [system: 'GITHUB', url: 'https://github.com/vahidhedayati/grails-jenkins-plugin/issues']
 	def scm = [url: 'https://github.com/vahidhedayati/grails-jenkins-plugin']
 
-	/*
-	 *def doWithSpring = {
-	 *	jenkinService(JenkinsService)
-	 *}
-	 */
 
 }

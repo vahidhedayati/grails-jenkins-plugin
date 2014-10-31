@@ -13,8 +13,6 @@ import org.apache.http.protocol.HttpContext
 
 class JenkinsService {
 	RESTClient http
-
-
 	private String verifyUrl(String nurl,String server,def user,def pass)  {
 		def ret = [:]
 		String result='Failed'

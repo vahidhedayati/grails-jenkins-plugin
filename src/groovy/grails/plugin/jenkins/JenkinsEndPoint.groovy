@@ -24,7 +24,6 @@ import javax.websocket.server.ServerEndpoint
 @ServerEndpoint("/JenkinsEndPoint/{server}/{job}")
 class JenkinsEndPoint implements ServletContextListener{
 	JenkinsService jenkinsService=new JenkinsService()
-	//def jenkinsService
 	private int httpConnTimeOut = 10*1000;
 	private int httpSockTimeOut = 30*1000;
 	static final Set<Session> jsessions = Collections.synchronizedSet(new HashSet<Session>())
