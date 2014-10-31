@@ -174,7 +174,7 @@ class JenkinsEndPoint implements ServletContextListener{
 			//This hogs websocket connection - so lets background it
 			def asyncProcess = new Thread({parseLiveLogs(userSession,bid+jensprogressive)} as Runnable )
 			asyncProcess.start()
-			//parseLiveLogs(userSession,nurl)
+			//parseLiveLogs(userSession,bid+jensprogressive)
 
 
 			// Sendback liveUrl back through sockets
@@ -194,7 +194,167 @@ class JenkinsEndPoint implements ServletContextListener{
 				userSession.getBasicRemote().sendText(it.toString())
 			}
 		}
+	}
 
+	private dashboard(Session userSession) {
+		getBuilds(userSession,jensurl)
+	}
+
+	private buildJob(Session userSession) {
+		String url=jensurl
+		def url1=url+jensbuildend
+		def lastbid=getLastBuild(url)
+		int currentBuild=jenkinsService.currentJob(lastbid)
+		String consolelog=jensconlog
+		try {
+			userSession.getBasicRemote().sendText("\nBefore triggering Build ID: "+currentBuild+"\n..waiting\n")
+			jobControl(userSession, url1,url)
+			boolean go=false
+			int a=0
+			def lastbid1,newBuild
+			while ((go==false)&&(a<6)) {
+				a++
+				lastbid1=getLastBuild(url)
+				if (lastbid1) {
+					newBuild=jenkinsService.currentJob(lastbid1)
+					userSession.getBasicRemote().sendText("[${newBuild}].")
+					sleep(1000)
+					if (newBuild > currentBuild) {
+						go=true
+					}
+				}else{
+					a--;
+				}
+			}
+			dashboard(userSession)
+			if (go) {
+				userSession.getBasicRemote().sendText("New Build ID: "+newBuild+"\nAttempting to parse logs:\n")
+				sleep(3000)
+				String url2=jenkinsService.stripDouble(lastbid1+consolelog)
+				parseJobConsole(userSession,url2,lastbid1)
+			}else{
+				userSession.getBasicRemote().sendText("\nBuild triggered failed to capture it running")
+
+			}
+			dashboard(userSession)
+
+		} catch (Exception e) {
+			e.printStackTrace()
+		}
+	}
+
+	private void jobControl(Session userSession,String url,String bid) {
+		HttpResponseDecorator html1=jenkinsService.httpConn('post',jenserver+url,jensuser ?: '',jenspass ?: '')
+	}
+
+	private def getBuilds(Session userSession,String url) {
+		try {
+			def finalList=[:]
+			def hList=[]
+			def col1,col2,col3
+			HttpResponseDecorator html1= http.get(path: "${url}")
+			def html=html1?.data
+			def sbn=html."**".findAll {it.@class.toString().contains("stop-button-link")}
+			if (sbn) {
+				col3 = sbn.collect {
+					[
+						bid :jenkinsService.verifyBuild(it.@href.text()),
+						bstatus : jenkinsService.verifyStatus(it.@href.text().toString()),
+						jobid :  jenkinsService.verifyJob(it.@href.text().toString())
+					]
+				}
+			}
+			// New jenkins
+			def bd=html."**".findAll {it.@class.toString().contains("build-details")}
+			if (bd) {
+				col1 = bd.collect {
+					[
+						bid : it.A[0].@href.text(),
+						bdate :it.toString().trim()
+					]
+				}
+				def bn=html."**".findAll {it.@class.toString().contains("build-name")}
+				if (bn) {
+					col2 = bn.collect {
+						[
+							bid :jenkinsService.verifyBuild(it.A[0].@href.text()),
+							//bstatus : verifyStatus(it.A[0].IMG[0].@class.text().toString()),
+							bstatus : jenkinsService.verifyStatus(it.A[0].IMG.@src.text().toString()),
+							//bimgUrl : it.A[0].IMG[0].@src.text(),
+							jobid : it.toString().trim().replaceAll('[\n|\r|#|\t| ]+', '').replaceAll("\\s","")
+						]
+					}
+				}
+			}else{
+				// Going to try parse older html styles - provided by a default jenkins install
+				bd=html."**".findAll {it.@class.toString().contains("tip model-link")}
+				if (bd) {
+					col1 = bd.collect {
+						[
+							bid : it.@href.text(),
+							bdate :it.toString().trim()
+						]
+					}
+				}
+				def bn=html."**".findAll {it.@class.toString().contains("build-row no-wrap")}
+				if (bn) {
+					col2=bn.collect {
+						[
+							bid: jenkinsService.verifyBuild(it.TD[0].A.@href.text().toString()),
+							bstatus : jenkinsService.verifyStatus(it.TD[0].A.IMG.@src.text().toString()),
+							jobid: jenkinsService.verifyJob(it.TD[0].A.@href.text().toString()).replaceAll("\\s","")
+						]
+					}
+				}
+			}
+			if (col3) {
+				finalList=[:]
+				finalList.put("historyQueue",col3)
+				userSession.getBasicRemote().sendText((finalList as JSON).toString())
+			}
+			if (col1&&col2) {
+				def combined = (col1 + col2).groupBy { it.bid }.collect { it.value.collectEntries { it } }
+				finalList=[:]
+				finalList.put("history",combined)
+				userSession.getBasicRemote().sendText((finalList as JSON).toString())
+			}
+
+
+		}catch(Exception e) {
+			log.error "Problem communicating with ${url}: ${e.message}"
+		}
+	}
+
+	private def getLastBuild(String url) {
+		def bid=""
+		def bdate
+		try {
+			int go=0;
+			HttpResponseDecorator html1=  http.get(path: "${url}")
+			def html=html1?.data
+			def bd=html."**".findAll {it.@class.toString().contains("build-details")}
+			if (bd) {
+				bd.each {
+					go++
+					if (go==1) {
+						bid=it.A[0].@href.text()
+						bdate=it.toString().trim()
+					}
+				}
+			}else{
+				bd=html."**".find { it.@class.toString().contains("tip model-link") }
+				bd.each {
+					go++
+					if (go==1) {
+						bid=it.@href.text()
+						bdate=it.toString().trim()
+					}
+				}
+			}
+		}catch(Exception e) {
+			log.error "Problem communicating with ${url}: ${e.message}"
+		}
+		return  bid
 	}
 
 
@@ -240,191 +400,21 @@ class JenkinsEndPoint implements ServletContextListener{
 				// On success get latest output back from headers
 				if (jensuser&&jenspass) {
 					headers.'Authorization' ="Basic ${"${jensuser}:${jenspass}".bytes.encodeBase64().toString()}"
-			}
-			response.failure = { resp, reader ->
-				//if (reader.text.contains('Invalid password')) {//}
-				hasMore=false
-			}
-			response.success = { resp, reader ->
-				hasMore=resp.headers.'X-More-Data'
-				csize=resp.headers.'X-Text-Size'
-				consoleAnnotator=resp.headers.'X-ConsoleAnnotator'
-				// If the current size is there and larger than osize value send to websocket
-				if (csize && csize > osize) {
-					userSession.getBasicRemote().sendText(reader.text as String)
+				}
+				response.failure = { resp, reader ->
+					//if (reader.text.contains('Invalid password')) {//}
+					hasMore=false
+				}
+				response.success = { resp, reader ->
+					hasMore=resp.headers.'X-More-Data'
+					csize=resp.headers.'X-Text-Size'
+					consoleAnnotator=resp.headers.'X-ConsoleAnnotator'
+					// If the current size is there and larger than osize value send to websocket
+					if (csize && csize > osize) {
+						userSession.getBasicRemote().sendText(reader.text as String)
+					}
 				}
 			}
 		}
 	}
-}
-
-private dashboard(Session userSession) {
-	getBuilds(userSession,jensurl)
-}
-
-private buildJob(Session userSession) {
-	String url=jensurl
-	def url1=url+jensbuildend
-	def lastbid=getLastBuild(url)
-	int currentBuild=jenkinsService.currentJob(lastbid)
-	String consolelog=jensconlog
-	try {
-		userSession.getBasicRemote().sendText("\nBefore triggering Build ID: "+currentBuild+"\n..waiting\n")
-		jobControl(userSession, url1,url)
-		boolean go=false
-		int a=0
-		def lastbid1,newBuild
-		while ((go==false)&&(a<6)) {
-			a++
-			lastbid1=getLastBuild(url)
-			if (lastbid1) {
-				newBuild=jenkinsService.currentJob(lastbid1)
-				userSession.getBasicRemote().sendText("[${newBuild}].")
-				sleep(1000)
-				if (newBuild > currentBuild) {
-					go=true
-				}
-			}else{
-				a--;
-			}
-		}
-		dashboard(userSession)
-		if (go) {
-			userSession.getBasicRemote().sendText("New Build ID: "+newBuild+"\nAttempting to parse logs:\n")
-			sleep(3000)
-			String url2=jenkinsService.stripDouble(lastbid1+consolelog)
-			parseJobConsole(userSession,url2,lastbid1)
-		}else{
-			userSession.getBasicRemote().sendText("\nBuild triggered failed to capture it running")
-
-		}
-		dashboard(userSession)
-
-	} catch (Exception e) {
-		e.printStackTrace()
-	}
-}
-
-private void jobControl(Session userSession,String url,String bid) {
-	HttpResponseDecorator html1=jenkinsService.httpConn('post',jenserver+url,jensuser ?: '',jenspass ?: '')
-}
-
-
-
-private def getBuilds(Session userSession,String url) {
-	try {
-		def finalList=[:]
-		def hList=[]
-		def col1,col2,col3
-		HttpResponseDecorator html1= http.get(path: "${url}")
-		def html=html1?.data
-		def sbn=html."**".findAll {it.@class.toString().contains("stop-button-link")}
-		if (sbn) {
-			col3 = sbn.collect {
-				[
-					bid :jenkinsService.verifyBuild(it.@href.text()),
-					bstatus : jenkinsService.verifyStatus(it.@href.text().toString()),
-					jobid :  jenkinsService.verifyJob(it.@href.text().toString())
-				]
-			}
-		}
-		// New jenkins
-		def bd=html."**".findAll {it.@class.toString().contains("build-details")}
-		if (bd) {
-			col1 = bd.collect {
-				[
-					bid : it.A[0].@href.text(),
-					bdate :it.toString().trim()
-				]
-			}
-
-			def bn=html."**".findAll {it.@class.toString().contains("build-name")}
-			if (bn) {
-				col2 = bn.collect {
-					[
-						bid :jenkinsService.verifyBuild(it.A[0].@href.text()),
-						//bstatus : verifyStatus(it.A[0].IMG[0].@class.text().toString()),
-						bstatus : jenkinsService.verifyStatus(it.A[0].IMG.@src.text().toString()),
-						//bimgUrl : it.A[0].IMG[0].@src.text(),
-						jobid : it.toString().trim().replaceAll('[\n|\r|#|\t| ]+', '').replaceAll("\\s","")
-					]
-				}
-			}
-
-		}else{
-			// Going to try parse older html styles - provided by a default jenkins install
-			bd=html."**".findAll {it.@class.toString().contains("tip model-link")}
-			if (bd) {
-				col1 = bd.collect {
-					[
-						bid : it.@href.text(),
-						bdate :it.toString().trim()
-					]
-				}
-			}
-			def bn=html."**".findAll {it.@class.toString().contains("build-row no-wrap")}
-			if (bn) {
-				col2=bn.collect {
-					[
-						bid: jenkinsService.verifyBuild(it.TD[0].A.@href.text().toString()),
-						bstatus : jenkinsService.verifyStatus(it.TD[0].A.IMG.@src.text().toString()),
-						jobid: jenkinsService.verifyJob(it.TD[0].A.@href.text().toString()).replaceAll("\\s","")
-					]
-				}
-			}
-		}
-		if (col3) {
-			finalList=[:]
-			finalList.put("historyQueue",col3)
-			userSession.getBasicRemote().sendText((finalList as JSON).toString())
-		}
-		if (col1&&col2) {
-			def combined = (col1 + col2).groupBy { it.bid }.collect { it.value.collectEntries { it } }
-			finalList=[:]
-			finalList.put("history",combined)
-			userSession.getBasicRemote().sendText((finalList as JSON).toString())
-		}
-
-
-	}catch(Exception e) {
-		log.error "Problem communicating with ${url}: ${e.message}"
-	}
-}
-
-private def getLastBuild(String url) {
-	def bid=""
-	def bdate
-	try {
-		int go=0;
-		HttpResponseDecorator html1=  http.get(path: "${url}")
-		def html=html1?.data
-		def bd=html."**".findAll {it.@class.toString().contains("build-details")}
-		if (bd) {
-			bd.each {
-				go++
-				if (go==1) {
-					bid=it.A[0].@href.text()
-					bdate=it.toString().trim()
-				}
-			}
-		}else{
-			bd=html."**".find { it.@class.toString().contains("tip model-link") }
-			bd.each {
-				go++
-				if (go==1) {
-					bid=it.@href.text()
-					bdate=it.toString().trim()
-				}
-			}
-		}
-	}catch(Exception e) {
-		log.error "Problem communicating with ${url}: ${e.message}"
-	}
-	return  bid
-}
-
-
-
-
-
 }
