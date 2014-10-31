@@ -33,7 +33,7 @@ The plugin functionality provides two core aspects of the Jenkins product within
 
 ##### lists current build history items on right hand side
 The build history info is sent via websockets. If you click an item it will display its log. It displays status of job whether it passed/failed/canelled/building or queued. If building it will additionally show running time and estimated time according to Jenkins, this was initially achieved by parsing page over and over, now moved locally as a javascript that works out difference of estimated time according to jobid/api/json estimateTime value set per jenkins job. You can click stop to send a stop to backend jenkins which will stop the build. Scheduled future builds will appeared as queued and you can also cancel them.
- 
+
 
 ##### Build
 This triggers a build and attempts to parse job output, since it is building the results by default are returned via Ajax, it uses websockets instead to grab ready chunks of log output and display back on your page.
@@ -50,9 +50,9 @@ This triggers a build and attempts to parse job output, since it is building the
 Controller:
 ExampleController.groovy:
 ```groovy
-	def build() { 
+	def build() {
 		def goahead=params.goahead
-		[goahead:goahead]	
+		[goahead:goahead]
 	}
 ```
 
@@ -60,21 +60,21 @@ GSP Page for build.gsp
 ```gsp
 
 
-<g:form method="post">
+<g:form>
 	<input type="hidden" name="goahead" value="yes">
 	<input type="submit" value="Build Jenkins job">
 </g:form>
 
 <g:if test="${goahead.equals('yes') }">
-	<jen:connect divId="firstId" jenserver="localhost" jensport="9090" jensuser="" jenspass="" 
+	<jen:connect divId="firstId" jenserver="localhost" jensport="9090" jensuser="" jenspass=""
 	jensjob="my_build" jensprefix="" jensfolder="job" jenschoice="build" hideButtons="no" hideBuildTimer="no" />
 
-	<jen:connect divId="secondId" jenserver="localhost" jensport="9090" jensuser="" jenspass="" 
+	<jen:connect divId="secondId" jenserver="localhost" jensport="9090" jensuser="" jenspass=""
 	jensjob="my_build2" jensprefix="" jensfolder="job" jenschoice="build" hideButtons="no" hideBuildTimer="no"/>
 </g:if>
 ```
  So we have a button that asks to trigger build - if when clicked - its a self posting form that sets goahead=yes
- 
+
  Then on the same page if this valus equals yes to call taglibs: results below:
 
 
@@ -91,7 +91,7 @@ Configure properties by adding following to grails-app/conf/Config.groovy under 
 
 
 /*
-* This is the most important configuration 
+* This is the most important configuration
 * in my current version the hostname is being defined by tomcat start up setenv.sh
 * In my tomcat setenv.sh I have
 * HOSTNAME=$(hostname)
@@ -105,13 +105,13 @@ jenkins.wshostname=System.getProperty('SERVERURL')+":8080"
 // can be overridden via tag lib :  wshostname="something"
 
 
-/* timeout 
+/* timeout
 * This is the default timeout value for websocket connection
 * If you wish to get user to be timed out if inactive set this to a millisecond value
 */
 jenkins.timeout=0
 
-/* 
+/*
 * Optional : not required - unless different to defaults
 * Jenkins hide Login Pag: default  'no'
 * choices : no/yes
@@ -121,16 +121,16 @@ jenkins.hideLoginPage='no'
 
 
 
-/* 
+/*
 * Optional : not required - unless different to defaults
 * Jenkins internal consoleLog : default  '/consoleFull'
 */
 jenkins.consoleLog='/consoleFull'
-// can be overridden via tag lib by definining: jensLog="something" 
+// can be overridden via tag lib by definining: jensLog="something"
 
 
 
-/* 
+/*
 * Optional : not required - unless different to defaults
 * Jenkins internal buildend : default  '/build?delay=0sec'
 */
@@ -138,7 +138,7 @@ jenkins.buildend='/build?delay=0sec'
 // can be overridden via tag lib : jensbuildend="something"
 
 
-/* 
+/*
 * Optional : not required - unless different to defaults
 * Jenkins internal progressiveuri : default  '/logText/progressiveHtml'
 */
@@ -146,7 +146,7 @@ jenkins.progressiveuri='/logText/progressiveHtml'
 // can be overridden via tag lib : jensprogressive="something"
 
 
-/* 
+/*
 * Optional : not required - unless different to defaults
 * Jenkins hide build/dashboard buttons : default  'no'
 * choices : no/yes
@@ -154,21 +154,21 @@ jenkins.progressiveuri='/logText/progressiveHtml'
 
 jenkins.hideButtons='no'
 
-/* 
+/*
 * Optional : not required - unless different to defaults
 * Jenkins hide build button : default  'no'
 * choices : no/yes
 */
 jenkins.hideTriggerButton='no'
 
-/* 
+/*
 * Optional : not required - unless different to defaults
 * Jenkins hide dashboard/buildhistory button : default  'no'
 * choices : no/yes
 */
 jenkins.hideDashBoardButton='no'
 
-  
+
 ```
 
 
@@ -191,18 +191,18 @@ jenschoice="${jenschoice}"
 />
 ```
 
-Optional override taglibs: (Refer to above Config.groovy to understand what these are:) 
+Optional override taglibs: (Refer to above Config.groovy to understand what these are:)
 ```gsp
 <jen:connect
 ....
 hideButtons="${hideButtons }"
 hideTriggerButton="${hideTriggerButton }"
 hideDashBoardButton="${hideDashBoardButton }"
-jensLog="something" 
+jensLog="something"
 wshostname="something"
 jensprogressive="something"
 jensLog="something"
-/> 
+/>
 
  ```
 
@@ -214,12 +214,12 @@ You should be able to call it multiple times and provide different divId's for e
 Tested on recent/older variants of Jenkins. May still fail on others, please post an issue with specific Jenkins version for me to look into.
 
 
- 
+
  Alternative more direct connect tag lib call:
  ```gsp
- <jen:dirconnect 
+ <jen:dirconnect
 		divId="someId"
-		jensurl="http://jenkins-server:port/job/jobname" 
+		jensurl="http://jenkins-server:port/job/jobname"
 		jensuser="current_user"
 		jenschoice="dashboard"
 		jensjob="jobname"
@@ -259,5 +259,5 @@ javax.websocket.DeploymentException: Multiple Endpoints may not be deployed to t
 	at org.apache.tomcat.websocket.server.WsServerContainer.addEndpoint(WsServerContainer.java:209)
 	at org.apache.tomcat.websocket.server.WsServerContainer.addEndpoint(WsServerContainer.java:268)
 	at javax.websocket.server.ServerContainer$addEndpoint.call(Unknown Source)
-```	
+```
 This does appear to be a warning and endpoint still works fine, and happens in tomcat... 7 + 8
