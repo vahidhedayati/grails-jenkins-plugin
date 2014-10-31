@@ -6,7 +6,6 @@ import grails.converters.JSON
 import grails.util.Holders
 import groovy.json.JsonBuilder
 import groovyx.net.http.HttpResponseDecorator
-import groovyx.net.http.HttpResponseException
 import groovyx.net.http.RESTClient
 
 import javax.servlet.ServletContextEvent
@@ -19,14 +18,13 @@ import javax.websocket.Session
 import javax.websocket.server.PathParam
 import javax.websocket.server.ServerContainer
 import javax.websocket.server.ServerEndpoint
-import org.apache.http.HttpRequest
-import org.apache.http.HttpRequestInterceptor
-import org.apache.http.protocol.HttpContext
 
 @WebListener
 
 @ServerEndpoint("/JenkinsEndPoint/{server}/{job}")
 class JenkinsEndPoint implements ServletContextListener{
+	JenkinsService jenkinsService=new JenkinsService()
+	//def jenkinsService
 	private int httpConnTimeOut = 10*1000;
 	private int httpSockTimeOut = 30*1000;
 	static final Set<Session> jsessions = Collections.synchronizedSet(new HashSet<Session>())
@@ -90,7 +88,7 @@ class JenkinsEndPoint implements ServletContextListener{
 
 			if (cmd.toString().equals('stopBuild')) {
 				if (data.bid) {
-					jobControl(userSession,stripDouble(data.bid+'/stop'),data.bid)
+					jobControl(userSession,jenkinsService.stripDouble(data.bid+'/stop'),data.bid)
 					dashboard(userSession)
 				}
 			}
@@ -136,16 +134,18 @@ class JenkinsEndPoint implements ServletContextListener{
 	}
 
 	private void jenkinsConnect(Session userSession) {
-		def validurl=verifyUrl(jensconurl)
+		http=jenkinsService.httpConn(jenserver,jensuser,jenspass)
+		def validurl=jenkinsService.verifyUrl(jensconurl,jenserver,jensuser,jenspass)
 		if (validurl.toString().startsWith('Success')) {
 			userSession.getBasicRemote().sendText('Jenkins plugin connected to: '+jensconurl)
 			// try to get apiToken if only user has provided
 			if (jensuser &&(!jenspass)) {
-				jenspass=returnToken(jensuser)
+				jenspass=jenkinsService.returnToken(jensuser,jenserver,userbase,userend)
 			}
 		}else{
 			userSession.getBasicRemote().sendText('JenkinsConnect failed to connect to: '+jensconurl)
 		}
+
 	}
 
 	private String echoJob(String server,String job) {
@@ -156,7 +156,7 @@ class JenkinsEndPoint implements ServletContextListener{
 	private void parseJobConsole(Session userSession,String url,String bid) {
 		// Send user confirmation that you are going to parse Jenkins job
 		userSession.getBasicRemote().sendText("\nAbout to parse ${url}\n")
-		HttpResponseDecorator html1=httpConn('get',jenserver,url,jensuser,jenspass)
+		HttpResponseDecorator html1=jenkinsService.httpConn('get',jenserver,url,jensuser,jenspass)
 		def html=html1?.data
 		boolean start,start1=false
 		// If we have a class of console output then set start1 to true
@@ -184,7 +184,7 @@ class JenkinsEndPoint implements ServletContextListener{
 			// httpbuilder this end to do remoteURL processing
 			def json = new JsonBuilder()
 			json {
-				delegate.liveUrl "${nurl}"
+				delegate.liveUrl "${jenserver}${url}"
 			}
 			userSession.getBasicRemote().sendText(json.toString())
 		}
@@ -198,7 +198,7 @@ class JenkinsEndPoint implements ServletContextListener{
 
 	}
 
-	
+
 	/*
 	 * Parse Jenkins API url - grab all but only using a few json values
 	 *  to calculate estimated duration of build
@@ -221,12 +221,12 @@ class JenkinsEndPoint implements ServletContextListener{
 		def csize,consoleAnnotator
 		String ssize=''
 		userSession.getBasicRemote().sendText("Attempting live poll")
-		def http1  =httpConn(jenserver,jensuser,jenspass)
+		def http1  =jenkinsService.httpConn(jenserver,jensuser,jenspass)
 
 		// while hasMore is true -
 		// jenkins html page defined as header values
 		// goes away once full results are returned
-		
+
 		while (hasMore) {
 			// If there is a text-size header set then create url appender
 			if (csize) {
@@ -267,9 +267,8 @@ private buildJob(Session userSession) {
 	String url=jensurl
 	def url1=url+jensbuildend
 	def lastbid=getLastBuild(url)
-	int currentBuild=currentJob(lastbid)
+	int currentBuild=jenkinsService.currentJob(lastbid)
 	String consolelog=jensconlog
-	//String consolelog='/consoleText'
 	try {
 		userSession.getBasicRemote().sendText("\nBefore triggering Build ID: "+currentBuild+"\n..waiting\n")
 		jobControl(userSession, url1,url)
@@ -280,7 +279,7 @@ private buildJob(Session userSession) {
 			a++
 			lastbid1=getLastBuild(url)
 			if (lastbid1) {
-				newBuild=currentJob(lastbid1)
+				newBuild=jenkinsService.currentJob(lastbid1)
 				userSession.getBasicRemote().sendText("[${newBuild}].")
 				sleep(1000)
 				if (newBuild > currentBuild) {
@@ -294,7 +293,7 @@ private buildJob(Session userSession) {
 		if (go) {
 			userSession.getBasicRemote().sendText("New Build ID: "+newBuild+"\nAttempting to parse logs:\n")
 			sleep(3000)
-			String url2=stripDouble(lastbid1+consolelog)
+			String url2=jenkinsService.stripDouble(lastbid1+consolelog)
 			parseJobConsole(userSession,url2,lastbid1)
 		}else{
 			userSession.getBasicRemote().sendText("\nBuild triggered failed to capture it running")
@@ -308,46 +307,10 @@ private buildJob(Session userSession) {
 }
 
 private void jobControl(Session userSession,String url,String bid) {
-	HttpResponseDecorator html1=httpConn('post',jenserver+url,jensuser,jenspass)
+	HttpResponseDecorator html1=jenkinsService.httpConn('post',jenserver+url,jensuser ?: '',jenspass ?: '')
 }
 
-private String verifyUrl(def nurl)  {
-	def ret = [:]
-	String result='Failed'
-	try {
-		boolean goahead=true
-		try {
-			http=httpConn(jenserver,jensuser,jenspass)
-		}catch (Exception ex){
-			result="Failed error: ${ex}"
-			return result
-			goahead=false
-		}catch (Throwable ex) {
-			result="Failed error: ${ex}"
-			return result
-			goahead=false
-		}catch ( HttpResponseException ex ) {
-			result="Failed error: ${ex.statusCode}"
-			return result
-			goahead=false
-		}
-		if (goahead) {
-			http?.request(GET,TEXT) { req ->
-				//http?.request(GET,HTML) { req ->
-				response.success = { resp ->
-					result="Success"
-				}
-				response.failure = { resp ->
-					result="Failed error: ${resp.statusLine.statusCode}"
-				}
-			}
-		}
-	}catch ( HttpResponseException ex ) {
-		result="Failed error: ${ex.statusCode}"
-		return result
-	}
-	return result
-}
+
 
 private def getBuilds(Session userSession,String url) {
 	try {
@@ -360,9 +323,9 @@ private def getBuilds(Session userSession,String url) {
 		if (sbn) {
 			col3 = sbn.collect {
 				[
-					bid :verifyBuild(it.@href.text()),
-					bstatus : verifyStatus(it.@href.text().toString()),
-					jobid :  verifyJob(it.@href.text().toString())
+					bid :jenkinsService.verifyBuild(it.@href.text()),
+					bstatus : jenkinsService.verifyStatus(it.@href.text().toString()),
+					jobid :  jenkinsService.verifyJob(it.@href.text().toString())
 				]
 			}
 		}
@@ -380,9 +343,9 @@ private def getBuilds(Session userSession,String url) {
 			if (bn) {
 				col2 = bn.collect {
 					[
-						bid :verifyBuild(it.A[0].@href.text()),
+						bid :jenkinsService.verifyBuild(it.A[0].@href.text()),
 						//bstatus : verifyStatus(it.A[0].IMG[0].@class.text().toString()),
-						bstatus : verifyStatus(it.A[0].IMG.@src.text().toString()),
+						bstatus : jenkinsService.verifyStatus(it.A[0].IMG.@src.text().toString()),
 						//bimgUrl : it.A[0].IMG[0].@src.text(),
 						jobid : it.toString().trim().replaceAll('[\n|\r|#|\t| ]+', '').replaceAll("\\s","")
 					]
@@ -404,9 +367,9 @@ private def getBuilds(Session userSession,String url) {
 			if (bn) {
 				col2=bn.collect {
 					[
-						bid: verifyBuild(it.TD[0].A.@href.text().toString()),
-						bstatus : verifyStatus(it.TD[0].A.IMG.@src.text().toString()),
-						jobid: verifyJob(it.TD[0].A.@href.text().toString()).replaceAll("\\s","")
+						bid: jenkinsService.verifyBuild(it.TD[0].A.@href.text().toString()),
+						bstatus : jenkinsService.verifyStatus(it.TD[0].A.IMG.@src.text().toString()),
+						jobid: jenkinsService.verifyJob(it.TD[0].A.@href.text().toString()).replaceAll("\\s","")
 					]
 				}
 			}
@@ -429,14 +392,12 @@ private def getBuilds(Session userSession,String url) {
 	}
 }
 
-
-
 private def getLastBuild(String url) {
 	def bid=""
 	def bdate
 	try {
 		int go=0;
-		HttpResponseDecorator html1= http.get(path: "${url}")
+		HttpResponseDecorator html1=  http.get(path: "${url}")
 		def html=html1?.data
 		def bd=html."**".findAll {it.@class.toString().contains("build-details")}
 		if (bd) {
@@ -465,160 +426,6 @@ private def getLastBuild(String url) {
 
 
 
-private String returnToken(String user) {
-	String url=userbase+user+userend
-	def token
-	int go=0;
-	try {
-	RESTClient http1 = new RESTClient("${jenserver}")
-	HttpResponseDecorator html1= http1.get(path: "${url}")
-	def html=html1?.data
-	def bd=html."**".findAll {it.@id.toString().contains("apiToken")}
-	if (bd) {
-		bd.each {
-			go++
-			if (go==1) {
-				token=it.@value.text()
-			}
-		}
-	}
-	}catch (Exception ex){
-	 log.info "Failed error: ${ex}"
-	}
-	return token
-}
-
-
-private RESTClient httpConn(String host,String user,String key) {
-	try {
-		RESTClient http = new RESTClient("${host}")
-		if (user&&key) {
-			http.client.addRequestInterceptor(new HttpRequestInterceptor() {
-						void process(HttpRequest httpRequest, HttpContext httpContext) {
-							httpRequest.addHeader('Authorization', 'Basic ' + "${user}:${key}".bytes.encodeBase64().toString())
-
-						}
-					})
-		}
-		return http
-	}catch (Exception ex){
-		log.debug("Failed error: ${ex}")
-	}
-}
-
-private HttpResponseDecorator httpConn(String type, String host,String uri,String user,String key) {
-	try {
-		RESTClient http = new RESTClient("${host}")
-		if (user&&key) {
-			http.client.addRequestInterceptor(new HttpRequestInterceptor() {
-						void process(HttpRequest httpRequest, HttpContext httpContext) {
-							httpRequest.addHeader('Authorization', 'Basic ' + "${user}:${key}".bytes.encodeBase64().toString())
-						}
-					})
-		}
-		if (type.equals('get')) {
-			return http.get(path: "${uri}")
-		}else{
-			return http.post(path: "${uri}")
-		}
-	}catch(Exception e) {
-		log.error "Problem communicating with ${uri}: ${e.message}"
-	}
-}
-
-private HttpResponseDecorator httpConn(String type,String url,String user,String key) {
-	try {
-		RESTClient http = new RESTClient("${url}")
-		if (user&&key) {
-			http.client.addRequestInterceptor(new HttpRequestInterceptor() {
-						void process(HttpRequest httpRequest, HttpContext httpContext) {
-							httpRequest.addHeader('Authorization', 'Basic ' + "${user}:${key}".bytes.encodeBase64().toString())
-						}
-					})
-		}
-		if (type.equals('get')) {
-			return http.get([:])
-		}else{
-			return http.post([:])
-		}
-	}catch(Exception e) {
-		log.error "Problem communicating with ${url}: ${e.message}"
-	}
-}
-
-private String verifyStatus(String img) {
-	String output="unknown"
-	if (img.contains("blue_anime")||(img.contains("aborted_anime"))||(img.contains("job"))&&(img.contains("stop"))) {
-		output="building"
-	}else if (img.contains("red")) {
-		output="failed"
-	}else if (img.contains("blue")) {
-		output="passed"
-	}else if ((img.contains("queue"))||(img.contains("cancelItem"))) {
-		output="queued"
-	}else if ((img.contains("grey"))||(img.contains("aborted"))) {
-		output="cancelled"
-	}
-	return output
-}
-
-private int currentJob(String job) {
-	if (job && job.endsWith('/')) {
-		job=job.substring(0,job.length()-1)
-		job=job.substring(job.lastIndexOf('/')+1,job.length())
-		if (job.isInteger()) {
-			return job as int
-		}
-		return 0
-	}
-	return 0
-}
-
-private String verifyJob(String job) {
-	if (job) {
-		if (job.endsWith('/')) {
-			job=job.substring(0,job.length()-1)
-		}
-		if (job.indexOf('=')>-1) {
-			job=job.substring(job.indexOf('=')+1,job.length())
-		}else if (job.endsWith('/console')) {
-			job=job.substring(0,job.indexOf('/console'))
-			job=job.substring(job.lastIndexOf('/')+1,job.length())
-		}else if (job.endsWith('/stop')) {
-			job=job.substring(0,job.indexOf('/stop'))
-			job=job.substring(job.lastIndexOf('/')+1,job.length())
-		}
-		return job
-	}
-	return
-}
-
-private def verifyBuild(String bid) {
-	if (bid && bid.endsWith('/console')) {
-		bid=bid.substring(0,bid.indexOf('/console')+1)
-	}else if (bid&& bid.endsWith('/stop')) {
-		bid=bid.substring(0,bid.indexOf('/stop')+1)
-	}
-	return bid
-}
-
-
-private String stripDouble(String url) {
-	if (url) {
-		if (url.indexOf('//')>-1) {
-			url=url.replace('//','/')
-		}
-		return url
-	}
-	return
-}
-
-private String seperator(def input) {
-	if (input &&(!input.toString().startsWith('/'))) {
-		input='/'+input
-	}
-	return input
-}
 
 
 }

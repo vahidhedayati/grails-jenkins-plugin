@@ -8,7 +8,7 @@
 </head>
 <body>
 
-<jenkins:connect
+<jen:connect
 divId="someId"
 jenserver="${jenserver }"
 jensport="${jensport}"

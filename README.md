@@ -176,7 +176,7 @@ jenkins.hideDashBoardButton='no'
 When submitted, the controller has been set to recieve parameters and call a tag lib which can also be used by you guys to call a jenkins build on the fly from within your gsp.
 
 ```gsp
-<jenkins:connect
+<jen:connect
 divId="someId"
 jenserver="${jenserver }"
 jensport="${jensport}"
@@ -193,7 +193,7 @@ jenschoice="${jenschoice}"
 
 Optional override taglibs: (Refer to above Config.groovy to understand what these are:) 
 ```gsp
-<jenkins:connect
+<jen:connect
 ....
 hideButtons="${hideButtons }"
 hideTriggerButton="${hideTriggerButton }"
@@ -205,7 +205,7 @@ jensLog="something"
 /> 
 
  ```
- 
+
 So long as you provide the above values from within a gsp page it should load in the results back on the page.
 
 
@@ -214,6 +214,17 @@ You should be able to call it multiple times and provide different divId's for e
 Tested on recent/older variants of Jenkins. May still fail on others, please post an issue with specific Jenkins version for me to look into.
 
 
+ 
+ Alternative more direct tag lib call:
+ ```gsp
+ <jen:dirconnect 
+		divId="someId"
+		jensurl="http://jenkins-server:port/job/jobname" 
+		jensuser="current_user"
+		jenschoice="dashboard"
+		jensjob="jobname"
+	/>
+```
 
 
 ### Authenticated Jenkins howto:
