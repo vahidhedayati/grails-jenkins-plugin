@@ -66,10 +66,10 @@ GSP Page for build.gsp
 </g:form>
 
 <g:if test="${goahead.equals('yes') }">
-	<jenkins:connect divId="firstId" jenserver="localhost" jensport="9090" jensuser="" jenspass="" 
+	<jen:connect divId="firstId" jenserver="localhost" jensport="9090" jensuser="" jenspass="" 
 	jensjob="my_build" jensprefix="" jensfolder="job" jenschoice="build" hideButtons="no" hideBuildTimer="no" />
 
-	<jenkins:connect divId="secondId" jenserver="localhost" jensport="9090" jensuser="" jenspass="" 
+	<jen:connect divId="secondId" jenserver="localhost" jensport="9090" jensuser="" jenspass="" 
 	jensjob="my_build2" jensprefix="" jensfolder="job" jenschoice="build" hideButtons="no" hideBuildTimer="no"/>
 </g:if>
 ```
@@ -215,7 +215,7 @@ Tested on recent/older variants of Jenkins. May still fail on others, please pos
 
 
  
- Alternative more direct tag lib call:
+ Alternative more direct connect tag lib call:
  ```gsp
  <jen:dirconnect 
 		divId="someId"
