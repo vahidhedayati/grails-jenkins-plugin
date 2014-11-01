@@ -1,37 +1,28 @@
 package grails.plugin.jenkins
 
-
 class JenkinsController {
-	
-	def grailsApplication
-	
-	def index() { 
-		def hideLoginPage=grailsApplication.config.jenkins.hideLoginPage
-		
+
+	def index() {
+		def hideLoginPage = config.hideLoginPage
+
 		if (hideLoginPage && hideLoginPage.toLowerCase().equals('yes')) {
 			render "Index page disabled"
-			return
 		}
-		
-	}
-	
-	def process() {		
-		String jenserver=params.jenserver
-		String jensport=params.jensport
-		String jensuser=params.jensuser
-		String jenspass=params.jenspass
-		String jensjob=params.jensjob
-		String jensfolder=params.jensfolder
-		String jensprefix=params.jensprefix
-		String jenschoice=params.jenschoice
-		
-		def hideButtons=grailsApplication.config.jenkins.hideButtons ?: 'no'
-		def hideTriggerButton=grailsApplication.config.jenkins.hideTriggerButton ?: 'no'
-		def hideDashBoardButton=grailsApplication.config.jenkins.hideDashBoardButton ?: 'no'
-		
-		
-		[hideButtons:hideButtons,hideTriggerButton:hideTriggerButton, hideDashBoardButton:hideDashBoardButton, jenserver:jenserver,jensport:jensport,jensuser:jensuser,
-		jenspass:jenspass,jensprefix:jensprefix,jensfolder:jensfolder,jensjob:jensjob,jenschoice:jenschoice]
 	}
 
+	def process(String jenserver, String jensport, String jensuser, String jenspass, String jensjob,
+	            String jensfolder, String jensprefix, String jenschoice) {
+
+		def hideButtons = config.hideButtons ?: 'no'
+		def hideTriggerButton = config.hideTriggerButton ?: 'no'
+		def hideDashBoardButton = config.hideDashBoardButton ?: 'no'
+
+		[hideButtons:hideButtons, hideTriggerButton:hideTriggerButton, hideDashBoardButton:hideDashBoardButton,
+	    jenserver:jenserver, jensport:jensport, jensuser:jensuser, jenspass:jenspass, jensprefix:jensprefix,
+	    jensfolder:jensfolder, jensjob:jensjob, jenschoice:jenschoice]
+	}
+
+	private getConfig() {
+		grailsApplication.config.jenkins
+	}
 }
