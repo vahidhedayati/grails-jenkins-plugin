@@ -14,10 +14,9 @@ class JenkinsService {
 
 	static transactional = false
 
-	RESTClient http
-
 	String verifyUrl(String nurl, String server, user, pass) {
 		String result = 'Failed'
+		RESTClient http
 		try {
 			try {
 				http = httpConn(server, user, pass)

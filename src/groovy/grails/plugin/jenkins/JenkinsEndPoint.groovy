@@ -19,6 +19,7 @@ import javax.websocket.server.PathParam
 import javax.websocket.server.ServerContainer
 import javax.websocket.server.ServerEndpoint
 
+import org.codehaus.groovy.grails.web.context.ServletContextHolder as SCH
 import org.codehaus.groovy.grails.web.servlet.GrailsApplicationAttributes as GA
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -51,7 +52,7 @@ class JenkinsEndPoint implements ServletContextListener {
 
 			def ctx = servletContext.getAttribute(GA.APPLICATION_CONTEXT)
 
-			jenkinsService = ctx.jenkinsService
+			//jenkinsService = ctx.jenkinsService
 
 			def grailsApplication = ctx.grailsApplication
 
@@ -72,6 +73,9 @@ class JenkinsEndPoint implements ServletContextListener {
 		//userSession.userProperties.server = server
 		//userSession.uerProperties.job = job
 		jsessions.add(userSession)
+		
+		def ctx= SCH.servletContext.getAttribute(GA.APPLICATION_CONTEXT)
+		jenkinsService = ctx.jenkinsService
 	}
 
 	@OnMessage
@@ -151,12 +155,13 @@ class JenkinsEndPoint implements ServletContextListener {
 	}
 
 	private void jenkinsConnect(Session userSession) {
-		http = jenkinsService.httpConn(jenserver, jensuser, jenspass)
+		
 		String validurl = jenkinsService.verifyUrl(jensconurl, jenserver, jensuser, jenspass)
 		if (!validurl.startsWith('Success')) {
 			userSession.basicRemote.sendText('JenkinsConnect failed to connect to: '+jensconurl)
 			return
 		}
+			http = jenkinsService.httpConn(jenserver, jensuser, jenspass)
 
 		userSession.basicRemote.sendText('Jenkins plugin connected to: ' + jensconurl)
 		// try to get apiToken if only user has provided
@@ -398,6 +403,7 @@ class JenkinsEndPoint implements ServletContextListener {
 		// jenkins html page defined as header values
 		// goes away once full results are returned
 
+		nurl=jenkinsService.stripDouble(nurl)
 		while (hasMore) {
 			// If there is a text-size header set then create url appender
 			if (csize) {
@@ -409,10 +415,12 @@ class JenkinsEndPoint implements ServletContextListener {
 			// Now get the url which may or may not have current header size
 			def url = nurl + ssize
 			http1?.request("$jenserver$url", GET, TEXT) { req ->
+				//uri.path = "$url"
 				// On success get latest output back from headers
 				if (jensuser && jenspass) {
 					headers.'Authorization' = 'Basic ' + "$jensuser:$jenspass".bytes.encodeBase64()
 				}
+				
 				response.failure = { resp, reader ->
 					//if (reader.text.contains('Invalid password')) {//}
 					hasMore = false
@@ -426,6 +434,7 @@ class JenkinsEndPoint implements ServletContextListener {
 						userSession.basicRemote.sendText(reader.text as String)
 					}
 				}
+				sleep(1000)
 			}
 		}
 	}
