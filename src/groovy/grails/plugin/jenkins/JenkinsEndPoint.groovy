@@ -233,7 +233,7 @@ class JenkinsEndPoint implements ServletContextListener {
 				lastbid1 = getLastBuild(url)
 				if (lastbid1) {
 					newBuild = jenkinsService.currentJob(lastbid1)
-					userSession.aasicRemote.sendText("[${newBuild}].")
+					userSession.basicRemote.sendText("[${newBuild}].")
 					sleep(1000)
 					if (newBuild > currentBuild) {
 						go = true
