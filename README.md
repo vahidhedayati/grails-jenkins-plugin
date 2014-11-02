@@ -173,6 +173,17 @@ jenkins.hideDashBoardButton='no'
 * notification is sent to controller and you can then call  further services on output
 */
 jenkins.processurl="http://localhost:8080/testjenkins/test/parseJenPlugin"
+
+
+/*
+* Optional : your own custom processing url for when builds are triggered
+* provide a full url back to a controll action so that when it completes an extra 
+* action button is provided
+* the process url could in theory call another end point to lets say jssh and do a live deployment
+*/
+jenkins.wsprocessname="Deploy"
+jenkins.wsprocessurl="http://localhost:8080/testjenkins/test/parseJenPluginDeploy"
+
 ```
 
 

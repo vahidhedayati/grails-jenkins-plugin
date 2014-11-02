@@ -185,7 +185,7 @@ class JenkinsEndPoint implements ServletContextListener {
 
 	private void parseJobConsole(Session userSession, String url, String bid) {
 		// Send user confirmation that you are going to parse Jenkins job
-		userSession.asyncRemote.sendText("\nAbout to parse ${url}\n")
+		userSession.basicRemote.sendText("\nAbout to parse ${url}\n")
 		HttpResponseDecorator html1 = jenService.httpConn('get', jenserver, url, jensuser, jenspass)
 		def html = html1?.data
 		boolean start, start1 = false
@@ -221,7 +221,7 @@ class JenkinsEndPoint implements ServletContextListener {
 		//This means job has finished and jenkins has static results showing in /consoleFull
 		if (start1) {
 			html."**".findAll{ it.@class.toString().contains("console-output")}.each {
-				userSession.asyncRemote.sendText(it.toString())
+				userSession.basicRemote.sendText(it.toString())
 			}
 		}
 	}
@@ -229,7 +229,7 @@ class JenkinsEndPoint implements ServletContextListener {
 		clearPage(userSession)
 		def job = userSession.userProperties.get("job").toString()
 		def server = userSession.userProperties.get("server").toString()
-		userSession.asyncRemote.sendText("""
+		userSession.basicRemote.sendText("""
 Welcome to Grails Jenkins Plugin
 You are connected to: $job 
 Running on Jenkins Host: $server
@@ -281,9 +281,12 @@ Running on Jenkins Host: $server
 						*/
 						def config = grailsApplication.config
 						String processurl = config.jenkins.processurl
+						String wsprocessurl = config.jenkins.wsprocessurl
+						String wsprocessname = config.jenkins.wsprocessname
 						if (processurl && currentBuild) {
 							//This hogs websocket connection - so lets background it
-							def asyncProcess = new Thread({jenService.workOnBuild(processurl,newBuild,url,jenserver, jensuser, jenspass,customParams,jensurl,jensApi)} as Runnable)
+							def asyncProcess = new Thread({jenService.workOnBuild(userSession,processurl,wsprocessurl,wsprocessname,newBuild,url,jenserver, jensuser, jenspass,customParams,jensurl,jensApi)} as Runnable)
+							//def asyncProcess = new Thread({jenService.workOnBuild(null,processurl,newBuild,url,jenserver, jensuser, jenspass,customParams,jensurl,jensApi)} as Runnable)
 							asyncProcess.start()
 						}
 						
@@ -439,7 +442,7 @@ Running on Jenkins Host: $server
 		boolean hasMore = true
 		def csize, consoleAnnotator
 		String ssize = ''
-		userSession.asyncRemote.sendText("Attempting live poll")
+		userSession.basicRemote.sendText("Attempting live poll")
 		def http1 = jenService.httpConn(jenserver, jensuser, jenspass)
 
 		// while hasMore is true -
@@ -448,15 +451,10 @@ Running on Jenkins Host: $server
 
 		nurl=jenService.stripDouble(nurl)
 		while (hasMore) {
-			// If there is a text-size header set then create url appender
-			//if (csize) {
-			//	ssize = "?start=$csize"
-			//}
+			
 			// Set old size to current size
 			def osize = csize
 
-			// Now get the url which may or may not have current header size
-			//def url = nurl + ssize
 			//http1?.request("$jenserver$url", GET, TEXT) { req ->}
 			http1?.request(GET, TEXT) { req ->
 				uri.path = "$nurl"
@@ -470,7 +468,6 @@ Running on Jenkins Host: $server
 				}
 				
 				response.failure = { resp, reader ->
-					//if (reader.text.contains('Invalid password')) {//}
 					hasMore = false
 				}
 				response.success = { resp, reader ->
@@ -479,7 +476,7 @@ Running on Jenkins Host: $server
 					consoleAnnotator = resp.headers.'X-ConsoleAnnotator'
 					// If the current size is there and larger than osize value send to websocket
 					if (csize && csize > osize) {
-						userSession.asyncRemote.sendText(reader.text as String)
+						userSession.basicRemote.sendText(reader.text as String)
 					}
 				}
 			}

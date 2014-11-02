@@ -159,6 +159,7 @@ resize:both;
 	<h6>Current user: <div id="jenkinsUser${divId}"></h6>
 
 <div class="BuildHistory">
+<div id="FeedBack${divId}" ></div>
 <div id="BuildHistory1${divId}" ></div>
 <div id="BuildHistory${divId}" ></div>
 </div>
@@ -207,13 +208,42 @@ function processMessage${divId}(message) {
 	if(json) {
 		var jsonData=JSON.parse(message.data);
 		//$('#connectionCount').html(jsonData.connCount);
+		
 		if (jsonData.liveUrl!=null) {
 			//console.log ('Poll page is: '+jsonData.liveUrl);
 			//pollPage(jsonData.nurl);
 		}
+		
 		if (jsonData.clearPage!=null) {
 			$('#messagesTextarea${divId}').html("");
 		}
+
+		if (jsonData.feedback!=null) {
+			var wsprocessurl = JSON.stringify(jsonData.feedback.wsprocessurl);
+			var wsprocessname = JSON.stringify(jsonData.feedback.wsprocessname);
+			var result = JSON.stringify(jsonData.feedback.result);
+			var buildUrl = JSON.stringify(jsonData.feedback.buildUrl);
+			var buildId = JSON.stringify(jsonData.feedback.buildId);
+			var user = JSON.stringify(jsonData.feedback.user);
+			var token = JSON.stringify(jsonData.feedback.token);
+			var customParams = JSON.stringify(jsonData.feedback.customParams);
+			var job = JSON.stringify(jsonData.feedback.job);
+			var server = JSON.stringify(jsonData.feedback.server);
+			var sb = [];
+			sb.push('<form method="post" action='+wsprocessurl+'>');
+			sb.push('<input type="hidden" name="result" value='+result+'>');
+			sb.push('<input type="hidden" name="buildUrl" value='+buildUrl+'>');
+			sb.push('<input type="hidden" name="buildId" value='+buildId+'>');
+			sb.push('<input type="hidden" name="user" value='+user+'>');
+			sb.push('<input type="hidden" name="token" value='+token+'>');
+			sb.push('<input type="hidden" name="customParams" value='+customParams+'>');
+			sb.push('<input type="hidden" name="job" value='+job+'>');
+			sb.push('<input type="hidden" name="server" value='+server+'>');
+			sb.push('<input type="submit" name="submit" value='+wsprocessname+'>');
+			sb.push('</form>');
+			$('#FeedBack${divId}').html(sb.join(""));	
+		}
+		
 		
 		if (jsonData.historytop!=null) {
 			jsonData.historytop.forEach(function(entry) {
@@ -222,9 +252,11 @@ function processMessage${divId}(message) {
 				updateBuilds${divId}()
 			});
 		}
+		
 		if (jsonData.buildNumber!=null) {
 			$('#BuildNumber${divId}').html(jsonData.buildNumber);
 		}
+		
 		if (jsonData.actions!=null) {
 			jsonData.actions.forEach(function(entry) {
 				if (entry.causes!=null) {

@@ -2,12 +2,12 @@ package grails.plugin.jenkins
 
 import static groovyx.net.http.ContentType.*
 import static groovyx.net.http.Method.*
-
-import javax.websocket.Session;
-
+import groovy.json.JsonBuilder
 import groovyx.net.http.HttpResponseDecorator
 import groovyx.net.http.HttpResponseException
 import groovyx.net.http.RESTClient
+
+import javax.websocket.Session
 
 import org.apache.http.HttpRequest
 import org.apache.http.HttpRequestInterceptor
@@ -85,7 +85,7 @@ class JenService {
 	//This is an asynchronous task that is given a new BuildID, it will poll the 
 	// api page and once it has a result it will return this back to your own 
 	// defined processcontrol url. 
-	def workOnBuild(String processurl, int bid,String uri,
+	def workOnBuild(Session userSession, String processurl, String wsprocessurl, String wsprocessname, int bid,String uri,
 		String jenserver, String jensuser, String jenspass, String customParams, 
 		String jensurl, String jensApi) {
 		
@@ -101,10 +101,29 @@ class JenService {
 			http1.get(path: "${url}") { resp, json ->
 				result = json?.result
 				if (result && result != 'null') {
+					if (userSession && wsprocessurl) {
+						def ajson = new JsonBuilder()
+						ajson.feedback{
+							//details {
+								delegate.wsprocessurl "$wsprocessurl"
+								delegate.wsprocessname "$wsprocessname"
+								delegate.result "$result"
+								delegate.buildUrl  "$jenserver$ubi"
+								delegate.buildId "${bid as String}"
+								delegate.customParams "${customParams}"
+								delegate.server  "${jenserver}"
+								delegate.user "${jensuser}"
+								delegate.token "${jenspass}"
+								delegate.job "${jensurl}"
+							//}
+						}	
+						userSession.basicRemote.sendText(ajson.toString())
+						//userSession.basicRemote.sendText("We have feedback for you result: $result")
+					}	
 					go = true
 				}
+				sleep(10000)
 			}
-			sleep(10000)
 		}
 
 		if (result) {
