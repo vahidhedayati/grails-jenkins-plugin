@@ -78,13 +78,13 @@ class JenkinsTagLib {
 		// String hideBuildTimer = attrs.hideBuildTimer ?: config.hideBuildTimer ?: 'no'
 
 
-		//println "--->> ${jenfullserver} --- ${jensconurl} "
+		//println "--->> ${jenfullserver} --- ${jensconurl} ${jensuser} ${attrs?.customParams}"
 		String appname = Metadata.current.getApplicationName()
 		def model = [hideButtons:hideButtons, hideTriggerButton:hideTriggerButton, hideDashBoardButton:hideDashBoardButton,
 		             jenschoice:jenschoice, divId:divId, jenfullserver:jenfullserver, jensconurl:jensconurl,
 		             jensjob:attrs.jensjob, jensuser:jensuser, jenspass:jenspass, appname:appname, wshostname:wshostname,
 		             jenserver:jenserver, jensurl:jensurl, jensprogressive:jensprogressive, jensbuildend:jensbuildend,
-		             jensconlog:jensconlog]
+		             jensconlog:jensconlog, customParams:attrs.customParams]
 		if (template) {
 			out << g.render(template:template, model: model)
 		}else{
@@ -99,14 +99,9 @@ class JenkinsTagLib {
 		}
 
 		String jensurl = attrs.remove('jensurl')
-		String jenserver = url.host
+		
 		String jensuser = attrs.remove('jensuser')
 		String jenspass = attrs.remove('jenspass')
-
-		String validurl = jenkinsService.verifyUrl(jensurl, jenserver, jensuser, jenspass)
-		if (!validurl.startsWith('Success')) {
-			return
-		}
 
 		def url = new URL(jensurl)
 		String template = attrs.remove('template')
@@ -115,8 +110,14 @@ class JenkinsTagLib {
 		String jensauthority = url.authority
 		String jenspath = url.path
 		String jensprot = url.protocol
+		String jenserver = url.host
 		//String jensport = url.port
 
+		String validurl = jenkinsService.verifyUrl(jensurl, jensurl, jensuser, jenspass)
+		if (!validurl.startsWith('Success')) {
+			return
+		}
+		
 		String jensconurl = jensprot + '://' + jensauthority
 
 		def config = grailsApplication.config.jenkins
@@ -133,7 +134,8 @@ class JenkinsTagLib {
 		def model = [hideButtons:hideButtons, hideTriggerButton:hideTriggerButton, hideDashBoardButton:hideDashBoardButton,
 		             jenschoice:jenschoice, divId:divId, jenfullserver:jensconurl, jensconurl:jensconurl, jensjob:attrs.jensjob,
 		             jensuser:jensuser, jenspass:jenspass, appname:appname, wshostname:wshostname, jenserver:jenserver,
-		             jensurl:jenspath, jensprogressive:jensprogressive, jensbuildend:jensbuildend, jensconlog:jensconlog]
+		             jensurl:jenspath, jensprogressive:jensprogressive, jensbuildend:jensbuildend, jensconlog:jensconlog,
+					 customParams:attrs.customParams]
 		if (template) {
 			out << g.render(template:template, model: model)
 		}else{

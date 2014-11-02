@@ -33,9 +33,65 @@ function toggleBlock(caller,called,calltext) {
 
 	  <div id="vcontainer"><div id="hcontainer">
     <div id="content">
+   <h1>Method 1 Quick Connect to your Jenkins Job [Build / View Historical logs]</h1>
    
+   <g:form method="post" action="process" controller="jenkins" >
    
-	<h1>Connect to your Jenkins Job [Build / View Historical logs]</h1>
+   <div  class="fieldcontain">
+	<div id="jensurl" style="display: none;"><div class="message" role="status">
+		Jenkins full job url :  http://jenkins-server:port/job/jobname
+	</div></div>
+	<label>Jenkins Server</label>
+	<g:textField name="jensurl" placeholder="Jenkins Full Job UL"/><a id="jensurlHeader"><i>Help?</i></a>
+	<g:javascript>
+	toggleBlock('#jensurlHeader','#jensurl','');
+	</g:javascript>
+	</div>
+	<div  class="fieldcontain">
+	<div id="jensjob1" style="display: none;"><div class="message" role="status">
+		Jenkins Job: Your jenkins job name
+	</div></div>
+	<label>Jenkins Job</label>
+	<g:textField name="jensjob" /><a id="jensjob1Header"><i>Help?</i></a>
+	<g:javascript>
+	toggleBlock('#jensjob1Header','#jensjob1','');
+	</g:javascript>
+	</div>
+	
+	<div  class="fieldcontain">
+	<div id="jensuser1" style="display: none;"><div class="message" role="status">
+		username: If Jenkins can authenticate/requires it if not leave token blank
+		
+	</div></div>
+	<label for="Username">Username</label>
+		<g:textField name="jensuser" placeholder="Jenkins username"/><a id="jensuser1Header"><i>Help?</i></a>
+		<g:javascript>
+	toggleBlock('#jensuser1Header','#jensuser1','');
+	</g:javascript>
+	</div>
+	
+	
+	<div  class="fieldcontain">
+	<div id="jenschoice" style="display: none;"><div class="message" role="status">
+		Your Choice dashboard displays build history or trigger a build
+	</div></div>
+	<label>Choice</label>
+	<g:select name="jenschoice" from="${['dashboard':'Dashboard','build':'Build']}" 
+	 optionKey="key" optionValue="value" class="many-to-one"/><a id="jenschoiceHeader"><i>Help?</i></a>
+	 <g:javascript>
+	toggleBlock('#jenschoiceHeader','#jenschoice','');
+	</g:javascript>
+	</div>
+	
+	<div  class="fieldcontain">
+	<label></label>
+	<g:submitButton name="submit" value="Connect to Jenkins" />
+	</div>
+	</g:form>
+	
+
+		
+	<h1>Method 2 Connect to your Jenkins Job [Build / View Historical logs]</h1>
 	<p></p>
 	<g:form method="post" action="process" controller="jenkins" >
 	

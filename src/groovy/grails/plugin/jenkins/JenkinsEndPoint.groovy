@@ -4,6 +4,8 @@ import static groovyx.net.http.ContentType.*
 import static groovyx.net.http.Method.*
 import grails.converters.JSON
 import groovy.json.JsonBuilder
+import groovyx.net.http.ContentType
+import groovyx.net.http.HTTPBuilder
 import groovyx.net.http.HttpResponseDecorator
 import groovyx.net.http.RESTClient
 
@@ -19,6 +21,7 @@ import javax.websocket.server.PathParam
 import javax.websocket.server.ServerContainer
 import javax.websocket.server.ServerEndpoint
 
+import org.codehaus.groovy.grails.commons.GrailsApplication
 import org.codehaus.groovy.grails.web.context.ServletContextHolder as SCH
 import org.codehaus.groovy.grails.web.servlet.GrailsApplicationAttributes as GA
 import org.slf4j.Logger
@@ -31,13 +34,13 @@ class JenkinsEndPoint implements ServletContextListener {
 	private final Logger log = LoggerFactory.getLogger(getClass().name)
 
 	private JenkinsService jenkinsService
-
+	private GrailsApplication grailsApplication
 	private int httpConnTimeOut = 10*1000
 	private int httpSockTimeOut = 30*1000
 
 	static final Set<Session> jsessions = ([] as Set).asSynchronized()
 
-	private String jensbuildend, jensprogressive, jensconlog, jensurl, jenserver, jensuser,jenspass,jenschoice,jensconurl = ''
+	private String customParams,jensbuildend, jensprogressive, jensconlog, jensurl, jenserver, jensuser,jenspass,jenschoice,jensconurl = ''
 	private String jensApi = '/api/json'
 	private String userbase = '/user/'
 	private String userend = '/configure'
@@ -54,7 +57,7 @@ class JenkinsEndPoint implements ServletContextListener {
 
 			//jenkinsService = ctx.jenkinsService
 
-			def grailsApplication = ctx.grailsApplication
+			grailsApplication = ctx.grailsApplication
 
 			def config = grailsApplication.config
 			int defaultMaxSessionIdleTimeout = config.jenkins.timeout ?: 0
@@ -70,18 +73,20 @@ class JenkinsEndPoint implements ServletContextListener {
 
 	@OnOpen
 	void whenOpening(Session userSession, EndpointConfig c, @PathParam("server") String server, @PathParam("job") String job) {
-		//userSession.userProperties.server = server
-		//userSession.uerProperties.job = job
+		userSession.userProperties.server = server
+		userSession.userProperties.job = job
 		jsessions.add(userSession)
 		
 		def ctx= SCH.servletContext.getAttribute(GA.APPLICATION_CONTEXT)
 		jenkinsService = ctx.jenkinsService
+		
+		grailsApplication= ctx.grailsApplication
 	}
 
 	@OnMessage
 	String handleMessage(String message, Session userSession) throws IOException {
-		//def job = userSession.getUserProperties().get("job").toString()
-		//def server = userSession.getUserProperties().get("server").toString()
+		//def job = userSession.userProperties.get("job").toString()
+		//def server = userSession.userProperties.get("server").toString()
 		def data = JSON.parse(message)
 		if (!data) {
 			return
@@ -94,6 +99,7 @@ class JenkinsEndPoint implements ServletContextListener {
 			jensuser = data.jensuser
 			jensconurl = data.jensconurl
 			jenspass = data.jenspass
+			customParams = data.customParams
 			jensconlog = data.jensconlog ?: '/consoleFull'
 			jensprogressive = data.jensprogressive ?: '/logText/progressiveHtml'
 			jensbuildend = data.jensbuildend  ?: '/build?delay=0sec'
@@ -128,8 +134,11 @@ class JenkinsEndPoint implements ServletContextListener {
 					clearPage(userSession)
 					buildJob(userSession)
 					break
-				case 'dashboard':
+				case 'dash':
 					dashboard(userSession)
+					break
+				case 'dashboard':
+					dashboardButton(userSession)
 					break
 				default:
 					disconnect(userSession)
@@ -176,7 +185,7 @@ class JenkinsEndPoint implements ServletContextListener {
 
 	private void parseJobConsole(Session userSession, String url, String bid) {
 		// Send user confirmation that you are going to parse Jenkins job
-		userSession.basicRemote.sendText("\nAbout to parse ${url}\n")
+		userSession.asyncRemote.sendText("\nAbout to parse ${url}\n")
 		HttpResponseDecorator html1 = jenkinsService.httpConn('get', jenserver, url, jensuser, jenspass)
 		def html = html1?.data
 		boolean start, start1 = false
@@ -202,30 +211,94 @@ class JenkinsEndPoint implements ServletContextListener {
 			// If user wishes they can interact with it this way
 			// Due to CORS - the method was changed to use
 			// httpbuilder this end to do remoteURL processing
-			def json = new JsonBuilder()
-			json {
-				delegate.liveUrl "${jenserver}${url}"
-			}
-			userSession.basicRemote.sendText(json.toString())
+			//def json = new JsonBuilder()
+			//json {
+			//	delegate.liveUrl "${jenserver}${url}"
+			//}
+			//userSession.asyncRemote.sendText(json.toString())
 		}
 
 		//This means job has finished and jenkins has static results showing in /consoleFull
 		if (start1) {
 			html."**".findAll{ it.@class.toString().contains("console-output")}.each {
-				userSession.basicRemote.sendText(it.toString())
+				userSession.asyncRemote.sendText(it.toString())
 			}
 		}
 	}
-
+	private dashboardButton(Session userSession) {
+		clearPage(userSession)
+		def job = userSession.userProperties.get("job").toString()
+		def server = userSession.userProperties.get("server").toString()
+		userSession.asyncRemote.sendText("""
+Welcome to Grails Jenkins Plugin
+You are connected to: $job 
+Running on Jenkins Host: $server
+""")
+		
+		getBuilds(userSession, jensurl)
+	}
 	private dashboard(Session userSession) {
 		getBuilds(userSession, jensurl)
 	}
 
+	private int currentBuildId(String url) {
+		def lastbid = getLastBuild(url)
+		//int currentBuild = jenkinsService.currentJob(lastbid)
+		if (lastbid) {
+			jenkinsService.currentJob(lastbid) as int
+		}
+	}
+	
+	private workOnBuild(Session userSession,String processurl, int bid,String uri) {
+		boolean go = false
+		def result
+		int max = 60
+		int a = 0
+		def ubi=jenkinsService.stripDouble(uri+"/"+bid.toString())
+		String url=ubi+jensApi
+		def http1 = jenkinsService.httpConn(jenserver, jensuser, jenspass)
+		while (!go && a < max) {
+			a++
+			http1.get(path: "${url}") { resp, json ->
+				result = json?.result
+				if (result && result != 'null') {
+					go = true
+				}
+			}
+			sleep(10000)
+		}
+
+		if (result) {
+			def http2 = jenkinsService.httpConn(processurl,'','')
+			http2.request( POST ) { req ->
+				requestContentType = URLENC
+				body = [
+					result : result,
+					buildUrl : jenserver+ubi,
+					buildId: bid as String,
+					customParams: customParams,
+					server : jenserver,
+					user : jensuser,
+					token : jenspass,
+					job : jensurl
+				]
+				response.success = { resp ->
+					log.debug "Process URL Success! ${resp.status}"
+				}
+
+				response.failure = { resp ->
+					log.debug "Process URL failed with status ${resp.status}"
+				}
+			}
+		}
+	}
+	
 	private buildJob(Session userSession) {
 		String url  = jensurl
 		def url1 = url + jensbuildend
-		def lastbid = getLastBuild(url)
-		int currentBuild = jenkinsService.currentJob(lastbid)
+		
+		int currentBuild = currentBuildId(url)
+		
 		String consolelog = jensconlog
 		try {
 			userSession.basicRemote.sendText("\nBefore triggering Build ID: $currentBuild\n..waiting\n")
@@ -235,12 +308,27 @@ class JenkinsEndPoint implements ServletContextListener {
 			def lastbid1, newBuild
 			while (!go && a < 6) {
 				a++
+				//newBuild = currentBuildId(url)
 				lastbid1 = getLastBuild(url)
 				if (lastbid1) {
 					newBuild = jenkinsService.currentJob(lastbid1)
 					userSession.basicRemote.sendText("[${newBuild}].")
 					sleep(1000)
 					if (newBuild > currentBuild) {
+						
+						/*
+						* Get hold of config from grails if we have a processurl
+						* a url defined upon success of a jenkins job that receives values 
+						* and does something with built jobs 
+						*/
+						def config = grailsApplication.config
+						String processurl = config.jenkins.processurl
+						if (processurl && currentBuild) {
+							//This hogs websocket connection - so lets background it
+							def asyncProcess = new Thread({workOnBuild(userSession,processurl,newBuild,url)} as Runnable)
+							asyncProcess.start()
+						}
+						
 						go = true
 					}
 				}
@@ -396,7 +484,7 @@ class JenkinsEndPoint implements ServletContextListener {
 		boolean hasMore = true
 		def csize, consoleAnnotator
 		String ssize = ''
-		userSession.basicRemote.sendText("Attempting live poll")
+		userSession.asyncRemote.sendText("Attempting live poll")
 		def http1 = jenkinsService.httpConn(jenserver, jensuser, jenspass)
 
 		// while hasMore is true -
@@ -406,16 +494,21 @@ class JenkinsEndPoint implements ServletContextListener {
 		nurl=jenkinsService.stripDouble(nurl)
 		while (hasMore) {
 			// If there is a text-size header set then create url appender
-			if (csize) {
-				ssize = "?start=$csize"
-			}
+			//if (csize) {
+			//	ssize = "?start=$csize"
+			//}
 			// Set old size to current size
 			def osize = csize
 
 			// Now get the url which may or may not have current header size
-			def url = nurl + ssize
-			http1?.request("$jenserver$url", GET, TEXT) { req ->
-				//uri.path = "$url"
+			//def url = nurl + ssize
+			//http1?.request("$jenserver$url", GET, TEXT) { req ->}
+			http1?.request(GET, TEXT) { req ->
+				uri.path = "$nurl"
+				if (csize) {
+					uri.query= [ start: "${csize}"]
+				}
+				
 				// On success get latest output back from headers
 				if (jensuser && jenspass) {
 					headers.'Authorization' = 'Basic ' + "$jensuser:$jenspass".bytes.encodeBase64()
@@ -431,10 +524,9 @@ class JenkinsEndPoint implements ServletContextListener {
 					consoleAnnotator = resp.headers.'X-ConsoleAnnotator'
 					// If the current size is there and larger than osize value send to websocket
 					if (csize && csize > osize) {
-						userSession.basicRemote.sendText(reader.text as String)
+						userSession.asyncRemote.sendText(reader.text as String)
 					}
 				}
-				sleep(1000)
 			}
 		}
 	}

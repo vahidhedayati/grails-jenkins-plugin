@@ -11,7 +11,7 @@ class JenkinsController {
 	}
 
 	def process(String jenserver, String jensport, String jensuser, String jenspass, String jensjob,
-	            String jensfolder, String jensprefix, String jenschoice) {
+	            String jensfolder, String jensprefix, String jenschoice,String jensurl) {
 
 		def hideButtons = config.hideButtons ?: 'no'
 		def hideTriggerButton = config.hideTriggerButton ?: 'no'
@@ -19,7 +19,7 @@ class JenkinsController {
 
 		[hideButtons:hideButtons, hideTriggerButton:hideTriggerButton, hideDashBoardButton:hideDashBoardButton,
 	    jenserver:jenserver, jensport:jensport, jensuser:jensuser, jenspass:jenspass, jensprefix:jensprefix,
-	    jensfolder:jensfolder, jensjob:jensjob, jenschoice:jenschoice]
+	    jensfolder:jensfolder, jensjob:jensjob, jenschoice:jenschoice,jensurl:jensurl]
 	}
 
 	private getConfig() {

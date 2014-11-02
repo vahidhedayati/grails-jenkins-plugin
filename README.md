@@ -168,7 +168,12 @@ jenkins.hideTriggerButton='no'
 */
 jenkins.hideDashBoardButton='no'
 
-
+/*
+* Optional : your own custom processing url for when builds are triggered
+* provide a full url back to a controll action so that when it completes a build
+* notification is sent to controller and you can then call  further services on output
+*/
+jenkins.processurl="http://localhost:8080/testjenkins/test/parseJenPlugin"
 ```
 
 
@@ -202,9 +207,18 @@ jensLog="something"
 wshostname="something"
 jensprogressive="something"
 jensLog="something"
+customParams="[appId: '123', appName: 'crazyApp', appEnv: 'test' ]"
 />
-
  ```
+customParams - if you have configured a processurl in your config you can pass values back
+
+
+Results are typically returned to process url like this:
+```
+[result:SUCCESS, token:9cf496bb07021a1d788f8838159291cf, buildUrl:http://localhost:9090/job/my_build/175, customParams:{appId=123, appName=crazyApp, appEnv=test}, buildId:175, job:/job/my_build, server:http://localhost:9090, user:cc, action:parseJenPlugin, format:null, controller:test]
+```
+
+
 
 So long as you provide the above values from within a gsp page it should load in the results back on the page.
 
@@ -224,6 +238,11 @@ Tested on recent/older variants of Jenkins. May still fail on others, please pos
 		jenschoice="dashboard"
 		jensjob="jobname"
 	/>
+```
+
+Optional - if you have configured a processurl in your config you can pass values back
+```gsp
+customParams="[appId: '123', appName: 'crazyApp', appEnv: 'test' ]"
 ```
 
 
@@ -250,14 +269,3 @@ Click on show API Token (This is an example token)
 
 With this information now login using the front end using the username and the token as the password - this now triggers builds as the user.
 
-
-# whilst running in PROD:
-
-Whilst running this plugin on a tomcat server from an application that calls plugin, I have seen:
-```
-javax.websocket.DeploymentException: Multiple Endpoints may not be deployed to the same path [/WsChatEndpoint]
-	at org.apache.tomcat.websocket.server.WsServerContainer.addEndpoint(WsServerContainer.java:209)
-	at org.apache.tomcat.websocket.server.WsServerContainer.addEndpoint(WsServerContainer.java:268)
-	at javax.websocket.server.ServerContainer$addEndpoint.call(Unknown Source)
-```
-This does appear to be a warning and endpoint still works fine, and happens in tomcat... 7 + 8

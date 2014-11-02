@@ -192,7 +192,7 @@ webSocket${divId}.onmessage=function(message) {processMessage${divId}(message);	
 
 function processOpen${divId}(message) {
 	$('#messagesTextarea${divId}').append('Server Connect....\n');
-	webSocket${divId}.send(JSON.stringify({'cmd':'connect','jensuser':"${jensuser }",'jensconurl':"${jensconurl }",'hideBuildTimer':"${hideBuildTimer }",
+	webSocket${divId}.send(JSON.stringify({'cmd':'connect','jensuser':"${jensuser }",'jensconurl':"${jensconurl }",'hideBuildTimer':"${hideBuildTimer }",'customParams':"${customParams}",
 	'jenspass':"${jenspass }",'jenserver':"${jenfullserver }",'jensurl':"${jensurl }",'jensbuildend':"${jensbuildend }",'jensprogressive': "${jensprogressive }", 'jensconlog':"${jensconlog }"}));
 	newBuild${divId}("${jenschoice }");
 }
@@ -249,7 +249,7 @@ function processMessage${divId}(message) {
 			cdtd${divId}();
 			console.log('Estimated completion time: '+timeObject);
 			iDate${divId}=timeObject;
-			newBuild${divId}('dashboard');
+			newBuild${divId}('dash');
 		}
 		
 		if (jsonData.historyQueue!=null) {
@@ -335,7 +335,7 @@ function cdtd${divId}() {
 	var timer;
 	var go=1;
 	if (timeDiff <= 0) {
-		newBuild${divId}('dashboard');
+		newBuild${divId}('dash');
 	    clearTimeout(timer);
 	    go=0;
 	}
