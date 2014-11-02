@@ -25,7 +25,7 @@ Dependency, in your conf/BuildConfig.groovy under plugins add:
 ### Walkthrough
 once plugin dependency added to  BuildConfig, refreshed dependencies upon run-appp, you will be able to access this plugin via this url:
 ```
-http://localhost:8080/yourapp/jenkins
+http://localhost:8080/yourapp/jen
 ```
 
 This will load in the default index page which asks a few questions in order for you to interact with the given jenkins server/job. This can either be re-used or just make a direct connection using <jenkins:connect within your gsp.

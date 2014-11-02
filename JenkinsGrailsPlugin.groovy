@@ -10,6 +10,7 @@ class JenkinsGrailsPlugin {
 	def developers = [name: 'Vahid Hedayati', email: 'badvad@gmail.com']
 	def issueManagement = [system: 'GITHUB', url: 'https://github.com/vahidhedayati/grails-jenkins-plugin/issues']
 	def scm = [url: 'https://github.com/vahidhedayati/grails-jenkins-plugin']
+	
 	def doWithWebDescriptor = { xml ->
 		def listenerNode = xml.'listener'
 		listenerNode[listenerNode.size() - 1] + {

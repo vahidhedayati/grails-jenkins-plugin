@@ -2,12 +2,12 @@ package grails.plugin.jenkins
 
 import grails.util.Metadata
 
-class JenkinsTagLib {
+class JenTagLib {
 
 	static namespace = "jen"
 
 	def grailsApplication
-	def jenkinsService
+	def jenService
 
 	// Logics to produce requirements put into taglib, controller page loads in taglib
 	// saves writing twice and now end user can interact directly via taglib calls
@@ -48,7 +48,7 @@ class JenkinsTagLib {
 		String jenfullserver = jenurl
 		String jensprefix = ''
 		if (attrs.jensprefix) {
-			jensprefix = jenkinsService.seperator(attrs?.jensprefix)
+			jensprefix = jenService.seperator(attrs?.jensprefix)
 			jenurl.append(jensprefix)
 		}
 		// Full url to jenkins server - main url
@@ -57,7 +57,7 @@ class JenkinsTagLib {
 		//String jensjob = attrs.jensjob
 		//String jensfolder = attrs.jensfolder ?: 'job'
 		// Relative UrI to get to folder/job (can now be appended to above)
-		String jensurl = jensprefix + jenkinsService.seperator(attrs?.jensfolder) + jenkinsService.seperator(attrs?.jensjob)
+		String jensurl = jensprefix + jenService.seperator(attrs?.jensfolder) + jenService.seperator(attrs?.jensjob)
 
 		// Configuration uris.
 		//Progressive page
@@ -113,7 +113,7 @@ class JenkinsTagLib {
 		String jenserver = url.host
 		//String jensport = url.port
 
-		String validurl = jenkinsService.verifyUrl(jensurl, jensurl, jensuser, jenspass)
+		String validurl = jenService.verifyUrl(jensurl, jensurl, jensuser, jenspass)
 		if (!validurl.startsWith('Success')) {
 			return
 		}

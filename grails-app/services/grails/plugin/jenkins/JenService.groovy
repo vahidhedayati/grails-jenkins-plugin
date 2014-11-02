@@ -10,7 +10,7 @@ import org.apache.http.HttpRequest
 import org.apache.http.HttpRequestInterceptor
 import org.apache.http.protocol.HttpContext
 
-class JenkinsService {
+class JenService {
 
 	static transactional = false
 

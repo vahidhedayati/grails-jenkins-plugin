@@ -33,7 +33,7 @@ class JenkinsEndPoint implements ServletContextListener {
 
 	private final Logger log = LoggerFactory.getLogger(getClass().name)
 
-	private JenkinsService jenkinsService
+	private JenService jenService
 	private GrailsApplication grailsApplication
 	private int httpConnTimeOut = 10*1000
 	private int httpSockTimeOut = 30*1000
@@ -78,7 +78,7 @@ class JenkinsEndPoint implements ServletContextListener {
 		jsessions.add(userSession)
 		
 		def ctx= SCH.servletContext.getAttribute(GA.APPLICATION_CONTEXT)
-		jenkinsService = ctx.jenkinsService
+		jenService = ctx.jenService
 		
 		grailsApplication= ctx.grailsApplication
 	}
@@ -116,7 +116,7 @@ class JenkinsEndPoint implements ServletContextListener {
 
 		if (cmd.equals('stopBuild')) {
 			if (data.bid) {
-				jobControl(userSession,jenkinsService.stripDouble(data.bid+'/stop'),data.bid)
+				jobControl(userSession,jenService.stripDouble(data.bid+'/stop'),data.bid)
 				dashboard(userSession)
 			}
 		}
@@ -165,17 +165,17 @@ class JenkinsEndPoint implements ServletContextListener {
 
 	private void jenkinsConnect(Session userSession) {
 		
-		String validurl = jenkinsService.verifyUrl(jensconurl, jenserver, jensuser, jenspass)
+		String validurl = jenService.verifyUrl(jensconurl, jenserver, jensuser, jenspass)
 		if (!validurl.startsWith('Success')) {
 			userSession.basicRemote.sendText('JenkinsConnect failed to connect to: '+jensconurl)
 			return
 		}
-			http = jenkinsService.httpConn(jenserver, jensuser, jenspass)
+			http = jenService.httpConn(jenserver, jensuser, jenspass)
 
 		userSession.basicRemote.sendText('Jenkins plugin connected to: ' + jensconurl)
 		// try to get apiToken if only user has provided
 		if (jensuser && !jenspass) {
-			jenspass = jenkinsService.returnToken(jensuser, jenserver, userbase, userend)
+			jenspass = jenService.returnToken(jensuser, jenserver, userbase, userend)
 		}
 	}
 
@@ -186,7 +186,7 @@ class JenkinsEndPoint implements ServletContextListener {
 	private void parseJobConsole(Session userSession, String url, String bid) {
 		// Send user confirmation that you are going to parse Jenkins job
 		userSession.asyncRemote.sendText("\nAbout to parse ${url}\n")
-		HttpResponseDecorator html1 = jenkinsService.httpConn('get', jenserver, url, jensuser, jenspass)
+		HttpResponseDecorator html1 = jenService.httpConn('get', jenserver, url, jensuser, jenspass)
 		def html = html1?.data
 		boolean start, start1 = false
 		// If we have a class of console output then set start1 to true
@@ -245,7 +245,7 @@ Running on Jenkins Host: $server
 		def lastbid = getLastBuild(url)
 		//int currentBuild = jenkinsService.currentJob(lastbid)
 		if (lastbid) {
-			jenkinsService.currentJob(lastbid) as int
+			jenService.currentJob(lastbid) as int
 		}
 	}
 	
@@ -254,9 +254,9 @@ Running on Jenkins Host: $server
 		def result
 		int max = 60
 		int a = 0
-		def ubi=jenkinsService.stripDouble(uri+"/"+bid.toString())
+		def ubi=jenService.stripDouble(uri+"/"+bid.toString())
 		String url=ubi+jensApi
-		def http1 = jenkinsService.httpConn(jenserver, jensuser, jenspass)
+		def http1 = jenService.httpConn(jenserver, jensuser, jenspass)
 		while (!go && a < max) {
 			a++
 			http1.get(path: "${url}") { resp, json ->
@@ -269,7 +269,7 @@ Running on Jenkins Host: $server
 		}
 
 		if (result) {
-			def http2 = jenkinsService.httpConn(processurl,'','')
+			def http2 = jenService.httpConn(processurl,'','')
 			http2.request( POST ) { req ->
 				requestContentType = URLENC
 				body = [
@@ -311,7 +311,7 @@ Running on Jenkins Host: $server
 				//newBuild = currentBuildId(url)
 				lastbid1 = getLastBuild(url)
 				if (lastbid1) {
-					newBuild = jenkinsService.currentJob(lastbid1)
+					newBuild = jenService.currentJob(lastbid1)
 					userSession.basicRemote.sendText("[${newBuild}].")
 					sleep(1000)
 					if (newBuild > currentBuild) {
@@ -340,7 +340,7 @@ Running on Jenkins Host: $server
 			if (go) {
 				userSession.basicRemote.sendText("New Build ID: $newBuild\nAttempting to parse logs:\n")
 				sleep(3000)
-				String url2 = jenkinsService.stripDouble(lastbid1 + consolelog)
+				String url2 = jenService.stripDouble(lastbid1 + consolelog)
 				parseJobConsole(userSession, url2, lastbid1)
 			}
 			else {
@@ -354,7 +354,7 @@ Running on Jenkins Host: $server
 	}
 
 	private void jobControl(Session userSession, String url, String bid) {
-		HttpResponseDecorator html1 = jenkinsService.httpConn('post', jenserver + url, jensuser ?: '', jenspass ?: '')
+		HttpResponseDecorator html1 = jenService.httpConn('post', jenserver + url, jensuser ?: '', jenspass ?: '')
 	}
 
 	private getBuilds(Session userSession,String url) {
@@ -368,9 +368,9 @@ Running on Jenkins Host: $server
 			if (sbn) {
 				col3 = sbn.collect {
 					[
-						bid: jenkinsService.verifyBuild(it.@href.text()),
-						bstatus : jenkinsService.verifyStatus(it.@href.text().toString()),
-						jobid :  jenkinsService.verifyJob(it.@href.text().toString())
+						bid: jenService.verifyBuild(it.@href.text()),
+						bstatus : jenService.verifyStatus(it.@href.text().toString()),
+						jobid :  jenService.verifyJob(it.@href.text().toString())
 					]
 				}
 			}
@@ -387,9 +387,9 @@ Running on Jenkins Host: $server
 				if (bn) {
 					col2 = bn.collect {
 						[
-							bid: jenkinsService.verifyBuild(it.A[0].@href.text()),
+							bid: jenService.verifyBuild(it.A[0].@href.text()),
 							//bstatus : verifyStatus(it.A[0].IMG[0].@class.text().toString()),
-							bstatus : jenkinsService.verifyStatus(it.A[0].IMG.@src.text().toString()),
+							bstatus : jenService.verifyStatus(it.A[0].IMG.@src.text().toString()),
 							//bimgUrl : it.A[0].IMG[0].@src.text(),
 							jobid : it.toString().trim().replaceAll('[\n|\r|#|\t| ]+', '').replaceAll("\\s","")
 						]
@@ -410,9 +410,9 @@ Running on Jenkins Host: $server
 				if (bn) {
 					col2 = bn.collect {
 						[
-							bid: jenkinsService.verifyBuild(it.TD[0].A.@href.text().toString()),
-							bstatus : jenkinsService.verifyStatus(it.TD[0].A.IMG.@src.text().toString()),
-							jobid: jenkinsService.verifyJob(it.TD[0].A.@href.text().toString()).replaceAll("\\s","")
+							bid: jenService.verifyBuild(it.TD[0].A.@href.text().toString()),
+							bstatus : jenService.verifyStatus(it.TD[0].A.IMG.@src.text().toString()),
+							jobid: jenService.verifyJob(it.TD[0].A.@href.text().toString()).replaceAll("\\s","")
 						]
 					}
 				}
@@ -485,13 +485,13 @@ Running on Jenkins Host: $server
 		def csize, consoleAnnotator
 		String ssize = ''
 		userSession.asyncRemote.sendText("Attempting live poll")
-		def http1 = jenkinsService.httpConn(jenserver, jensuser, jenspass)
+		def http1 = jenService.httpConn(jenserver, jensuser, jenspass)
 
 		// while hasMore is true -
 		// jenkins html page defined as header values
 		// goes away once full results are returned
 
-		nurl=jenkinsService.stripDouble(nurl)
+		nurl=jenService.stripDouble(nurl)
 		while (hasMore) {
 			// If there is a text-size header set then create url appender
 			//if (csize) {

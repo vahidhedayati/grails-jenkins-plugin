@@ -1,6 +1,6 @@
 package grails.plugin.jenkins
 
-class JenkinsController {
+class JenController {
 
 	def index() {
 		def hideLoginPage = config.hideLoginPage
