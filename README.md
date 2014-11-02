@@ -87,7 +87,7 @@ GSP Page for build.gsp
 
 # Config.groovy variables required:
 
-Configure properties by adding following to grails-app/conf/Config.groovy under the "wschat" key:
+Configure properties by adding following to grails-app/conf/Config.groovy under the "jenkins" key:
 
 ```groovy
 
