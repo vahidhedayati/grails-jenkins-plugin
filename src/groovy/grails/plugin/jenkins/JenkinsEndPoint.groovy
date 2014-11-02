@@ -283,7 +283,7 @@ Running on Jenkins Host: $server
 						String processurl = config.jenkins.processurl
 						String wsprocessurl = config.jenkins.wsprocessurl
 						String wsprocessname = config.jenkins.wsprocessname
-						if (processurl && currentBuild) {
+						if ((wsprocessurl||processurl) && currentBuild) {
 							//This hogs websocket connection - so lets background it
 							def asyncProcess = new Thread({jenService.workOnBuild(userSession,processurl,wsprocessurl,wsprocessname,newBuild,url,jenserver, jensuser, jenspass,customParams,jensurl,jensApi)} as Runnable)
 							//def asyncProcess = new Thread({jenService.workOnBuild(null,processurl,newBuild,url,jenserver, jensuser, jenspass,customParams,jensurl,jensApi)} as Runnable)

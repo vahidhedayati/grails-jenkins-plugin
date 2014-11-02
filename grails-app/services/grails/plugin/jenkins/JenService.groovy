@@ -82,13 +82,13 @@ class JenService {
 	}
 
 	
-	//This is an asynchronous task that is given a new BuildID, it will poll the 
-	// api page and once it has a result it will return this back to your own 
-	// defined processcontrol url. 
+	//This is an asynchronous task that is given a new BuildID, it will poll the
+	// api page and once it has a result it will return this back to your own
+	// defined processcontrol url.
 	def workOnBuild(Session userSession, String processurl, String wsprocessurl, String wsprocessname, int bid,String uri,
-		String jenserver, String jensuser, String jenspass, String customParams, 
-		String jensurl, String jensApi) {
-		
+			String jenserver, String jensuser, String jenspass, String customParams,
+			String jensurl, String jensApi) {
+
 		boolean go = false
 		def result
 		int max = 120
@@ -104,22 +104,19 @@ class JenService {
 					if (userSession && wsprocessurl) {
 						def ajson = new JsonBuilder()
 						ajson.feedback{
-							//details {
-								delegate.wsprocessurl "$wsprocessurl"
-								delegate.wsprocessname "$wsprocessname"
-								delegate.result "$result"
-								delegate.buildUrl  "$jenserver$ubi"
-								delegate.buildId "${bid as String}"
-								delegate.customParams "${customParams}"
-								delegate.server  "${jenserver}"
-								delegate.user "${jensuser}"
-								delegate.token "${jenspass}"
-								delegate.job "${jensurl}"
-							//}
-						}	
+							delegate.wsprocessurl "$wsprocessurl"
+							delegate.wsprocessname "$wsprocessname"
+							delegate.result "$result"
+							delegate.buildUrl  "$jenserver$ubi"
+							delegate.buildId "${bid as String}"
+							delegate.customParams "${customParams}"
+							delegate.server  "${jenserver}"
+							delegate.user "${jensuser}"
+							delegate.token "${jenspass}"
+							delegate.job "${jensurl}"
+						}
 						userSession.basicRemote.sendText(ajson.toString())
-						//userSession.basicRemote.sendText("We have feedback for you result: $result")
-					}	
+					}
 					go = true
 				}
 				sleep(10000)
