@@ -220,6 +220,7 @@ Results are typically returned to process url like this:
 [result:SUCCESS, token:9cf496bb07021a1d788f8838159291cf, buildUrl:http://localhost:9090/job/my_build/175, customParams:{appId=123, appName=crazyApp, appEnv=test}, buildId:175, job:/job/my_build, server:http://localhost:9090, user:cc, action:parseJenPlugin, format:null, controller:test]
 ```
 
+##### Refer further down on information on how to retrieve customParams
 
 
 So long as you provide the above values from within a gsp page it should load in the results back on the page.
@@ -271,3 +272,38 @@ Click on show API Token (This is an example token)
 
 With this information now login using the front end using the username and the token as the password - this now triggers builds as the user.
 
+
+###### customParams Retrieval
+This is our example parseJenplugin call, the results are actually in JSON format, so as per what fed in. I am now extracting each value which I can use 
+
+def parseJenPlugin() { 
+		println ":::> ${params} <:::"
+		def pp=params.customParams
+		def apps
+		if (pp) {
+			def data = JSON.parse(params.customParams)
+			def appId=data?.appId
+			def appName=data?.appName
+			def appEnv=data?.appEnv
+			println "--- Our Custom values passed from initial taglib call are:"
+			println " AppID: $appId | AppName: $appName | AppEnv: $appEnv"
+			/*
+			 *    <jen:connect divId="firstId" 
+					.....
+					customParams="[appId: '123', appName: 'crazyApp', appEnv: 'test' ]"
+					/>
+					
+					which has produced:
+					
+					:::> [result:SUCCESS, token:9cf496bb07021a1d788f8838159291cf, buildUrl:http://localhost:9090/job/my_build/182, customParams:{appId=123, appName=crazyApp, appEnv=test}, buildId:182, job:/job/my_build, server:http://localhost:9090, user:cc, action:parseJenPlugin, format:null, controller:test] <:::
+--- Our Custom values passed from initial taglib call are:
+ AppID: 123 | AppName: crazyApp | AppEnv: test
+
+					
+			 * 
+			 */
+			
+			
+		}
+		render ""
+	}

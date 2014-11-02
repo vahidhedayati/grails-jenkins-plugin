@@ -122,11 +122,11 @@ class JenService {
 					job : jensurl
 				]
 				response.success = { resp ->
-					log.debug "Process URL Success! ${resp.status}"
+					log.info "Process URL Success! ${resp.status}"
 				}
 
 				response.failure = { resp ->
-					log.debug "Process URL failed with status ${resp.status}"
+					log.info "Process URL failed with status ${resp.status}"
 				}
 			}
 		}
