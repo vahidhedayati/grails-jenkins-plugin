@@ -77,7 +77,7 @@ class JenService {
 	}
 	
 	// This posts some form of action to Jenkins builds etc 
-	private void jobControl(Session userSession, String url, String bid, String jenserver, String jensuser, String jenspass ) {
+	HttpResponseDecorator jobControl(Session userSession, String url, String bid, String jenserver, String jensuser, String jenspass ) {
 		HttpResponseDecorator html1 = httpConn('post', jenserver + url, jensuser ?: '', jenspass ?: '')
 	}
 
