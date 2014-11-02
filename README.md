@@ -18,7 +18,7 @@ Dependency, in your conf/BuildConfig.groovy under plugins add:
 
 [Part 2: update showing multiple builds, basic grails build in Jenkins](https://www.youtube.com/watch?v=CKv3TqWq4AQ)
 
-[Part 3: update showing jenkins authentication](https://www.youtube.com/watch?v=LOREp25Vz2Y)
+[Part 3: update showing Jenkins authentication](https://www.youtube.com/watch?v=LOREp25Vz2Y)
 
 [Part 4: Non token authentication, custom Parameters](https://www.youtube.com/watch?v=bO3s8e4Qakc)
 
@@ -28,20 +28,17 @@ once plugin dependency added to  BuildConfig, refreshed dependencies upon run-ap
 http://localhost:8080/yourapp/jen
 ```
 
-This will load in the default index page which asks a few questions in order for you to interact with the given jenkins server/job. This can either be re-used or just make a direct connection using <jenkins:connect within your gsp.
+This will load in the default index page which asks a few questions in order for you to interact with the given jenkins server/job. This can either be re-used or just make a direct connection using <jen:connect within your gsp.
 
 
-The plugin functionality provides two core aspects of the Jenkins product within your grails app:
+The plugin adds the following functionality to your existing grails application:
 
 ##### lists current build history items on right hand side
-The build history info is sent via websockets. If you click an item it will display its log. It displays status of job whether it passed/failed/canelled/building or queued. If building it will additionally show running time and estimated time according to Jenkins, this was initially achieved by parsing page over and over, now moved locally as a javascript that works out difference of estimated time according to jobid/api/json estimateTime value set per jenkins job. You can click stop to send a stop to backend jenkins which will stop the build. Scheduled future builds will appeared as queued and you can also cancel them.
+The build history info is sent via WebSockets. If you click an item the Jenkins console logs will be displayed. It displays status of job whether it passed/failed/cancelled/building or queued. If building it will additionally show running time and estimated time according to Jenkins, this was initially achieved by parsing page over and over, now moved locally as a JavaScript that works out difference of estimated time according to jobid/api/json estimateTime value set per Jenkins job. You can click stop to send a stop to backend Jenkins which will stop the build. Scheduled future builds will appeared as queued and you can also cancel them.
 
 
 ##### Build
-This triggers a build and attempts to parse job output, since it is building the results by default are returned via Ajax, it uses websockets instead to grab ready chunks of log output and display back on your page.
-
-
-
+This triggers a build and attempts to parse the live Jenkins console output, since it is building the results on Jenkins by default are returned using Ajax. The plugin attempts to do a similar thing but using WebSockets, it grab ready chunks of log output and display back on your page.
 
 
 #### How to use
@@ -255,11 +252,12 @@ Once you have configured global security of some form on your Jenkins server. Au
 
 ##### The plugin will attempt to grab the user authToken from the given server, if it can successfully retrieve this without authentication then the userToken is automatically set.
 
-So if you simply provide a username, the plugin will try do the rest.
+So by simply providing a valid username, the plugin will try do the rest and authenticate as the given user. With this you can easily gain a better overview of who is trigerring the build on Jenkins backend.
 
-Whilst building if the current user has got authenticated then the user will appear above build logs.
+Whilst building if the current user has got authenticated then the user will appear above build logs otherwise current user will show anonymous.
 
 ##### To manually define authToken per user(known as jenspass)
+
 First thing first, you need to enable authentication on Jenkins, our systems uses AD plugin and connects a user through to AD.
 Once a user has logged in then goto:
 
@@ -274,7 +272,7 @@ With this information now login using the front end using the username and the t
 
 
 ###### customParams Retrieval
-This is our example parseJenplugin call, the results are actually in JSON format, so as per what fed in. I am now extracting each value which I can use 
+This is our example parseJenplugin call, the results are actually in JSON format, so as per what fed in in above example. I am now extracting each value on processurl: 
 
 def parseJenPlugin() { 
 		println ":::> ${params} <:::"
