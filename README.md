@@ -273,7 +273,7 @@ With this information now login using the front end using the username and the t
 
 ###### customParams Retrieval
 This is our example parseJenplugin call, the results are actually in JSON format, so as per what fed in in above example. I am now extracting each value on processurl: 
-
+```groovy
 def parseJenPlugin() { 
 		println ":::> ${params} <:::"
 		def pp=params.customParams
@@ -305,3 +305,4 @@ def parseJenPlugin() {
 		}
 		render ""
 	}
+```
