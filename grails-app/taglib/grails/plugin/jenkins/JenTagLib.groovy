@@ -88,7 +88,7 @@ class JenTagLib {
 		if (template) {
 			out << g.render(template:template, model: model)
 		}else{
-			out << g.render(contextPath: pluginContextPath, template: '/jenkins/process', model: model)
+			out << g.render(contextPath: pluginContextPath, template: '/jen/process', model: model)
 		}
 	}
 
@@ -139,7 +139,7 @@ class JenTagLib {
 		if (template) {
 			out << g.render(template:template, model: model)
 		}else{
-			out << g.render(contextPath: pluginContextPath, template: '/jenkins/process', model: model)
+			out << g.render(contextPath: pluginContextPath, template: '/jen/process', model: model)
 		}
 	}
 }

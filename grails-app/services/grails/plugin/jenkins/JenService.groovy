@@ -2,6 +2,9 @@ package grails.plugin.jenkins
 
 import static groovyx.net.http.ContentType.*
 import static groovyx.net.http.Method.*
+
+import javax.websocket.Session;
+
 import groovyx.net.http.HttpResponseDecorator
 import groovyx.net.http.HttpResponseException
 import groovyx.net.http.RESTClient
@@ -14,6 +17,7 @@ class JenService {
 
 	static transactional = false
 
+	// Simply ensures URL is a successful URL.
 	String verifyUrl(String nurl, String server, user, pass) {
 		String result = 'Failed'
 		RESTClient http
@@ -46,7 +50,8 @@ class JenService {
 		}
 		return result
 	}
-
+	
+	//This returns the Jenkins APIToken for a given username
 	String returnToken(String user, String jenserver, String userbase, String userend) {
 		String url = userbase + user + userend
 		def token
@@ -70,7 +75,64 @@ class JenService {
 		}
 		return token
 	}
+	
+	// This posts some form of action to Jenkins builds etc 
+	private void jobControl(Session userSession, String url, String bid, String jenserver, String jensuser, String jenspass ) {
+		HttpResponseDecorator html1 = httpConn('post', jenserver + url, jensuser ?: '', jenspass ?: '')
+	}
 
+	
+	//This is an asynchronous task that is given a new BuildID, it will poll the 
+	// api page and once it has a result it will return this back to your own 
+	// defined processcontrol url. 
+	def workOnBuild(String processurl, int bid,String uri,
+		String jenserver, String jensuser, String jenspass, String customParams, 
+		String jensurl, String jensApi) {
+		
+		boolean go = false
+		def result
+		int max = 120
+		int a = 0
+		def ubi=stripDouble(uri+"/"+bid.toString())
+		String url=ubi+jensApi
+		def http1 = httpConn(jenserver, jensuser, jenspass)
+		while (!go && a < max) {
+			a++
+			http1.get(path: "${url}") { resp, json ->
+				result = json?.result
+				if (result && result != 'null') {
+					go = true
+				}
+			}
+			sleep(10000)
+		}
+
+		if (result) {
+			def http2 = httpConn(processurl,'','')
+			http2.request( POST ) { req ->
+				requestContentType = URLENC
+				body = [
+					result : result,
+					buildUrl : jenserver+ubi,
+					buildId: bid as String,
+					customParams: customParams,
+					server : jenserver,
+					user : jensuser,
+					token : jenspass,
+					job : jensurl
+				]
+				response.success = { resp ->
+					log.debug "Process URL Success! ${resp.status}"
+				}
+
+				response.failure = { resp ->
+					log.debug "Process URL failed with status ${resp.status}"
+				}
+			}
+		}
+	}
+		
+		
 	RESTClient httpConn(String host, String user, String key) {
 		try {
 			return createRestClient(host, user, key)

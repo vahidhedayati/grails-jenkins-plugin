@@ -35,7 +35,7 @@ function toggleBlock(caller,called,calltext) {
     <div id="content">
    <h1>Method 1 Quick Connect to your Jenkins Job [Build / View Historical logs]</h1>
    
-   <g:form method="post" action="process" controller="jenkins" >
+   <g:form method="post" action="process" controller="jen" >
    
    <div  class="fieldcontain">
 	<div id="jensurl" style="display: none;"><div class="message" role="status">
@@ -93,7 +93,7 @@ function toggleBlock(caller,called,calltext) {
 		
 	<h1>Method 2 Connect to your Jenkins Job [Build / View Historical logs]</h1>
 	<p></p>
-	<g:form method="post" action="process" controller="jenkins" >
+	<g:form method="post" action="process" controller="jen" >
 	
 	<div  class="fieldcontain">
 	<div id="jenserver" style="display: none;"><div class="message" role="status">

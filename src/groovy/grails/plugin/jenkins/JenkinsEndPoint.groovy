@@ -116,7 +116,7 @@ class JenkinsEndPoint implements ServletContextListener {
 
 		if (cmd.equals('stopBuild')) {
 			if (data.bid) {
-				jobControl(userSession,jenService.stripDouble(data.bid+'/stop'),data.bid)
+				jenService.jobControl(userSession,jenService.stripDouble(data.bid+'/stop'),data.bid,jenserver, jensuser, jenspass)
 				dashboard(userSession)
 			}
 		}
@@ -147,7 +147,7 @@ class JenkinsEndPoint implements ServletContextListener {
 	}
 
 	private void cancelJob(Session userSession,String bid){
-		jobControl(userSession,bid,bid)
+		jenService.jobControl(userSession,bid,bid,jenserver, jensuser, jenspass)
 	}
 
 	private void disconnect(Session userSession) {
@@ -249,49 +249,7 @@ Running on Jenkins Host: $server
 		}
 	}
 	
-	private workOnBuild(Session userSession,String processurl, int bid,String uri) {
-		boolean go = false
-		def result
-		int max = 60
-		int a = 0
-		def ubi=jenService.stripDouble(uri+"/"+bid.toString())
-		String url=ubi+jensApi
-		def http1 = jenService.httpConn(jenserver, jensuser, jenspass)
-		while (!go && a < max) {
-			a++
-			http1.get(path: "${url}") { resp, json ->
-				result = json?.result
-				if (result && result != 'null') {
-					go = true
-				}
-			}
-			sleep(10000)
-		}
 
-		if (result) {
-			def http2 = jenService.httpConn(processurl,'','')
-			http2.request( POST ) { req ->
-				requestContentType = URLENC
-				body = [
-					result : result,
-					buildUrl : jenserver+ubi,
-					buildId: bid as String,
-					customParams: customParams,
-					server : jenserver,
-					user : jensuser,
-					token : jenspass,
-					job : jensurl
-				]
-				response.success = { resp ->
-					log.debug "Process URL Success! ${resp.status}"
-				}
-
-				response.failure = { resp ->
-					log.debug "Process URL failed with status ${resp.status}"
-				}
-			}
-		}
-	}
 	
 	private buildJob(Session userSession) {
 		String url  = jensurl
@@ -302,7 +260,7 @@ Running on Jenkins Host: $server
 		String consolelog = jensconlog
 		try {
 			userSession.basicRemote.sendText("\nBefore triggering Build ID: $currentBuild\n..waiting\n")
-			jobControl(userSession, url1, url)
+			jenService.jobControl(userSession, url1, url,jenserver, jensuser, jenspass)
 			boolean go = false
 			int a = 0
 			def lastbid1, newBuild
@@ -325,7 +283,7 @@ Running on Jenkins Host: $server
 						String processurl = config.jenkins.processurl
 						if (processurl && currentBuild) {
 							//This hogs websocket connection - so lets background it
-							def asyncProcess = new Thread({workOnBuild(userSession,processurl,newBuild,url)} as Runnable)
+							def asyncProcess = new Thread({jenService.workOnBuild(processurl,newBuild,url,jenserver, jensuser, jenspass,customParams,jensurl,jensApi)} as Runnable)
 							asyncProcess.start()
 						}
 						
@@ -353,9 +311,6 @@ Running on Jenkins Host: $server
 		}
 	}
 
-	private void jobControl(Session userSession, String url, String bid) {
-		HttpResponseDecorator html1 = jenService.httpConn('post', jenserver + url, jensuser ?: '', jenspass ?: '')
-	}
 
 	private getBuilds(Session userSession,String url) {
 		try {
