@@ -16,9 +16,11 @@ Dependency, in your conf/BuildConfig.groovy under plugins add:
 ### Video
 [Video 1 older look](http://youtu.be/XfsrBAa8aAg)
 
-[Part 2: update showing multiple builds](https://www.youtube.com/watch?v=CKv3TqWq4AQ)
+[Part 2: update showing multiple builds, basic grails build in Jenkins](https://www.youtube.com/watch?v=CKv3TqWq4AQ)
 
 [Part 3: update showing jenkins authentication](https://www.youtube.com/watch?v=LOREp25Vz2Y)
+
+[Part 4: Non token authentication, custom Parameters](https://www.youtube.com/watch?v=bO3s8e4Qakc)
 
 ### Walkthrough
 once plugin dependency added to  BuildConfig, refreshed dependencies upon run-appp, you will be able to access this plugin via this url:
