@@ -113,23 +113,29 @@ padding: 12px 12px 12px 12px;
 overflow:auto;
 resize:both;
 }
+
 .redfont { 
  color: #0000FF;
  font-size: 0.8em;
 }
-.red {
+
+.failed {
 	background: #FFB2B2;
 }
-.green {
+
+.queued {
 	background: #CCEBCC;
 }
-.orange{
+
+.cancelled {
 	background: #FFD6AD;
 }
-.blue {
+
+.building {
 	background:#B2E0FF;
 }
-.grey {
+
+.queued {
 	background:#EEE;
 }
 
@@ -293,14 +299,11 @@ function processMessage${divId}(message) {
 			jsonData.historyQueue.forEach(function(entry) {
 				switch(entry.bstatus) {
 					case 'queued':
-						cclass='grey'
-						sb.push('\n<li class='+cclass+' >'+entry.jobid+' : <small>has been queued | <a onclick="javascript:cancelQueue${divId}('+wrapIt(entry.bid)+');">CANCEL</a></small>\n</li>');			
+						sb.push('\n<li class='+entry.bstatus+' >'+entry.jobid+' : <small>has been queued | <a onclick="javascript:cancelQueue${divId}('+wrapIt(entry.bid)+');">CANCEL</a></small>\n</li>');			
 						break;
 					case 'building':
-						//cclass='blue'
-						///sb.push('\n<li class='+cclass+'><a onclick="javascript:viewHistory${divId}('+wrapIt(entry.bid)+');">'+entry.jobid+' : <small>'+entry.bstatus+'</small></a>\n');
+						///sb.push('\n<li class='+entry.bstatus+'><a onclick="javascript:viewHistory${divId}('+wrapIt(entry.bid)+');">'+entry.jobid+' : <small>'+entry.bstatus+'</small></a>\n');
 						//sb.push('\n<a onclick="javascript:stopBuild${divId}('+wrapIt(entry.bid)+');"><small>STOP</small></a>\n');
-						
 						//sb.push('</li>');			
 						break;	
 					}	
@@ -318,21 +321,23 @@ function processMessage${divId}(message) {
 				var crec=cc.substring(cc.lastIndexOf('/')+1,cc.length);
 				var cclass=''
 					switch(entry.bstatus) {
-					case 'passed':
-						cclass='green'
-						sb.push('\n<li class='+cclass+'><a onclick="javascript:viewHistory${divId}('+wrapIt(entry.bid)+');">'+entry.jobid+' : <small>'+entry.bstatus+' '+entry.bdate+'</small></a>\n</li>');
-						break;
-					case 'queued':
-						cclass='grey'
-						sb.push('\n<li class='+cclass+' >'+entry.jobid+' : <small>has been queued | <a onclick="javascript:cancelQueue${divId}('+wrapIt(entry.bid)+');">CANCEL</a></small>\n</li>');			
-						break;
-					case 'failed':
-						cclass='red'
-						sb.push('\n<li class='+cclass+'><a onclick="javascript:viewHistory${divId}('+wrapIt(entry.bid)+');">'+entry.jobid+' : <small>'+entry.bstatus+' '+entry.bdate+'</small></a>\n</li>');						
-						break;
-					case 'building':
-						cclass='blue'
-							sb.push('\n<li class='+cclass+'><a onclick="javascript:viewHistory${divId}('+wrapIt(entry.bid)+');">'+entry.jobid+' : <small>'+entry.bstatus+' '+entry.bdate+'</small></a>\n');
+						case 'passed':
+							sb.push('\n<li class='+entry.bstatus+'><a onclick="javascript:viewHistory${divId}('+wrapIt(entry.bid)+');">'+entry.jobid+' : ');
+							sb.push('<small>'+entry.bstatus+' '+entry.bdate+'</small></a>');
+							sb.push(' | <a onclick="javascript:parseHistory${divId}('+wrapIt(entry.bid)+');">Selective log</a>');
+							sb.push('\n</li>');
+							break;
+						//case 'queued':
+						//	sb.push('\n<li class='+entry.bstatus+' >'+entry.jobid+' : <small>has been queued | <a onclick="javascript:cancelQueue${divId}('+wrapIt(entry.bid)+');">CANCEL</a></small>\n</li>');			
+						//	break;
+						case 'failed':
+							sb.push('\n<li class='+entry.bstatus+'><a onclick="javascript:viewHistory${divId}('+wrapIt(entry.bid)+');">'+entry.jobid+' : ');
+							sb.push('<small>'+entry.bstatus+' '+entry.bdate+'</small></a>');
+							//sb.push(' | Other Act');
+							sb.push('\n</li>');						
+							break;
+						case 'building':
+							sb.push('\n<li class='+entry.bstatus+'><a onclick="javascript:viewHistory${divId}('+wrapIt(entry.bid)+');">'+entry.jobid+' : <small>'+entry.bstatus+' '+entry.bdate+'</small></a>\n');
 							sb.push('\n<a onclick="javascript:stopBuild${divId}('+wrapIt(entry.bid)+');"><small>STOP</small></a>\n');
 							sb.push('<br/><small><span id="BuildEstimation${divId}" class="redfont">');
 							sb.push('<div class="jbutton">Estimated Time:');
@@ -345,12 +350,10 @@ function processMessage${divId}(message) {
 							    //updateBuilds(entry.bid)
 							 //   updateBuilds${divId}();
 							//},600);			
-						break;
-					case 'cancelled':
-						cclass='orange'
-							sb.push('\n<li class='+cclass+' ><a onclick="javascript:viewHistory${divId}('+wrapIt(entry.bid)+');">'+entry.jobid+' : <small>'+entry.bstatus+' '+entry.bdate+'</small></a>\n</li>');
-						break;
-								
+							break;
+						case 'cancelled':
+							sb.push('\n<li class='+entry.bstatus+' ><a onclick="javascript:viewHistory${divId}('+wrapIt(entry.bid)+');">'+entry.jobid+' : <small>'+entry.bstatus+' '+entry.bdate+'</small></a>\n</li>');
+							break;			
 					}			
 			});
 			sb.push('</ul>')
@@ -362,6 +365,9 @@ function processMessage${divId}(message) {
 	}
 }
 
+function parseHistory${divId}(bid) {
+	webSocket${divId}.send(JSON.stringify({'cmd': 'parseHistory', 'bid': bid }));
+}
 
 function cdtd${divId}() {
 	var future = new Date(iDate${divId});

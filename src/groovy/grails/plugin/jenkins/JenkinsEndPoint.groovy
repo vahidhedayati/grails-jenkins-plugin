@@ -7,6 +7,7 @@ import grails.util.Environment
 import groovy.json.JsonBuilder
 import groovyx.net.http.ContentType
 import groovyx.net.http.HttpResponseDecorator
+import groovyx.net.http.Method
 import groovyx.net.http.RESTClient
 
 import javax.servlet.ServletContext
@@ -46,6 +47,8 @@ class JenkinsEndPoint implements ServletContextListener {
 	private String userbase = '/user/'
 	private String userend = '/configure'
 
+	private String consoleText = '/consoleText'
+	
 	RESTClient http
 
 	void contextInitialized(ServletContextEvent event) {
@@ -123,7 +126,17 @@ class JenkinsEndPoint implements ServletContextListener {
 				parseJobConsole(userSession,url2,data.bid)
 			}
 		}
+		if (cmd.equals('parseHistory')) {
+			if (data.bid) {
+				clearPage(userSession)
+				String url2 = jenserver+data.bid+consoleText
+				definedParseJobConsole(userSession,url2,data.bid)
+			}
+		}
 
+		
+		
+		
 		if (cmd.equals('stopBuild')) {
 			if (data.bid) {
 				jenService.jobControl(jenService.stripDouble(data.bid+'/stop'),data.bid,jenserver, jensuser, jenspass)
@@ -193,6 +206,29 @@ class JenkinsEndPoint implements ServletContextListener {
 		return server
 	}
 
+	// Working on this process VH
+	private void definedParseJobConsole(Session userSession, String url,  String bid) {
+		
+		def wks
+		def http1 = jenService.httpConn(jenserver, jensuser, jenspass)
+		http1.request(Method.GET, ContentType.TEXT) { req ->
+			uri.path = bid
+		
+		requestContentType = TEXT
+		   response.success = { resp, reader ->
+			 //  reader.text.each { hh ->
+				println "-- ${reader.text}"
+			   
+			   if (reader.text.contains('Building in workspace')) {
+				   println "EEE WOOOT"
+					wks=reader.text.substring(reader.text.indexOf('Building in workspace ')+22,reader.text.length())   
+			   }
+			   //}
+			}
+		}
+		userSession.basicRemote.sendText("\nWKS ${wks}\n")
+	} 
+	
 	private void parseJobConsole(Session userSession, String url, String bid) {
 		// Send user confirmation that you are going to parse Jenkins job
 		userSession.basicRemote.sendText("\nAbout to parse ${url}\n")
@@ -350,7 +386,7 @@ Running on Jenkins Host: $server
 			if (sbn) {
 				col3 = sbn.collect {
 					[
-						bid: jenService.verifyBuild(it.@href.text()),
+						bid : jenService.verifyBuild(it.@href.text()),
 						bstatus : jenService.verifyStatus(it.@href.text().toString()),
 						jobid :  jenService.verifyJob(it.@href.text().toString())
 					]
@@ -362,14 +398,14 @@ Running on Jenkins Host: $server
 				col1 = bd.collect {
 					[
 						bid : it.A[0].@href.text(),
-						bdate :it.toString().trim()
+						bdate : it.toString().trim()
 					]
 				}
 				def bn = html."**".findAll {it.@class.toString().contains("build-name")}
 				if (bn) {
 					col2 = bn.collect {
 						[
-							bid: jenService.verifyBuild(it.A[0].@href.text()),
+							bid : jenService.verifyBuild(it.A[0].@href.text()),
 							//bstatus : verifyStatus(it.A[0].IMG[0].@class.text().toString()),
 							bstatus : jenService.verifyStatus(it.A[0].IMG.@src.text().toString()),
 							//bimgUrl : it.A[0].IMG[0].@src.text(),
@@ -384,7 +420,7 @@ Running on Jenkins Host: $server
 					col1 = bd.collect {
 						[
 							bid : it.@href.text(),
-							bdate :it.toString().trim()
+							bdate : it.toString().trim()
 						]
 					}
 				}
@@ -392,9 +428,9 @@ Running on Jenkins Host: $server
 				if (bn) {
 					col2 = bn.collect {
 						[
-							bid: jenService.verifyBuild(it.TD[0].A.@href.text().toString()),
+							bid : jenService.verifyBuild(it.TD[0].A.@href.text().toString()),
 							bstatus : jenService.verifyStatus(it.TD[0].A.IMG.@src.text().toString()),
-							jobid: jenService.verifyJob(it.TD[0].A.@href.text().toString()).replaceAll("\\s","")
+							jobid : jenService.verifyJob(it.TD[0].A.@href.text().toString()).replaceAll("\\s","")
 						]
 					}
 				}
