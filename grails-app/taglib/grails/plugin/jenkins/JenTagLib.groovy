@@ -22,7 +22,6 @@ class JenTagLib {
 		String jensuser = attrs.remove('jensuser')
 		String jenspass = attrs.remove('jenspass')
 		String jenschoice = attrs.remove('jenschoice')
-
 		//String jensprefix = attrs.remove('jensprefix')
 
 		def config = grailsApplication.config.jenkins
@@ -71,6 +70,10 @@ class JenTagLib {
 		// jens uri to get to full logs:
 		// Default: '/consoleFull'
 		String jensconlog = attrs.jensLog ?: config.consoleLog ?: '/consoleFull'
+		
+		String processurl = attrs.processurl ?: config.processurl  
+		String wsprocessurl = attrs.wsprocessurl ?: config.wsprocessurl
+		String wsprocessname = attrs.wsprocessname ?: config.wsprocessname
 
 		String hideButtons = attrs.hideButtons ?: config.hideButtons ?: 'no'
 		String hideTriggerButton = attrs.hideTriggerButton ?: config.hideTriggerButton ?: 'no'
@@ -84,7 +87,8 @@ class JenTagLib {
 		             jenschoice:jenschoice, divId:divId, jenfullserver:jenfullserver, jensconurl:jensconurl,
 		             jensjob:attrs.jensjob, jensuser:jensuser, jenspass:jenspass, appname:appname, wshostname:wshostname,
 		             jenserver:jenserver, jensurl:jensurl, jensprogressive:jensprogressive, jensbuildend:jensbuildend,
-		             jensconlog:jensconlog, customParams:attrs.customParams]
+		             jensconlog:jensconlog, customParams:attrs.customParams,processurl:processurl,wsprocessurl:wsprocessurl,
+					 wsprocessname:wsprocessname]
 		if (template) {
 			out << g.render(template:template, model: model)
 		}else{
@@ -92,6 +96,7 @@ class JenTagLib {
 		}
 	}
 
+	// Shorter method to do the same as above 
 	def dirconnect = {attrs ->
 
 		if (!attrs.jensjob) {
@@ -112,7 +117,7 @@ class JenTagLib {
 		String jensprot = url.protocol
 		String jenserver = url.host
 		//String jensport = url.port
-
+		
 		String validurl = jenService.verifyUrl(jensurl, jensurl, jensuser, jenspass)
 		if (!validurl.startsWith('Success')) {
 			return
@@ -129,17 +134,38 @@ class JenTagLib {
 		String hideButtons = attrs.hideButtons ?: config.hideButtons ?: 'no'
 		String hideTriggerButton = attrs.hideTriggerButton ?: config.hideTriggerButton ?: 'no'
 		String hideDashBoardButton = attrs.hideDashBoardButton ?: config.hideDashBoardButton ?: 'no'
+		String processurl = attrs.processurl ?: config.processurl
+		String wsprocessurl = attrs.wsprocessurl ?: config.wsprocessurl
+		String wsprocessname = attrs.wsprocessname ?: config.wsprocessname
+
 		String appname = Metadata.current.getApplicationName()
 
 		def model = [hideButtons:hideButtons, hideTriggerButton:hideTriggerButton, hideDashBoardButton:hideDashBoardButton,
 		             jenschoice:jenschoice, divId:divId, jenfullserver:jensconurl, jensconurl:jensconurl, jensjob:attrs.jensjob,
 		             jensuser:jensuser, jenspass:jenspass, appname:appname, wshostname:wshostname, jenserver:jenserver,
 		             jensurl:jenspath, jensprogressive:jensprogressive, jensbuildend:jensbuildend, jensconlog:jensconlog,
-					 customParams:attrs.customParams]
+					 customParams:attrs.customParams,processurl:processurl,wsprocessurl:wsprocessurl,wsprocessname:wsprocessname]
 		if (template) {
 			out << g.render(template:template, model: model)
 		}else{
 			out << g.render(contextPath: pluginContextPath, template: '/jen/process', model: model)
 		}
 	}
+	
+	// Non WebSocket build task - that triggers build
+	// Upon success calls a process URL if any
+	def asyncBuild = {attrs ->
+		String jensuser = attrs.remove('jensuser')
+		String jenspass = attrs.remove('jenspass')
+		String url = attrs.remove('url')
+		String customParams = attrs.remove('customParams')
+		
+		def config = grailsApplication.config.jenkins
+		String processurl = attrs.processurl  ?: config.processurl
+		  
+		jenService.asyncBuilder(url,jensuser,jenspass,processurl,customParams) 
+		
+		out << "Build Triggered Awaiting processing to take place once it completes"
+	}
+
 }

@@ -40,7 +40,8 @@ class JenkinsEndPoint implements ServletContextListener {
 
 	static final Set<Session> jsessions = ([] as Set).asSynchronized()
 
-	private String customParams,jensbuildend, jensprogressive, jensconlog, jensurl, jenserver, jensuser,jenspass,jenschoice,jensconurl = ''
+	private String customParams,jensbuildend, jensprogressive, jensconlog, jensurl, jenserver, jensuser, jenspass, jenschoice, jensconurl = ''
+	private String processurl, wsprocessurl, wsprocessname = ''
 	private String jensApi = '/api/json'
 	private String userbase = '/user/'
 	private String userend = '/configure'
@@ -79,10 +80,10 @@ class JenkinsEndPoint implements ServletContextListener {
 		userSession.userProperties.job = job
 		jsessions.add(userSession)
 		
-		def ctx= SCH.servletContext.getAttribute(GA.APPLICATION_CONTEXT)
+		def ctx = SCH.servletContext.getAttribute(GA.APPLICATION_CONTEXT)
 		jenService = ctx.jenService
 		
-		grailsApplication= ctx.grailsApplication
+		grailsApplication = ctx.grailsApplication
 	}
 
 	@OnMessage
@@ -105,6 +106,9 @@ class JenkinsEndPoint implements ServletContextListener {
 			jensconlog = data.jensconlog ?: '/consoleFull'
 			jensprogressive = data.jensprogressive ?: '/logText/progressiveHtml'
 			jensbuildend = data.jensbuildend  ?: '/build?delay=0sec'
+			processurl = data.processurl
+			wsprocessurl = data.wsprocessurl
+			wsprocessname = data.wsprocessname
 			jenkinsConnect(userSession)
 		}
 
@@ -118,7 +122,7 @@ class JenkinsEndPoint implements ServletContextListener {
 
 		if (cmd.equals('stopBuild')) {
 			if (data.bid) {
-				jenService.jobControl(userSession,jenService.stripDouble(data.bid+'/stop'),data.bid,jenserver, jensuser, jenspass)
+				jenService.jobControl(jenService.stripDouble(data.bid+'/stop'),data.bid,jenserver, jensuser, jenspass)
 				dashboard(userSession)
 			}
 		}
@@ -149,7 +153,7 @@ class JenkinsEndPoint implements ServletContextListener {
 	}
 
 	private void cancelJob(Session userSession,String bid){
-		jenService.jobControl(userSession,bid,bid,jenserver, jensuser, jenspass)
+		jenService.jobControl(bid,bid,jenserver, jensuser, jenspass)
 	}
 
 	private void disconnect(Session userSession) {
@@ -262,7 +266,7 @@ Running on Jenkins Host: $server
 		String consolelog = jensconlog
 		try {
 			userSession.basicRemote.sendText("\nBefore triggering Build ID: $currentBuild\n..waiting\n")
-			jenService.jobControl(userSession, url1, url,jenserver, jensuser, jenspass)
+			jenService.jobControl(url1, url,jenserver, jensuser, jenspass)
 			boolean go = false
 			int a = 0
 			def lastbid1, newBuild
@@ -291,7 +295,6 @@ Running on Jenkins Host: $server
 							//def asyncProcess = new Thread({jenService.workOnBuild(null,processurl,newBuild,url,jenserver, jensuser, jenspass,customParams,jensurl,jensApi)} as Runnable)
 							asyncProcess.start()
 						}
-						
 						go = true
 					}
 				}

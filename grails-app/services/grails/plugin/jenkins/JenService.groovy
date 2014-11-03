@@ -16,7 +16,9 @@ import org.apache.http.protocol.HttpContext
 class JenService {
 
 	static transactional = false
-
+	def grailsApplication
+	private String jensApi = '/api/json'
+	
 	// Simply ensures URL is a successful URL.
 	String verifyUrl(String nurl, String server, user, pass) {
 		String result = 'Failed'
@@ -76,12 +78,111 @@ class JenService {
 		return token
 	}
 	
+	def asyncBuilder(String url, String jensuser, String jenspass,  String processurl, String customParams) {
+		
+		def aurl = new URL(url)
+		String jensauthority = aurl.authority
+		String jensprot = aurl.protocol
+		String jensurl=aurl.path
+		String jenserver=jensprot + '://' + jensauthority
+		
+		def config = grailsApplication.config.jenkins
+		def jensbuildend = config.jensbuildend  ?: '/build?delay=0sec'
+		
+		def url1 = jenserver + jensurl + jensbuildend
+		// current Build ID
+		int currentBuild = currentBuildId(jensurl, jenserver, jensuser, jenspass)
+		
+		// Kicks off build
+		jobControl(url1,jensuser, jenspass)
+		// Increment existing buildID with 1
+		int newBuild=currentBuild+1
+	
+		// Sleep a while
+		sleep(1000)
+		
+		// Kick off a job to asynchronously check build and if we have result to trigger processurl
+		def asyncProcess = new Thread({workOnBuild(null,processurl,'','',newBuild,jensurl,jenserver, jensuser, jenspass,customParams,jensurl,jensApi)} as Runnable)
+		asyncProcess.start()
+		
+	 }
+	
+	def asyncBuilder(String jensurl, String jenserver, String jensuser, String jenspass,  String processurl, String customParams) {
+		
+		def config = grailsApplication.config.jenkins
+		def jensbuildend = config.jensbuildend  ?: '/build?delay=0sec'
+		
+		def url1 = jensurl + jensbuildend
+		// current Build ID
+		int currentBuild = currentBuildId(jensurl, jenserver, jensuser, jenspass)
+		
+		// Kicks off build
+		jobControl(url1,jensuser, jenspass)
+		// Increment existing buildID with 1
+		int newBuild=currentBuild+1
+	
+		// Sleep a while
+		sleep(10000)
+		
+		// Kick off a job to asynchronously check build and if we have result to trigger processurl
+		def asyncProcess = new Thread({workOnBuild(null,processurl,'','',newBuild,jensurl,jenserver, jensuser, jenspass,customParams,jensurl,jensApi)} as Runnable)
+		asyncProcess.start()
+		
+	 }
+	  
+	private int currentBuildId(String url, String jenserver, String jensuser, String jenspass) {
+		def lastbid = getLastBuild(url, jenserver, jensuser, jenspass)
+		//int currentBuild = jenkinsService.currentJob(lastbid)
+		if (lastbid) {
+			currentJob(lastbid) as int
+		}
+	}
+	
+	private String getLastBuild(String url, String jenserver, String jensuser, String jenspass) {
+		String bid = ""
+		String bdate
+		try {
+			int go = 0
+			RESTClient http = httpConn(jenserver, jensuser, jenspass)
+			HttpResponseDecorator html1 = http.get(path: "${url}")
+			def html = html1?.data
+			def bd = html."**".findAll {it.@class.toString().contains("build-details")}
+			if (bd) {
+				bd.each {
+					go++
+					if (go == 1) {
+						bid = it.A[0].@href.text()
+						bdate = it.toString().trim()
+					}
+				}
+			}
+			else {
+				bd = html."**".find { it.@class.toString().contains("tip model-link") }
+				bd.each {
+					go++
+					if (go == 1) {
+						bid = it.@href.text()
+						bdate = it.toString().trim()
+					}
+				}
+			}
+		}
+		catch(e) {
+			log.error "Problem communicating with ${url}: ${e.message}", e
+		}
+		return  bid
+	}
+	
+	// This posts some form of action to Jenkins builds etc
+	HttpResponseDecorator jobControl(String url, String jensuser, String jenspass ) {
+		HttpResponseDecorator html1 = httpConn('post',  url, jensuser ?: '', jenspass ?: '')
+	}
+	
 	// This posts some form of action to Jenkins builds etc 
-	HttpResponseDecorator jobControl(Session userSession, String url, String bid, String jenserver, String jensuser, String jenspass ) {
+	HttpResponseDecorator jobControl(String url, String bid, String jenserver, String jensuser, String jenspass ) {
 		HttpResponseDecorator html1 = httpConn('post', jenserver + url, jensuser ?: '', jenspass ?: '')
 	}
 
-	
 	//This is an asynchronous task that is given a new BuildID, it will poll the
 	// api page and once it has a result it will return this back to your own
 	// defined processcontrol url.

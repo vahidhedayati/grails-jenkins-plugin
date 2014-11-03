@@ -218,6 +218,9 @@ wshostname="something"
 jensprogressive="something"
 jensLog="something"
 customParams="[appId: '123', appName: 'crazyApp', appEnv: 'test' ]"
+processurl="http://your_process_url/controller/action"
+wsprocessurl="http://your_process_url/controller/action"
+wsprocessname="Deploy code"
 />
  ```
 customParams - if you have configured a processurl in your config you can pass values back
@@ -252,9 +255,37 @@ Tested on recent/older variants of Jenkins. May still fail on others, please pos
 ```
 
 Optional - if you have configured a processurl in your config you can pass values back
+All optional above should work
 ```gsp
+processurl="http://your_process_url/controller/action"
+wsprocessurl="http://your_process_url/controller/action"
+wsprocessname="Deploy code"
 customParams="[appId: '123', appName: 'crazyApp', appEnv: 'test' ]"
 ```
+
+
+
+####Async Build (Non Websocket)
+This will trigger a service that does a background build, whilst building it will check for completion, once completed it will trigger process url 
+and send back results to it.
+```gsp
+<jen:asyncBuild
+	url="http://host:post/job/JOB_NAME"
+	customParams="[appId:'MyCurrentJob', appDetails: 'Something']"
+	jensuser="MyUserId"
+	processurl="http://localhost:8080/testjenkins/test/myresults"
+	
+	/>
+```	
+
+	
+	
+	
+
+The processurl - is a background process that has no interaction with your front end view, runs in the background. When a job completes it returns its status plus a variety of other parameters to the given url.
+
+The wsprocessurl - is a url which wsprocessname is the display name for the link within your websocket connected page. Once the job is completed a button is provided on the same websocket page to trigger the next controller/action which could in short be another taglib call that calls yet another websocket to process something else.
+You can enable both processurl and wsprocessurl - they could be doing different things if needs be. It would not be a good idea to call the same controller/action since it will then lead to duplicated actions.
 
 
 ### Authenticated Jenkins howto:

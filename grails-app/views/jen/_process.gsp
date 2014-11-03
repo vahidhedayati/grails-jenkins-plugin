@@ -193,8 +193,11 @@ webSocket${divId}.onmessage=function(message) {processMessage${divId}(message);	
 
 function processOpen${divId}(message) {
 	$('#messagesTextarea${divId}').append('Server Connect....\n');
-	webSocket${divId}.send(JSON.stringify({'cmd':'connect','jensuser':"${jensuser }",'jensconurl':"${jensconurl }",'hideBuildTimer':"${hideBuildTimer }",'customParams':"${customParams}",
-	'jenspass':"${jenspass }",'jenserver':"${jenfullserver }",'jensurl':"${jensurl }",'jensbuildend':"${jensbuildend }",'jensprogressive': "${jensprogressive }", 'jensconlog':"${jensconlog }"}));
+	webSocket${divId}.send(JSON.stringify({'cmd':'connect','jensuser':"${jensuser }",'jensconurl':"${jensconurl }",
+		'hideBuildTimer':"${hideBuildTimer }",'customParams':"${customParams}", 
+		'processurl':"${processurl}",'wsprocessurl':"${wsprocessurl}",'wsprocessname':"${wsprocessname}",
+		'jenspass':"${jenspass }",'jenserver':"${jenfullserver }",'jensurl':"${jensurl }",
+		'jensbuildend':"${jensbuildend }",'jensprogressive': "${jensprogressive }", 'jensconlog':"${jensconlog }"}));
 	newBuild${divId}("${jenschoice }");
 }
 

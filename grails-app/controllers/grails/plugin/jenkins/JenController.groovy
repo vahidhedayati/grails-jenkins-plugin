@@ -1,7 +1,7 @@
 package grails.plugin.jenkins
 
 class JenController {
-
+	
 	def index() {
 		def hideLoginPage = config.hideLoginPage
 
@@ -21,7 +21,7 @@ class JenController {
 	    jenserver:jenserver, jensport:jensport, jensuser:jensuser, jenspass:jenspass, jensprefix:jensprefix,
 	    jensfolder:jensfolder, jensjob:jensjob, jenschoice:jenschoice,jensurl:jensurl]
 	}
-
+	
 	private getConfig() {
 		grailsApplication.config.jenkins
 	}
