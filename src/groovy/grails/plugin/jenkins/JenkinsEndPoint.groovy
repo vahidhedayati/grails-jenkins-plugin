@@ -51,7 +51,9 @@ class JenkinsEndPoint implements ServletContextListener {
 		ServletContext servletContext = event.servletContext
 		final ServerContainer serverContainer = servletContext.getAttribute("javax.websocket.server.ServerContainer")
 		try {
-			serverContainer.addEndpoint(JenkinsEndPoint)
+			// Adding this conflicts with listener added via plugin descriptor
+			// Whilst it works as run-app - in production this causes issues
+			//serverContainer.addEndpoint(JenkinsEndPoint)
 
 			def ctx = servletContext.getAttribute(GA.APPLICATION_CONTEXT)
 
