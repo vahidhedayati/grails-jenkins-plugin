@@ -250,6 +250,7 @@ class JenkinsEndPoint implements ServletContextListener {
 			
 		}
 	}
+	
 	private dashboardButton(Session userSession) {
 		clearPage(userSession)
 		def job = userSession.userProperties.get("job").toString()
@@ -262,6 +263,7 @@ Running on Jenkins Host: $server
 		
 		getBuilds(userSession, jensurl)
 	}
+	
 	private dashboard(Session userSession) {
 		getBuilds(userSession, jensurl)
 	}
@@ -273,8 +275,6 @@ Running on Jenkins Host: $server
 			jenService.currentJob(lastbid) as int
 		}
 	}
-	
-
 	
 	private buildJob(Session userSession) {
 		String url  = jensurl
