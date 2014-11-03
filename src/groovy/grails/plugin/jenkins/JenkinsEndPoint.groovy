@@ -3,9 +3,9 @@ package grails.plugin.jenkins
 import static groovyx.net.http.ContentType.*
 import static groovyx.net.http.Method.*
 import grails.converters.JSON
+import grails.util.Environment
 import groovy.json.JsonBuilder
 import groovyx.net.http.ContentType
-import groovyx.net.http.HTTPBuilder
 import groovyx.net.http.HttpResponseDecorator
 import groovyx.net.http.RESTClient
 
@@ -52,16 +52,20 @@ class JenkinsEndPoint implements ServletContextListener {
 		ServletContext servletContext = event.servletContext
 		final ServerContainer serverContainer = servletContext.getAttribute("javax.websocket.server.ServerContainer")
 		try {
+			
 			// Adding this conflicts with listener added via plugin descriptor
 			// Whilst it works as run-app - in production this causes issues
-			//serverContainer.addEndpoint(JenkinsEndPoint)
-
+			def environment=Environment.current.name
+			if (environment=='development') {
+				serverContainer.addEndpoint(JenkinsEndPoint)
+			}
+			
 			def ctx = servletContext.getAttribute(GA.APPLICATION_CONTEXT)
 
 			//jenkinsService = ctx.jenkinsService
 
 			grailsApplication = ctx.grailsApplication
-
+			
 			def config = grailsApplication.config
 			int defaultMaxSessionIdleTimeout = config.jenkins.timeout ?: 0
 			serverContainer.defaultMaxSessionIdleTimeout = defaultMaxSessionIdleTimeout
@@ -197,10 +201,11 @@ class JenkinsEndPoint implements ServletContextListener {
 		boolean start, start1 = false
 		// If we have a class of console output then set start1 to true
 		// This means the job has actually finished building and jenkins content is now static
-		if (html."**".findAll{ it.@class.toString().contains("console-output")}) {
-			start1 = true
-		}
 
+		if (html."**".findAll{ it.@class.toString().contains("console-output") || it.@href.toString().contains("consoleText")}) {
+			start1=true
+		}
+		
 		// However if we see fetchNext within the html then it is likely to be building
 		// So lets attempt to connect to progressiveHtml page within jenkins
 		if (html."**".find{ it.toString().contains("fetchNext") ||it.@id.toString().contains("out")}) {
@@ -226,9 +231,23 @@ class JenkinsEndPoint implements ServletContextListener {
 
 		//This means job has finished and jenkins has static results showing in /consoleFull
 		if (start1) {
-			html."**".findAll{ it.@class.toString().contains("console-output")}.each {
+			/*html."**".findAll{ it.@class.toString().contains("console-output")}.each {
 				userSession.basicRemote.sendText(it.toString())
 			}
+			*/
+			if (html."**".findAll{ it.@class.toString().contains("console-output")}) {
+				html."**".findAll{ it.@class.toString().contains("console-output")}.each {
+					userSession.getBasicRemote().sendText(it.toString())
+				}
+			}else{
+				if (html."**".findAll{ it.@href.toString().contains("consoleText")}) {
+					String uri=jenService.stripDouble("${bid}/consoleText")
+					HttpResponseDecorator html2= http.get(path: "${uri}")
+					userSession.getBasicRemote().sendText(html2?.data.text.toString())
+					
+				}
+			}
+			
 		}
 	}
 	private dashboardButton(Session userSession) {
@@ -360,7 +379,7 @@ Running on Jenkins Host: $server
 				}
 			}else{
 				// Going to try parse older html styles - provided by a default jenkins install
-				bd = html."**".findAll {it.@class.toString().contains("tip model-link")}
+				bd = html."**".findAll {it.@class.toString().contains("tip")}
 				if (bd) {
 					col1 = bd.collect {
 						[
@@ -413,7 +432,7 @@ Running on Jenkins Host: $server
 				}
 			}
 			else {
-				bd = html."**".find { it.@class.toString().contains("tip model-link") }
+				bd = html."**".find { it.@class.toString().contains("tip") }
 				bd.each {
 					go++
 					if (go == 1) {
