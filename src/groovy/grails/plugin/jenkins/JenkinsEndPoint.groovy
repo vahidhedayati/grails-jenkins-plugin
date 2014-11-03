@@ -211,8 +211,8 @@ class JenkinsEndPoint implements ServletContextListener {
 		String workspace,ftype,file
 		try {
 			
-			def http1 = jenService.httpConn(jenserver, jensuser, jenspass)
-			http1.request(Method.GET, ContentType.TEXT) { req ->
+			//def http1 = jenService.httpConn(jenserver, jensuser, jenspass)
+			http.request(Method.GET, ContentType.TEXT) { req ->
 				
 				uri.path = bid+consoleText
 				requestContentType = TEXT

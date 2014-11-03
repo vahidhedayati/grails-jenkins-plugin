@@ -23,6 +23,10 @@ Dependency, in your conf/BuildConfig.groovy under plugins add:
 [Part 4: Non token authentication, custom Parameters](https://www.youtube.com/watch?v=bO3s8e4Qakc)
 
 [grailsjenkins part 5 : automated build/deploy via jssh websockets async non websocket build ](https://www.youtube.com/watch?v=665QHQ-8q0U)
+
+[Test website testjenkins - used in videos](https://github.com/vahidhedayati/testjenkins)
+
+
 ### Walkthrough
 once plugin dependency added to  BuildConfig, refreshed dependencies upon run-appp, you will be able to access this plugin via this url:
 ```
