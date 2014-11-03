@@ -17,8 +17,11 @@ class JenService {
 
 	static transactional = false
 	def grailsApplication
+
 	private String jensApi = '/api/json'
-	
+	private String userbase = '/user/'
+	private String userend = '/configure'
+
 	// Simply ensures URL is a successful URL.
 	String verifyUrl(String nurl, String server, user, pass) {
 		String result = 'Failed'
@@ -52,7 +55,7 @@ class JenService {
 		}
 		return result
 	}
-	
+
 	//This returns the Jenkins APIToken for a given username
 	String returnToken(String user, String jenserver, String userbase, String userend) {
 		String url = userbase + user + userend
@@ -73,63 +76,75 @@ class JenService {
 			}
 		}
 		catch (e)  {
-			log.info "Failed error: ${e}", e
+			log.error "Failed error: ${e}", e
 		}
 		return token
 	}
-	
+
 	def asyncBuilder(String url, String jensuser, String jenspass,  String processurl, String customParams) {
-		
+
 		def aurl = new URL(url)
 		String jensauthority = aurl.authority
 		String jensprot = aurl.protocol
 		String jensurl=aurl.path
 		String jenserver=jensprot + '://' + jensauthority
-		
+
 		def config = grailsApplication.config.jenkins
 		def jensbuildend = config.jensbuildend  ?: '/build?delay=0sec'
-		
+
+		if (jensuser && !jenspass) {
+			jenspass = returnToken(jensuser, jenserver, userbase, userend)
+		}
+
 		def url1 = jenserver + jensurl + jensbuildend
 		// current Build ID
 		int currentBuild = currentBuildId(jensurl, jenserver, jensuser, jenspass)
-		
+
 		// Kicks off build
 		jobControl(url1,jensuser, jenspass)
 		// Increment existing buildID with 1
 		int newBuild=currentBuild+1
-	
+
 		// Sleep a while
-		sleep(1000)
-		
+		sleep(6000)
+
 		// Kick off a job to asynchronously check build and if we have result to trigger processurl
 		def asyncProcess = new Thread({workOnBuild(null,processurl,'','',newBuild,jensurl,jenserver, jensuser, jenspass,customParams,jensurl,jensApi)} as Runnable)
 		asyncProcess.start()
-		
-	 }
-	
+
+	}
+
 	def asyncBuilder(String jensurl, String jenserver, String jensuser, String jenspass,  String processurl, String customParams) {
-		
+
 		def config = grailsApplication.config.jenkins
 		def jensbuildend = config.jensbuildend  ?: '/build?delay=0sec'
-		
+
 		def url1 = jensurl + jensbuildend
+
+		if (jensuser && !jenspass) {
+			jenspass = returnToken(jensuser, jenserver, userbase, userend)
+		}
+
+
 		// current Build ID
 		int currentBuild = currentBuildId(jensurl, jenserver, jensuser, jenspass)
-		
+
 		// Kicks off build
 		jobControl(url1,jensuser, jenspass)
 		// Increment existing buildID with 1
 		int newBuild=currentBuild+1
-	
+
+
+
 		// Sleep a while
-		sleep(10000)
-		
+		sleep(6000)
+
 		// Kick off a job to asynchronously check build and if we have result to trigger processurl
 		def asyncProcess = new Thread({workOnBuild(null,processurl,'','',newBuild,jensurl,jenserver, jensuser, jenspass,customParams,jensurl,jensApi)} as Runnable)
 		asyncProcess.start()
-		
-	 }
-	  
+
+	}
+
 	private int currentBuildId(String url, String jenserver, String jensuser, String jenspass) {
 		def lastbid = getLastBuild(url, jenserver, jensuser, jenspass)
 		//int currentBuild = jenkinsService.currentJob(lastbid)
@@ -137,7 +152,7 @@ class JenService {
 			currentJob(lastbid) as int
 		}
 	}
-	
+
 	private String getLastBuild(String url, String jenserver, String jensuser, String jenspass) {
 		String bid = ""
 		String bdate
@@ -172,13 +187,13 @@ class JenService {
 		}
 		return  bid
 	}
-	
+
 	// This posts some form of action to Jenkins builds etc
 	HttpResponseDecorator jobControl(String url, String jensuser, String jenspass ) {
 		HttpResponseDecorator html1 = httpConn('post',  url, jensuser ?: '', jenspass ?: '')
 	}
-	
-	// This posts some form of action to Jenkins builds etc 
+
+	// This posts some form of action to Jenkins builds etc
 	HttpResponseDecorator jobControl(String url, String bid, String jenserver, String jensuser, String jenspass ) {
 		HttpResponseDecorator html1 = httpConn('post', jenserver + url, jensuser ?: '', jenspass ?: '')
 	}
@@ -194,36 +209,47 @@ class JenService {
 		def result
 		int max = 120
 		int a = 0
+		
 		def ubi=stripDouble(uri+"/"+bid.toString())
 		String url=ubi+jensApi
+		
 		def http1 = httpConn(jenserver, jensuser, jenspass)
-		while (!go && a < max) {
-			a++
-			http1.get(path: "${url}") { resp, json ->
-				result = json?.result
-				if (result && result != 'null') {
-					if (userSession && wsprocessurl) {
-						def ajson = new JsonBuilder()
-						ajson.feedback{
-							delegate.wsprocessurl "$wsprocessurl"
-							delegate.wsprocessname "$wsprocessname"
-							delegate.result "$result"
-							delegate.buildUrl  "$jenserver$ubi"
-							delegate.buildId "${bid as String}"
-							delegate.customParams "${customParams}"
-							delegate.server  "${jenserver}"
-							delegate.user "${jensuser}"
-							delegate.token "${jenspass}"
-							delegate.job "${jensurl}"
+		
+		try {
+			
+			while (!go && a < max) {
+				
+				a++
+				
+				http1.get(path: "${url}") { resp, json ->
+					result = json.result
+					if (result && result != 'null') {
+						if (userSession && wsprocessurl) {
+							def ajson = new JsonBuilder()
+							ajson.feedback{
+								delegate.wsprocessurl "$wsprocessurl"
+								delegate.wsprocessname "$wsprocessname"
+								delegate.result "$result"
+								delegate.buildUrl  "$jenserver$ubi"
+								delegate.buildId "${bid as String}"
+								delegate.customParams "${customParams}"
+								delegate.server  "${jenserver}"
+								delegate.user "${jensuser}"
+								delegate.token "${jenspass}"
+								delegate.job "${jensurl}"
+							}
+							userSession.basicRemote.sendText(ajson.toString())
 						}
-						userSession.basicRemote.sendText(ajson.toString())
+						go = true
 					}
-					go = true
+					sleep(10000)
 				}
-				sleep(10000)
 			}
+			
+		}catch (e) {
+			log.error "Problem communicating with ${jenserver + url}: ${e.message}", e
 		}
-
+		
 		if (result) {
 			def http2 = httpConn(processurl,'','')
 			http2.request( POST ) { req ->
@@ -239,17 +265,17 @@ class JenService {
 					job : jensurl
 				]
 				response.success = { resp ->
-					log.info "Process URL Success! ${resp.status}"
+					log.error "Process URL Success! ${resp.status}"
 				}
 
 				response.failure = { resp ->
-					log.info "Process URL failed with status ${resp.status}"
+					log.error "Process URL failed with status ${resp.status}"
 				}
 			}
 		}
 	}
-		
-		
+
+
 	RESTClient httpConn(String host, String user, String key) {
 		try {
 			return createRestClient(host, user, key)

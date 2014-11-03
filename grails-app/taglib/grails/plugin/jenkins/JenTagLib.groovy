@@ -160,6 +160,8 @@ class JenTagLib {
 		String url = attrs.remove('url')
 		String customParams = attrs.remove('customParams')
 		
+		
+		
 		def config = grailsApplication.config.jenkins
 		String processurl = attrs.processurl  ?: config.processurl
 		  
