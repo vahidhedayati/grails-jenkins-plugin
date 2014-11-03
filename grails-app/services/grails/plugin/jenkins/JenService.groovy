@@ -146,10 +146,13 @@ class JenService {
 	}
 
 	private int currentBuildId(String url, String jenserver, String jensuser, String jenspass) {
-		def lastbid = getLastBuild(url, jenserver, jensuser, jenspass)
+		def lastbid = getLastBuild(url, jenserver, jensuser ?: '', jenspass ?: '')
 		//int currentBuild = jenkinsService.currentJob(lastbid)
 		if (lastbid) {
-			currentJob(lastbid) as int
+			def cj=currentJob(lastbid)
+			if (cj && cj.toString().isInteger()) {
+				cj as int
+			}
 		}
 	}
 

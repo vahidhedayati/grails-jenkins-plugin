@@ -160,14 +160,20 @@ class JenTagLib {
 		String url = attrs.remove('url')
 		String customParams = attrs.remove('customParams')
 		
+		String jensurl = attrs.remove('jensurl')
+		String jenserver = attrs.remove('jenserver')
 		
 		
 		def config = grailsApplication.config.jenkins
 		String processurl = attrs.processurl  ?: config.processurl
-		  
-		jenService.asyncBuilder(url,jensuser,jenspass,processurl,customParams) 
+		if (jensurl&&jenserver) {  
+			jenService.asyncBuilder(jensurl, jenserver, url, jensuser, jenspass, processurl, customParams)
+		} else{
+			jenService.asyncBuilder(url, jensuser, jenspass, processurl, customParams)
+		}	
 		
 		out << "Build Triggered Awaiting processing to take place once it completes"
 	}
 
+	
 }

@@ -208,26 +208,43 @@ class JenkinsEndPoint implements ServletContextListener {
 
 	// Working on this process VH
 	private void definedParseJobConsole(Session userSession, String url,  String bid) {
-		
-		def wks
-		def http1 = jenService.httpConn(jenserver, jensuser, jenspass)
-		http1.request(Method.GET, ContentType.TEXT) { req ->
-			uri.path = bid
-		
-		requestContentType = TEXT
-		   response.success = { resp, reader ->
-			 //  reader.text.each { hh ->
-				println "-- ${reader.text}"
-			   
-			   if (reader.text.contains('Building in workspace')) {
-				   println "EEE WOOOT"
-					wks=reader.text.substring(reader.text.indexOf('Building in workspace ')+22,reader.text.length())   
-			   }
-			   //}
+		String workspace,ftype,file
+		try {
+			
+			def http1 = jenService.httpConn(jenserver, jensuser, jenspass)
+			http1.request(Method.GET, ContentType.TEXT) { req ->
+				
+				uri.path = bid+consoleText
+				requestContentType = TEXT
+				
+				response.success = { resp, reader ->
+					reader.text.eachLine {line ->
+						
+						if (line.contains('Building in workspace')) {
+							workspace=line.substring(line.indexOf('Building in workspace ')+22,line.length())
+						}
+						
+						if (line.contains('Done creating')) {
+							String target=line.substring(line.indexOf('Done creating ')+15,line.length())
+							
+							if (target.indexOf(" ")>-1) { 
+								ftype = target.substring(0,target.indexOf(' ')+1)
+								file = target.substring(target.indexOf(' ')+1,target.length())
+							}else{
+								file = target
+							}
+							
+						}
+
+					}
+				}
 			}
+		} catch (Exception e) {
+			e.printStackTrace()
 		}
-		userSession.basicRemote.sendText("\nWKS ${wks}\n")
-	} 
+		
+		userSession.basicRemote.sendText("\nWorkSpace: ${workspace}\nFile Type: $ftype\n File: $file\n")
+	}
 	
 	private void parseJobConsole(Session userSession, String url, String bid) {
 		// Send user confirmation that you are going to parse Jenkins job
@@ -308,7 +325,10 @@ Running on Jenkins Host: $server
 		def lastbid = getLastBuild(url)
 		//int currentBuild = jenkinsService.currentJob(lastbid)
 		if (lastbid) {
-			jenService.currentJob(lastbid) as int
+			def cj=jenService.currentJob(lastbid)
+			if (cj && cj.toString().isInteger()) {
+			cj as int
+			}
 		}
 	}
 	

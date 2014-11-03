@@ -324,7 +324,7 @@ function processMessage${divId}(message) {
 						case 'passed':
 							sb.push('\n<li class='+entry.bstatus+'><a onclick="javascript:viewHistory${divId}('+wrapIt(entry.bid)+');">'+entry.jobid+' : ');
 							sb.push('<small>'+entry.bstatus+' '+entry.bdate+'</small></a>');
-							sb.push(' | <a onclick="javascript:parseHistory${divId}('+wrapIt(entry.bid)+');">Selective log</a>');
+							sb.push(' <small>| <a onclick="javascript:parseHistory${divId}('+wrapIt(entry.bid)+');">SUMMARY</a></small>');
 							sb.push('\n</li>');
 							break;
 						//case 'queued':
