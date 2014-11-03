@@ -225,10 +225,9 @@ class JenkinsEndPoint implements ServletContextListener {
 						}
 						
 						if (line.contains('Done creating')) {
-							String target=line.substring(line.indexOf('Done creating ')+15,line.length())
-							
+							String target=line.substring(line.indexOf('Done creating ')+14,line.length())
 							if (target.indexOf(" ")>-1) { 
-								ftype = target.substring(0,target.indexOf(' ')+1)
+								ftype = target.substring(0,target.indexOf(' '))
 								file = target.substring(target.indexOf(' ')+1,target.length())
 							}else{
 								file = target
