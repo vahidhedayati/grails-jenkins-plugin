@@ -28,6 +28,7 @@ import org.codehaus.groovy.grails.web.servlet.GrailsApplicationAttributes as GA
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
+
 @WebListener
 @ServerEndpoint("/JenkinsEndPoint/{server}/{job}")
 class JenkinsEndPoint implements ServletContextListener {
@@ -48,27 +49,27 @@ class JenkinsEndPoint implements ServletContextListener {
 	private String userend = '/configure'
 
 	private String consoleText = '/consoleText'
-	
+
 	RESTClient http
 
 	void contextInitialized(ServletContextEvent event) {
 		ServletContext servletContext = event.servletContext
 		final ServerContainer serverContainer = servletContext.getAttribute("javax.websocket.server.ServerContainer")
 		try {
-			
+
 			// Adding this conflicts with listener added via plugin descriptor
 			// Whilst it works as run-app - in production this causes issues
 			def environment=Environment.current.name
 			if (environment=='development') {
 				serverContainer.addEndpoint(JenkinsEndPoint)
 			}
-			
+
 			def ctx = servletContext.getAttribute(GA.APPLICATION_CONTEXT)
 
 			//jenkinsService = ctx.jenkinsService
 
 			grailsApplication = ctx.grailsApplication
-			
+
 			def config = grailsApplication.config
 			int defaultMaxSessionIdleTimeout = config.jenkins.timeout ?: 0
 			serverContainer.defaultMaxSessionIdleTimeout = defaultMaxSessionIdleTimeout
@@ -86,10 +87,10 @@ class JenkinsEndPoint implements ServletContextListener {
 		userSession.userProperties.server = server
 		userSession.userProperties.job = job
 		jsessions.add(userSession)
-		
+
 		def ctx = SCH.servletContext.getAttribute(GA.APPLICATION_CONTEXT)
 		jenService = ctx.jenService
-		
+
 		grailsApplication = ctx.grailsApplication
 	}
 
@@ -134,9 +135,9 @@ class JenkinsEndPoint implements ServletContextListener {
 			}
 		}
 
-		
-		
-		
+
+
+
 		if (cmd.equals('stopBuild')) {
 			if (data.bid) {
 				jenService.jobControl(jenService.stripDouble(data.bid+'/stop'),data.bid,jenserver, jensuser, jenspass)
@@ -187,13 +188,13 @@ class JenkinsEndPoint implements ServletContextListener {
 	}
 
 	private void jenkinsConnect(Session userSession) {
-		
+
 		String validurl = jenService.verifyUrl(jensconurl, jenserver, jensuser, jenspass)
 		if (!validurl.startsWith('Success')) {
 			userSession.basicRemote.sendText('JenkinsConnect failed to connect to: '+jensconurl)
 			return
 		}
-			http = jenService.httpConn(jenserver, jensuser, jenspass)
+		http = jenService.httpConn(jenserver, jensuser, jenspass)
 
 		userSession.basicRemote.sendText('Jenkins plugin connected to: ' + jensconurl)
 		// try to get apiToken if only user has provided
@@ -206,45 +207,111 @@ class JenkinsEndPoint implements ServletContextListener {
 		return server
 	}
 
-	// Working on this process VH
+	private void jobStatus(Session userSession,String uri) {
+		
+		def changes=parseApiJson(uri + jensApi)
+		
+		def result=changes.result
+		def buildId=changes.number
+		def bdate=changes.id
+		def fdn=changes.fullDisplayName
+		def changeSet=changes?.changeSet
+		def culprits=changes?.culprits
+		
+		def userId,userName
+		if (changes.actions) {
+			def cb=changes.actions[0].causes[0]
+			userId=cb.userId
+			userName=cb.userName
+		}
+		
+		userSession.basicRemote.sendText("$fdn $bdate\n")
+		userSession.basicRemote.sendText("Build id: $buildId | Status: $result\n")
+		userSession.basicRemote.sendText("By: $userId $userName\n")
+
+		userSession.basicRemote.sendText("Changed: $changeSet \n")
+		userSession.basicRemote.sendText("Changes by:\n")
+		
+		if (culprits) {
+			culprits.each  {cp->
+				userSession.basicRemote.sendText("${cp.fullName}\n")
+			}
+		}
+
+	}
+	// Returns Summary results
 	private void definedParseJobConsole(Session userSession, String url,  String bid) {
 		String workspace,ftype,file
+		def builds=[]
 		try {
-			
-			//def http1 = jenService.httpConn(jenserver, jensuser, jenspass)
+			jobStatus(userSession,bid)
 			http.request(Method.GET, ContentType.TEXT) { req ->
-				
 				uri.path = bid+consoleText
 				requestContentType = TEXT
-				
+
 				response.success = { resp, reader ->
 					reader.text.eachLine {line ->
-						
-						if (line.contains('Building in workspace')) {
-							workspace=line.substring(line.indexOf('Building in workspace ')+22,line.length())
+						def results=(matchers(line))
+						if (results) {
+							builds.add(results)
 						}
-						
-						if (line.contains('Done creating')) {
-							String target=line.substring(line.indexOf('Done creating ')+14,line.length())
-							if (target.indexOf(" ")>-1) { 
-								ftype = target.substring(0,target.indexOf(' '))
-								file = target.substring(target.indexOf(' ')+1,target.length())
-							}else{
-								file = target
-							}
-							
-						}
-
 					}
 				}
 			}
 		} catch (Exception e) {
 			e.printStackTrace()
 		}
-		
-		userSession.basicRemote.sendText("\nWorkSpace: ${workspace}\nFile Type: $ftype\n File: $file\n")
+		builds.each { entry ->
+			entry.each { k,v->
+				userSession.basicRemote.sendText("${k}: ${v}\n")
+			}
+		}
 	}
-	
+
+
+	private Map matchers (String line) {
+		def bitem=[:]
+		def matcher
+
+		matcher = (line =~ /Building (.*?)(?: .*)? workspace (.*)/)
+		if (matcher.matches()){
+			bitem.put('workspace', matcher[0][2])
+		}
+
+		matcher = (line =~ /(.*?)(?: .*)?Building (.*):(.*)/)
+		if (matcher.matches()){
+			//bitem.put('ftype', matcher[0][2])
+			bitem.put('file', matcher[0][3])
+		}
+		
+		
+		matcher = (line =~ /Done creating (.*) (.*)/)
+		if (matcher.matches()){
+			//bitem.put('ftype', matcher[0][1])
+			bitem.put('file', matcher[0][2])
+		}
+		
+		
+		// Last transaction ID - is a block that is returned in Jenkins
+		// May not apply to all types of logs
+		matcher = (line =~ /(.*?)Last valid trans (.*)/)
+		if (matcher.matches()){
+			def tid=matcher[0][2]
+			if (tid) {
+				tid=tid.toString().substring(1,tid.toString().length()-1)
+				def tid1=jenService.returnArrary(tid)
+				tid1.each {csv->
+					def (k, v) = csv.split('=')
+					if (k=="id") { k="Last_Transaction_ID: "}
+					bitem.put(k, v)
+				}
+			}
+		}
+		return bitem
+	}
+
+
+
 	private void parseJobConsole(Session userSession, String url, String bid) {
 		// Send user confirmation that you are going to parse Jenkins job
 		userSession.basicRemote.sendText("\nAbout to parse ${url}\n")
@@ -257,7 +324,7 @@ class JenkinsEndPoint implements ServletContextListener {
 		if (html."**".findAll{ it.@class.toString().contains("console-output") || it.@href.toString().contains("consoleText")}) {
 			start1=true
 		}
-		
+
 		// However if we see fetchNext within the html then it is likely to be building
 		// So lets attempt to connect to progressiveHtml page within jenkins
 		if (html."**".find{ it.toString().contains("fetchNext") ||it.@id.toString().contains("out")}) {
@@ -284,9 +351,9 @@ class JenkinsEndPoint implements ServletContextListener {
 		//This means job has finished and jenkins has static results showing in /consoleFull
 		if (start1) {
 			/*html."**".findAll{ it.@class.toString().contains("console-output")}.each {
-				userSession.basicRemote.sendText(it.toString())
-			}
-			*/
+			 userSession.basicRemote.sendText(it.toString())
+			 }
+			 */
 			if (html."**".findAll{ it.@class.toString().contains("console-output")}) {
 				html."**".findAll{ it.@class.toString().contains("console-output")}.each {
 					userSession.getBasicRemote().sendText(it.toString())
@@ -296,13 +363,13 @@ class JenkinsEndPoint implements ServletContextListener {
 					String uri=jenService.stripDouble("${bid}/consoleText")
 					HttpResponseDecorator html2= http.get(path: "${uri}")
 					userSession.getBasicRemote().sendText(html2?.data.text.toString())
-					
+
 				}
 			}
-			
+
 		}
 	}
-	
+
 	private dashboardButton(Session userSession) {
 		clearPage(userSession)
 		def job = userSession.userProperties.get("job").toString()
@@ -312,10 +379,10 @@ Welcome to Grails Jenkins Plugin
 You are connected to: $job 
 Running on Jenkins Host: $server
 """)
-		
+
 		getBuilds(userSession, jensurl)
 	}
-	
+
 	private dashboard(Session userSession) {
 		getBuilds(userSession, jensurl)
 	}
@@ -326,17 +393,17 @@ Running on Jenkins Host: $server
 		if (lastbid) {
 			def cj=jenService.currentJob(lastbid)
 			if (cj && cj.toString().isInteger()) {
-			cj as int
+				cj as int
 			}
 		}
 	}
-	
+
 	private buildJob(Session userSession) {
 		String url  = jensurl
 		def url1 = url + jensbuildend
-		
+
 		int currentBuild = currentBuildId(url)
-		
+
 		String consolelog = jensconlog
 		try {
 			userSession.basicRemote.sendText("\nBefore triggering Build ID: $currentBuild\n..waiting\n")
@@ -353,12 +420,12 @@ Running on Jenkins Host: $server
 					userSession.basicRemote.sendText("[${newBuild}].")
 					sleep(1000)
 					if (newBuild > currentBuild) {
-						
+
 						/*
-						* Get hold of config from grails if we have a processurl
-						* a url defined upon success of a jenkins job that receives values 
-						* and does something with built jobs 
-						*/
+						 * Get hold of config from grails if we have a processurl
+						 * a url defined upon success of a jenkins job that receives values 
+						 * and does something with built jobs 
+						 */
 						def config = grailsApplication.config
 						String processurl = config.jenkins.processurl
 						String wsprocessurl = config.jenkins.wsprocessurl
@@ -512,6 +579,15 @@ Running on Jenkins Host: $server
 	}
 
 	/*
+	 * Parse Jenkins API url - grab all but only using a few json values
+	 *  to calculate estimated duration of build
+	 */
+	def parseApiJson(String uri) {
+		http.get(path: uri) { resp, json -> return json  }
+	}
+
+
+	/*
 	 *fetchNext javascript function, it grabs the current size returned from header:
 	 *X-Text-Size and pushes it back as start={value}
 	 *this ensures the response returned via websockets only contains
@@ -530,7 +606,7 @@ Running on Jenkins Host: $server
 
 		nurl=jenService.stripDouble(nurl)
 		while (hasMore) {
-			
+
 			// Set old size to current size
 			def osize = csize
 
@@ -540,12 +616,12 @@ Running on Jenkins Host: $server
 				if (csize) {
 					uri.query= [ start: "${csize}"]
 				}
-				
+
 				// On success get latest output back from headers
 				if (jensuser && jenspass) {
 					headers.'Authorization' = 'Basic ' + "$jensuser:$jenspass".bytes.encodeBase64()
 				}
-				
+
 				response.failure = { resp, reader ->
 					hasMore = false
 				}

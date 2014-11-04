@@ -369,6 +369,15 @@ class JenService {
 		return bid
 	}
 
+	
+	def returnArrary(String csv) {
+		List<String> block
+		if (csv.toString().indexOf(',')>-1) {
+				block =csv.split(',').collect { it.trim() }
+				return block
+		}	
+		return csv
+	}
 
 	String stripDouble(String url) {
 		if (url) {
