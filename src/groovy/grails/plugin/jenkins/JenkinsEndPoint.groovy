@@ -140,7 +140,7 @@ class JenkinsEndPoint implements ServletContextListener {
 			}
 		}
 
-
+// Jira - jira-test  - // commmits
 
 
 		if (cmd.equals('stopBuild')) {
@@ -305,9 +305,11 @@ class JenkinsEndPoint implements ServletContextListener {
 				tid=tid.toString().substring(1,tid.toString().length()-1)
 				def tid1=jenService.returnArrary(tid)
 				tid1.each {csv->
-					def (k, v) = csv.split('=')
-					if (k=="id") { k="Last_Transaction_ID: "}
-					bitem.put(k, v)
+					if (csv.toString() =~ /[A-z]+\=[A-z]+/) {
+						def (k,v) = csv.split('=')
+						if (k=="id") { k="Last_Transaction_ID: "}
+						bitem.put(k, v)
+					}
 				}
 			}
 		}
@@ -318,29 +320,41 @@ class JenkinsEndPoint implements ServletContextListener {
 		def col3
 		HttpResponseDecorator html1 = http.get(path: "$url")
 		def html = html1?.data
+
 		def sbn = html."**".findAll {it.@id.toString().contains("main-panel")}
-		if (sbn) {
-			col3 = sbn.collect {
-				[
-					cid : it.OL.LI.text().split(':')[0].trim(),
-					cinfo : it.OL.LI.text().split(':')[1].trim(),
-				]
-			}
-		}
-		sbn = html."**".findAll {it.@class.toString().contains("changeset-message")}
-		if (sbn) {
-			col3 += sbn.collect {
-				[
-					message : it.toString().trim().replaceAll("(\\r\\n|\\n)", '').replaceAll("\\s+", " "),
-					
-				]
+		boolean go=true
+		
+		sbn.each {
+			if (it.toString().trim().replaceAll("(\\r\\n|\\n)", '').replaceAll("\\s+", " ").contains('No changes')) {
+				go=false
 			}
 		}
 		
-		if (col3) {
-			col3.each { entry ->
-				entry.each { k,v->
-					userSession.basicRemote.sendText("${k}: ${v}\n")
+		if (go) {
+			if (sbn) {
+				col3 = sbn.collect {
+					[
+						cid : it.OL.LI.text().split(':')[0].trim(),
+						cinfo : it.OL.LI.text().split(':')[1].trim(),
+					]
+				}
+			}
+
+			sbn = html."**".findAll {it.@class.toString().contains("changeset-message")}
+			if (sbn) {
+				col3 += sbn.collect {
+					[
+						message : it.toString().trim().replaceAll("(\\r\\n|\\n)", '').replaceAll("\\s+", " "),
+
+					]
+				}
+			}
+
+			if (col3) {
+				col3.each { entry ->
+					entry.each { k,v->
+						userSession.basicRemote.sendText("${k}: ${v}\n")
+					}
 				}
 			}
 		}
@@ -409,12 +423,12 @@ class JenkinsEndPoint implements ServletContextListener {
 		def job = userSession.userProperties.get("job").toString()
 		def server = userSession.userProperties.get("server").toString()
 		userSession.basicRemote.sendText("""
-Welcome to Grails Jenkins Plugin
-You are connected to: $job 
-Running on Jenkins Host: $server
+${jensuser ?: 'Guest'} welcome to Grails Jenkins Plugin
+Currently connected to : $job running on $server
 """)
 
 		getBuilds(userSession, jensurl)
+		
 	}
 
 	private dashboard(Session userSession) {
@@ -494,8 +508,11 @@ Running on Jenkins Host: $server
 		}
 	}
 
-
-	private getBuilds(Session userSession,String url) {
+	// Jenkins servers with prefix had issue with previous simple get method - 
+	// instead doing a full connection again a little OTT
+	// now moved to service for reuse
+	private getBuilds(Session userSession,String url) { 
+		
 		try {
 			def finalList = [:]
 			def hList = []

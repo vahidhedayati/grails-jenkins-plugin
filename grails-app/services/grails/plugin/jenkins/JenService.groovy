@@ -2,6 +2,7 @@ package grails.plugin.jenkins
 
 import static groovyx.net.http.ContentType.*
 import static groovyx.net.http.Method.*
+import grails.converters.JSON
 import groovy.json.JsonBuilder
 import groovyx.net.http.HttpResponseDecorator
 import groovyx.net.http.HttpResponseException
@@ -201,6 +202,8 @@ class JenService {
 		HttpResponseDecorator html1 = httpConn('post', jenserver + url, jensuser ?: '', jenspass ?: '')
 	}
 
+	
+	
 	//This is an asynchronous task that is given a new BuildID, it will poll the
 	// api page and once it has a result it will return this back to your own
 	// defined processcontrol url.

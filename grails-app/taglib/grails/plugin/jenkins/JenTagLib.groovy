@@ -43,18 +43,21 @@ class JenTagLib {
 		if (attrs.jensport) {
 			jenurl.append(':').append(attrs.jensport)
 		}
-		// Full url to jenkins server - main url
-		String jenfullserver = jenurl
+		
 		String jensprefix = ''
 		if (attrs.jensprefix) {
 			jensprefix = jenService.seperator(attrs?.jensprefix)
 			jenurl.append(jensprefix)
 		}
+		
 		// Full url to jenkins server - main url
 		String jensconurl = jenurl
+		
+		// Full url to jenkins server - main url
+		String jenfullserver = jenurl
+		
 
-		//String jensjob = attrs.jensjob
-		//String jensfolder = attrs.jensfolder ?: 'job'
+		// Both connection URL and URI need the prefix for it work 
 		// Relative UrI to get to folder/job (can now be appended to above)
 		String jensurl = jensprefix + jenService.seperator(attrs?.jensfolder) + jenService.seperator(attrs?.jensjob)
 
@@ -78,10 +81,7 @@ class JenTagLib {
 		String hideButtons = attrs.hideButtons ?: config.hideButtons ?: 'no'
 		String hideTriggerButton = attrs.hideTriggerButton ?: config.hideTriggerButton ?: 'no'
 		String hideDashBoardButton = attrs.hideDashBoardButton ?: config.hideDashBoardButton ?: 'no'
-		// String hideBuildTimer = attrs.hideBuildTimer ?: config.hideBuildTimer ?: 'no'
 
-
-		//println "--->> ${jenfullserver} --- ${jensconurl} ${jensuser} ${attrs?.customParams}"
 		String appname = Metadata.current.getApplicationName()
 		def model = [hideButtons:hideButtons, hideTriggerButton:hideTriggerButton, hideDashBoardButton:hideDashBoardButton,
 		             jenschoice:jenschoice, divId:divId, jenfullserver:jenfullserver, jensconurl:jensconurl,
