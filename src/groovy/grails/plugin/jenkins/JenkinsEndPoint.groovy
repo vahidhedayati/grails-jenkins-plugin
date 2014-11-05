@@ -44,12 +44,13 @@ class JenkinsEndPoint implements ServletContextListener {
 
 	private String customParams,jensbuildend, jensprogressive, jensconlog, jensurl, jenserver, jensuser, jenspass, jenschoice, jensconurl = ''
 	private String processurl, wsprocessurl, wsprocessname = ''
+	
 	private String jensApi = '/api/json'
 	private String userbase = '/user/'
 	private String userend = '/configure'
-
 	private String consoleText = '/consoleText'
-
+	private String changes = '/changes'
+	
 	RESTClient http
 
 	void contextInitialized(ServletContextEvent event) {
@@ -131,7 +132,11 @@ class JenkinsEndPoint implements ServletContextListener {
 			if (data.bid) {
 				clearPage(userSession)
 				String url2 = jenserver+data.bid+consoleText
+				jobStatus(userSession,data.bid)
 				definedParseJobConsole(userSession,url2,data.bid)
+				String cgurl=data.bid+changes
+				parseChanges(userSession,cgurl)
+				
 			}
 		}
 
@@ -244,7 +249,6 @@ class JenkinsEndPoint implements ServletContextListener {
 		String workspace,ftype,file
 		def builds=[]
 		try {
-			jobStatus(userSession,bid)
 			http.request(Method.GET, ContentType.TEXT) { req ->
 				uri.path = bid+consoleText
 				requestContentType = TEXT
@@ -310,7 +314,37 @@ class JenkinsEndPoint implements ServletContextListener {
 		return bitem
 	}
 
-
+	private void parseChanges(Session userSession, String url) {
+		def col3
+		HttpResponseDecorator html1 = http.get(path: "$url")
+		def html = html1?.data
+		def sbn = html."**".findAll {it.@id.toString().contains("main-panel")}
+		if (sbn) {
+			col3 = sbn.collect {
+				[
+					cid : it.OL.LI.text().split(':')[0].trim(),
+					cinfo : it.OL.LI.text().split(':')[1].trim(),
+				]
+			}
+		}
+		sbn = html."**".findAll {it.@class.toString().contains("changeset-message")}
+		if (sbn) {
+			col3 += sbn.collect {
+				[
+					message : it.toString().trim().replaceAll("(\\r\\n|\\n)", '').replaceAll("\\s+", " "),
+					
+				]
+			}
+		}
+		
+		if (col3) {
+			col3.each { entry ->
+				entry.each { k,v->
+					userSession.basicRemote.sendText("${k}: ${v}\n")
+				}
+			}
+		}
+	}
 
 	private void parseJobConsole(Session userSession, String url, String bid) {
 		// Send user confirmation that you are going to parse Jenkins job
