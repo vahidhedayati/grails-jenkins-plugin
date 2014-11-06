@@ -2,7 +2,6 @@ package grails.plugin.jenkins
 
 import static groovyx.net.http.ContentType.*
 import static groovyx.net.http.Method.*
-import grails.converters.JSON
 import groovy.json.JsonBuilder
 import groovyx.net.http.HttpResponseDecorator
 import groovyx.net.http.HttpResponseException
@@ -10,9 +9,15 @@ import groovyx.net.http.RESTClient
 
 import javax.websocket.Session
 
+import net.rcarz.jiraclient.BasicCredentials
+import net.rcarz.jiraclient.JiraClient
+import net.rcarz.jiraclient.JiraException
+
 import org.apache.http.HttpRequest
 import org.apache.http.HttpRequestInterceptor
 import org.apache.http.protocol.HttpContext
+
+import spock.lang.Issue
 
 class JenService {
 
@@ -191,7 +196,25 @@ class JenService {
 		}
 		return  bid
 	}
-
+	
+	
+	def jiratest(String jirauser,String jirapass, String jiraserver,String jiraticket,String customfield,String jenresults) {
+		BasicCredentials creds = new BasicCredentials("${jirauser}", "${jirapass}")
+		JiraClient jira = new JiraClient("${jiraserver}", creds)
+		try {
+			Issue issue = jira.getIssue("${jiraticket}")
+			Object cfvalue = issue.getField("${customfield}");
+			issue.update().field("${customfield}", "${jenresults}").execute()
+		} catch (JiraException ex) {
+			log.error(ex.getMessage())
+			if (ex.getCause() != null) {
+				log.error(ex.getCause().getMessage())
+			}	
+		}
+	}
+	
+	
+	
 	// This posts some form of action to Jenkins builds etc
 	HttpResponseDecorator jobControl(String url, String jensuser, String jenspass ) {
 		HttpResponseDecorator html1 = httpConn('post',  url, jensuser ?: '', jenspass ?: '')

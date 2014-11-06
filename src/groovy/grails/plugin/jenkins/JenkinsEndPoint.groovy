@@ -135,13 +135,9 @@ class JenkinsEndPoint implements ServletContextListener {
 				jobStatus(userSession,data.bid)
 				definedParseJobConsole(userSession,url2,data.bid)
 				String cgurl=data.bid+changes
-				parseChanges(userSession,cgurl)
-				
+				parseChanges(userSession,cgurl)		
 			}
 		}
-
-// Jira - jira-test  - // commmits
-
 
 		if (cmd.equals('stopBuild')) {
 			if (data.bid) {

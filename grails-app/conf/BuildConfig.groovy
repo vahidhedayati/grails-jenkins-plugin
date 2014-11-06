@@ -13,11 +13,16 @@ grails.project.dependency.resolution = {
 
 	dependencies {
 		build ('javax.websocket:javax.websocket-api:1.0') { export = false }
-
+		
 		runtime('org.codehaus.groovy.modules.http-builder:http-builder:0.5.1') {
 			excludes 'xalan'
 			excludes 'xml-apis'
 			excludes 'groovy'
+		}
+		
+		// Jira client
+		compile 'net.rcarz:jira-client:0.5', { 
+				excludes ('junit')
 		}
 	}
 
