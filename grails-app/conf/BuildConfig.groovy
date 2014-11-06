@@ -21,9 +21,9 @@ grails.project.dependency.resolution = {
 		}
 		
 		// Jira client
-		compile 'net.rcarz:jira-client:0.5', { 
-				excludes ('junit')
-		}
+		//compile 'net.rcarz:jira-client:0.5', { 
+		//		excludes ('junit')
+		//}
 	}
 
 	plugins {

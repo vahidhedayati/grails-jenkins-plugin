@@ -9,20 +9,11 @@ import groovyx.net.http.RESTClient
 
 import javax.websocket.Session
 
-import net.rcarz.jiraclient.BasicCredentials
-import net.rcarz.jiraclient.JiraClient
-import net.rcarz.jiraclient.JiraException
-
-import org.apache.http.HttpRequest
-import org.apache.http.HttpRequestInterceptor
-import org.apache.http.protocol.HttpContext
-
-import spock.lang.Issue
-
 class JenService {
 
 	static transactional = false
 	def grailsApplication
+	def hBuilderService
 
 	private String jensApi = '/api/json'
 	private String userbase = '/user/'
@@ -34,7 +25,7 @@ class JenService {
 		RESTClient http
 		try {
 			try {
-				http = httpConn(server, user, pass)
+				http = hBuilderService.httpConn(server, user, pass)
 			}
 			catch (HttpResponseException e) {
 				return "Failed error: $e.statusCode"
@@ -68,7 +59,7 @@ class JenService {
 		def token
 		int go = 0
 		try {
-			RESTClient http1 = new RESTClient(jenserver)
+			def http1 = hBuilderService.httpConn(jenserver, '', '')
 			HttpResponseDecorator html1 = http1.get(path: "${url}")
 			def html = html1?.data
 			def bd = html."**".findAll {it.@id.toString().contains("apiToken")}
@@ -167,7 +158,7 @@ class JenService {
 		String bdate
 		try {
 			int go = 0
-			RESTClient http = httpConn(jenserver, jensuser, jenspass)
+			RESTClient http = hBuilderService.httpConn(jenserver, jensuser, jenspass)
 			HttpResponseDecorator html1 = http.get(path: "${url}")
 			def html = html1?.data
 			def bd = html."**".findAll {it.@class.toString().contains("build-details")}
@@ -197,35 +188,15 @@ class JenService {
 		return  bid
 	}
 	
-	
-	def jiratest(String jirauser,String jirapass, String jiraserver,String jiraticket,String customfield,String jenresults) {
-		BasicCredentials creds = new BasicCredentials("${jirauser}", "${jirapass}")
-		JiraClient jira = new JiraClient("${jiraserver}", creds)
-		try {
-			Issue issue = jira.getIssue("${jiraticket}")
-			Object cfvalue = issue.getField("${customfield}");
-			issue.update().field("${customfield}", "${jenresults}").execute()
-		} catch (JiraException ex) {
-			log.error(ex.getMessage())
-			if (ex.getCause() != null) {
-				log.error(ex.getCause().getMessage())
-			}	
-		}
-	}
-	
-	
-	
 	// This posts some form of action to Jenkins builds etc
 	HttpResponseDecorator jobControl(String url, String jensuser, String jenspass ) {
-		HttpResponseDecorator html1 = httpConn('post',  url, jensuser ?: '', jenspass ?: '')
+		HttpResponseDecorator html1 = hBuilderService.httpConn('post',  url, jensuser ?: '', jenspass ?: '')
 	}
 
 	// This posts some form of action to Jenkins builds etc
 	HttpResponseDecorator jobControl(String url, String bid, String jenserver, String jensuser, String jenspass ) {
-		HttpResponseDecorator html1 = httpConn('post', jenserver + url, jensuser ?: '', jenspass ?: '')
+		HttpResponseDecorator html1 = hBuilderService.httpConn('post', jenserver + url, jensuser ?: '', jenspass ?: '')
 	}
-
-	
 	
 	//This is an asynchronous task that is given a new BuildID, it will poll the
 	// api page and once it has a result it will return this back to your own
@@ -242,7 +213,7 @@ class JenService {
 		def ubi=stripDouble(uri+"/"+bid.toString())
 		String url=ubi+jensApi
 		
-		def http1 = httpConn(jenserver, jensuser, jenspass)
+		def http1 = hBuilderService.httpConn(jenserver, jensuser, jenspass)
 		
 		try {
 			
@@ -280,7 +251,7 @@ class JenService {
 		}
 		
 		if (result) {
-			def http2 = httpConn(processurl,'','')
+			def http2 = hBuilderService.httpConn(processurl,'','')
 			http2.request( POST ) { req ->
 				requestContentType = URLENC
 				body = [
@@ -294,7 +265,7 @@ class JenService {
 					job : jensurl
 				]
 				response.success = { resp ->
-					log.error "Process URL Success! ${resp.status}"
+					log.debug "Process URL Success! ${resp.status}"
 				}
 
 				response.failure = { resp ->
@@ -304,41 +275,6 @@ class JenService {
 		}
 	}
 
-
-	RESTClient httpConn(String host, String user, String key) {
-		try {
-			return createRestClient(host, user, key)
-		}
-		catch (e)  {
-			log.error("Failed error: $e", e)
-		}
-	}
-
-	HttpResponseDecorator httpConn(String type, String host, String uri, String user, String key) {
-		try {
-			return createRestClient(host, user, key)."${type}"(path: uri)
-		}
-		catch (e) {
-			log.error "Problem communicating with ${uri}: ${e.message}", e
-		}
-	}
-
-	HttpResponseDecorator httpConn(String type, String url, String user, String key) {
-		try {
-			return createRestClient(url, user, key)."${type}"([:])
-		}
-		catch(e) {
-			log.error "Problem communicating with ${url}: ${e.message}", e
-		}
-	}
-
-	protected RESTClient createRestClient(String url, String user, String key) {
-		RESTClient http = new RESTClient(url)
-		if (user && key) {
-			http.client.addRequestInterceptor(new BasicAuthRequestInterceptor(user, key))
-		}
-		http
-	}
 
 	String verifyStatus(String img) {
 		String output = "unknown"
@@ -422,17 +358,3 @@ class JenService {
 	}
 }
 
-class BasicAuthRequestInterceptor implements HttpRequestInterceptor {
-
-	final String user
-	final String key
-
-	BasicAuthRequestInterceptor(String user, String key) {
-		this.user = user
-		this.key = key
-	}
-
-	void process(HttpRequest httpRequest, HttpContext httpContext) {
-		httpRequest.addHeader('Authorization', 'Basic ' + "$user:$key".bytes.encodeBase64())
-	}
-}

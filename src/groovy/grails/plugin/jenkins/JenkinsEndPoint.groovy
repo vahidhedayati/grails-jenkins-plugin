@@ -36,6 +36,7 @@ class JenkinsEndPoint implements ServletContextListener {
 	private final Logger log = LoggerFactory.getLogger(getClass().name)
 
 	private JenService jenService
+	private HBuilderService hBuilderService
 	private GrailsApplication grailsApplication
 	private int httpConnTimeOut = 10*1000
 	private int httpSockTimeOut = 30*1000
@@ -91,7 +92,7 @@ class JenkinsEndPoint implements ServletContextListener {
 
 		def ctx = SCH.servletContext.getAttribute(GA.APPLICATION_CONTEXT)
 		jenService = ctx.jenService
-
+		hBuilderService = ctx.hBuilderService
 		grailsApplication = ctx.grailsApplication
 	}
 
@@ -195,7 +196,7 @@ class JenkinsEndPoint implements ServletContextListener {
 			userSession.basicRemote.sendText('JenkinsConnect failed to connect to: '+jensconurl)
 			return
 		}
-		http = jenService.httpConn(jenserver, jensuser, jenspass)
+		http = hBuilderService.httpConn(jenserver, jensuser, jenspass)
 
 		userSession.basicRemote.sendText('Jenkins plugin connected to: ' + jensconurl)
 		// try to get apiToken if only user has provided
@@ -359,7 +360,7 @@ class JenkinsEndPoint implements ServletContextListener {
 	private void parseJobConsole(Session userSession, String url, String bid) {
 		// Send user confirmation that you are going to parse Jenkins job
 		userSession.basicRemote.sendText("\nAbout to parse ${url}\n")
-		HttpResponseDecorator html1 = jenService.httpConn('get', jenserver, url, jensuser, jenspass)
+		HttpResponseDecorator html1 = hBuilderService.httpConn('get', jenserver, url, jensuser, jenspass)
 		def html = html1?.data
 		boolean start, start1 = false
 		// If we have a class of console output then set start1 to true
@@ -645,7 +646,7 @@ Currently connected to : $job running on $server
 		def csize, consoleAnnotator
 		String ssize = ''
 		userSession.basicRemote.sendText("Attempting live poll")
-		def http1 = jenService.httpConn(jenserver, jensuser, jenspass)
+		def http1 = hBuilderService.httpConn(jenserver, jensuser, jenspass)
 
 		// while hasMore is true -
 		// jenkins html page defined as header values
