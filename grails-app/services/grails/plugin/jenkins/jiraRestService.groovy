@@ -11,14 +11,32 @@ class jiraRestService {
 	def hBuilderService
 	private String jrapi = '/rest/api/2/issue/' 
 	
-	def updatecustomField(String jirauser,String jirapass, String jiraserver,String jiraticket,String customfield,String jenresults) {
+	/*qtype being:
+	 * 
+	will update custom field / description and add a comment:
+	    
+	customfield  -- updates customg field input1 required only
+	comment  -- adds a comment input1 required only
+	description -- updates description requires input1 and input2 (description,body)
+	
+	
+	*/
+	def updateJira(String jirauser,String jirapass, String jiraserver,String jiraticket,String qtype,String customfield,String input1,String input2) {
 		String url=jrapi+jiraticket
 		try {
 			RESTClient http = hBuilderService.httpConn(jiraserver, jirauser, jirapass)
 			http.request( PUT, JSON ) { req ->
 				uri.path = url
 				
-				body = [ fields:[ customfield: "$jenresults" ] ]
+				if (qtype == "customfield") {
+					body = [ fields:[ customfield: "$input1" ] ]
+					
+				} else if (qtype == "comment") {
+					body = [ update:[ comment:[ add: [body : "$input1"] ] ] ]
+					
+				} else if (qtype == "description") {
+					body = [ update:[ description:[ set: "$input1"], comment: [ body: "${input2}"] ] ]
+				}
 				
 				response.success = { resp ->
 					log.debug "Process URL Success! ${resp.status}"
@@ -34,62 +52,13 @@ class jiraRestService {
 	}
 	
 	
+
+	
 	/*
-	 *
-	def jiratest(String jirauser,String jirapass, String jiraserver,String jiraticket,String customfield,String jenresults) {
-		BasicCredentials creds = new BasicCredentials("${jirauser}", "${jirapass}")
-		JiraClient jira = new JiraClient("${jiraserver}", creds)
-		try {
-			Issue issue = jira.getIssue("${jiraticket}")
-			Object cfvalue = issue.getField("${customfield}");
-			issue.update().field("${customfield}", "${jenresults}").execute()
-		} catch (JiraException ex) {
-			log.error(ex.getMessage())
-			if (ex.getCause() != null) {
-				log.error(ex.getCause().getMessage())
-			}
-		}
-	}
+ 	{"update": { "comment": [ {"add": {  "body": "It is time to finish this task"	} } ] }}
+	{ "update": {  "description": [	 {	"set": "JIRA should also come with a free pony" } ], "comment": [{			"add": {
+   "body": "This request was originally written in French, which most of our developers can't read"
+	} } ] }}
 	*/
-
-	
-	
-	/*
-	 *
-	 * curl -D- -u fred:fred -X PUT --data {see below} -H "Content-Type: application/json" http://kelpie9:8081/rest/api/2/issue/QA-31
-	 * {
-   "update": {
-	  "comment": [
-		 {
-			"add": {
-			   "body": "It is time to finish this task"
-			}
-		 }
-	  ]
-   }
-}
-	 */
-	
-	/*
-	 * curl -D- -u fred:fred -X PUT --data {see below} -H "Content-Type: application/json" http://kelpie9:8081/rest/api/2/issue/QA-31
-
-example input data
-{
-   "update": {
-   "description": [
-		 {
-			"set": "JIRA should also come with a free pony"
-		 }
-	  ],
-	  "comment": [
-		 {
-			"add": {
-			   "body": "This request was originally written in French, which most of our developers can't read"
-			}
-		 }
-	  ]
-   }
-}
-*/
 }
 
