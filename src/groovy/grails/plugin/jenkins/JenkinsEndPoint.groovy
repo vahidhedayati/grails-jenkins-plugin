@@ -36,21 +36,26 @@ class JenkinsEndPoint implements ServletContextListener {
 	private final Logger log = LoggerFactory.getLogger(getClass().name)
 
 	private JenService jenService
-	private HBuilderService hBuilderService
+	//private HBuilderService hBuilderService
+	private JiraRestService jiraRestService
 	private GrailsApplication grailsApplication
+	//def config
 	private int httpConnTimeOut = 10*1000
 	private int httpSockTimeOut = 30*1000
+	HBuilder hBuilder=new HBuilder()
 
 	static final Set<Session> jsessions = ([] as Set).asSynchronized()
 
 	private String customParams,jensbuildend, jensprogressive, jensconlog, jensurl, jenserver, jensuser, jenspass, jenschoice, jensconurl = ''
-	private String processurl, wsprocessurl, wsprocessname = ''
+	private String processurl, wsprocessurl, wsprocessname,jiraTicket = ''
 	
 	private String jensApi = '/api/json'
 	private String userbase = '/user/'
 	private String userend = '/configure'
 	private String consoleText = '/consoleText'
 	private String changes = '/changes'
+	
+	
 	
 	RESTClient http
 
@@ -92,8 +97,10 @@ class JenkinsEndPoint implements ServletContextListener {
 
 		def ctx = SCH.servletContext.getAttribute(GA.APPLICATION_CONTEXT)
 		jenService = ctx.jenService
-		hBuilderService = ctx.hBuilderService
+		//hBuilderService = ctx.hBuilderService
+		jiraRestService = ctx.jiraRestService
 		grailsApplication = ctx.grailsApplication
+		//def config = grailsApplication.config
 	}
 
 	@OnMessage
@@ -104,7 +111,6 @@ class JenkinsEndPoint implements ServletContextListener {
 		if (!data) {
 			return
 		}
-
 		String cmd = data.cmd
 		if (cmd.equals('connect')) {
 			jenserver = data.jenserver
@@ -132,11 +138,39 @@ class JenkinsEndPoint implements ServletContextListener {
 		if (cmd.equals('parseHistory')) {
 			if (data.bid) {
 				clearPage(userSession)
+				
 				String url2 = jenserver+data.bid+consoleText
-				jobStatus(userSession,data.bid)
-				definedParseJobConsole(userSession,url2,data.bid)
 				String cgurl=data.bid+changes
-				parseChanges(userSession,cgurl)		
+				String jobstat=jobStatus(userSession,data.bid)
+				String jobconsole=definedParseJobConsole(userSession,url2,data.bid)
+				String changes=parseChanges(userSession,cgurl)
+				
+				
+				StringBuilder sb=new StringBuilder()
+				for (int a=0; a < 30; a++) {
+					sb.append('-')
+				}
+				String sbb="\n"+sb.toString()+"\n"
+				String output=jobstat+sbb+jobconsole+sbb+changes
+				userSession.basicRemote.sendText(output)
+				
+				def config = grailsApplication.config
+				String sendtoJira = config.jenkins.sendtoJira
+				if (sendtoJira && sendtoJira.toLowerCase().equals('yes')) {
+					String jiraServer = config.jenkins.jiraServer
+					String jiraUser = config.jenkins.jiraUser
+					String jiraPass = config.jenkins.jiraPass
+					String jiraSendType = config.jenkins.jiraSendType
+
+					if (jiraSendType && jiraSendType.toLowerCase().equals('comment')) {
+						jiraRestService.addComment(jiraServer,jiraUser,jiraPass,jiraTicket,output)
+					}else if (jiraSendType && jiraSendType.toLowerCase().equals('customfield')) {
+						String jiracustomField = config.jenkins.customField
+						jiraRestService.addCustomField(jiraServer,jiraUser,jiraPass,jiraTicket,jiracustomField,output)
+						jiraRestService.addComment(jiraServer,jiraUser,jiraPass,jiraTicket,"BO Selecta")
+					}
+					
+				}
 			}
 		}
 
@@ -190,18 +224,17 @@ class JenkinsEndPoint implements ServletContextListener {
 	}
 
 	private void jenkinsConnect(Session userSession) {
-
 		String validurl = jenService.verifyUrl(jensconurl, jenserver, jensuser, jenspass)
 		if (!validurl.startsWith('Success')) {
 			userSession.basicRemote.sendText('JenkinsConnect failed to connect to: '+jensconurl)
 			return
 		}
-		http = hBuilderService.httpConn(jenserver, jensuser, jenspass)
+		http = hBuilder.httpConn(jenserver, jensuser, jenspass)
 
 		userSession.basicRemote.sendText('Jenkins plugin connected to: ' + jensconurl)
 		// try to get apiToken if only user has provided
 		if (jensuser && !jenspass) {
-			jenspass = jenService.returnToken(jensuser, jenserver, userbase, userend)
+			jenspass = jenService.returnToken(jensuser, jenserver)
 		}
 	}
 
@@ -209,24 +242,64 @@ class JenkinsEndPoint implements ServletContextListener {
 		return server
 	}
 
-	private void jobStatus(Session userSession,String uri) {
-		
+	private String jobStatus(Session userSession,String uri) {
+		StringBuilder sb=new StringBuilder()
 		def changes=parseApiJson(uri + jensApi)
-		
-		def result=changes.result
-		def buildId=changes.number
-		def bdate=changes.id
-		def fdn=changes.fullDisplayName
-		def changeSet=changes?.changeSet
-		def culprits=changes?.culprits
+		if (changes) { 
+		String result=changes?.result
+		String buildId=changes?.number
+		String bdate=changes?.id
+		String fdn=changes?.fullDisplayName
+		String changeSet=changes?.changeSet
+		String culprits=changes?.culprits
 		
 		def userId,userName
-		if (changes.actions) {
-			def cb=changes.actions[0].causes[0]
-			userId=cb.userId
-			userName=cb.userName
+		if (changes?.actions) {
+			changes.actions.each { ca->
+				ca.causes.each { cb->
+					userId=cb?.userId
+					userName=cb?.userName
+				}
+			}
+			/*if (changes.actions[0].causes[0] ) { 
+			def cb=changes?.actions[0]?.causes[0]
+			if (cb) {
+				userId=cb?.userId
+				userName=cb?.userName
+			}
+			}
+			*/
 		}
 		
+		if (fdn) {
+			sb.append("$fdn $bdate\n")
+		}
+		
+		if (buildId) {
+			sb.append("Build_ID: $buildId\n")
+			
+			sb.append("Status: $result\n")
+		}
+		
+		if (userId) {
+			sb.append("By: $userId $userName\n")
+		}
+		
+		/*if (changeSet) {
+			sb.append("Changed: $changeSet \n")
+		}
+		*/
+		/*
+		if (culprits) {
+			sb.append("Changes by:\n")
+			culprits.each  {cp->
+				if (cp) {
+					sb.append("${cp}\n")
+				}
+			}
+		}
+		*/
+		/*
 		userSession.basicRemote.sendText("$fdn $bdate\n")
 		userSession.basicRemote.sendText("Build id: $buildId | Status: $result\n")
 		userSession.basicRemote.sendText("By: $userId $userName\n")
@@ -239,10 +312,13 @@ class JenkinsEndPoint implements ServletContextListener {
 				userSession.basicRemote.sendText("${cp.fullName}\n")
 			}
 		}
-
+		*/
+		}
+		sb.toString()
 	}
+	
 	// Returns Summary results
-	private void definedParseJobConsole(Session userSession, String url,  String bid) {
+	private String definedParseJobConsole(Session userSession, String url,  String bid) {
 		String workspace,ftype,file
 		def builds=[]
 		try {
@@ -262,11 +338,16 @@ class JenkinsEndPoint implements ServletContextListener {
 		} catch (Exception e) {
 			e.printStackTrace()
 		}
+		StringBuilder sb=new StringBuilder()
+		if (builds) {
 		builds.each { entry ->
 			entry.each { k,v->
-				userSession.basicRemote.sendText("${k}: ${v}\n")
+				//userSession.basicRemote.sendText("${k}: ${v}\n")
+				sb.append("${k}: ${v}\n")
 			}
 		}
+		}
+		sb.toString()
 	}
 
 
@@ -313,8 +394,9 @@ class JenkinsEndPoint implements ServletContextListener {
 		return bitem
 	}
 
-	private void parseChanges(Session userSession, String url) {
+	private String parseChanges(Session userSession, String url) {
 		def col3
+		StringBuilder sb=new StringBuilder()
 		HttpResponseDecorator html1 = http.get(path: "$url")
 		def html = html1?.data
 
@@ -331,7 +413,7 @@ class JenkinsEndPoint implements ServletContextListener {
 			if (sbn) {
 				col3 = sbn.collect {
 					[
-						cid : it.OL.LI.text().split(':')[0].trim(),
+						cid : parseTicket(it.OL.LI.text()),
 						cinfo : it.OL.LI.text().split(':')[1].trim(),
 					]
 				}
@@ -350,17 +432,19 @@ class JenkinsEndPoint implements ServletContextListener {
 			if (col3) {
 				col3.each { entry ->
 					entry.each { k,v->
-						userSession.basicRemote.sendText("${k}: ${v}\n")
+						//userSession.basicRemote.sendText("${k}: ${v}\n")
+						sb.append("${k}: ${v}\n")
 					}
 				}
 			}
 		}
+		sb.toString()
 	}
 
 	private void parseJobConsole(Session userSession, String url, String bid) {
 		// Send user confirmation that you are going to parse Jenkins job
 		userSession.basicRemote.sendText("\nAbout to parse ${url}\n")
-		HttpResponseDecorator html1 = hBuilderService.httpConn('get', jenserver, url, jensuser, jenspass)
+		HttpResponseDecorator html1 = hBuilder.httpConn('get', jenserver, url, jensuser, jenspass)
 		def html = html1?.data
 		boolean start, start1 = false
 		// If we have a class of console output then set start1 to true
@@ -584,6 +668,11 @@ Currently connected to : $job running on $server
 		}
 	}
 
+	private String parseTicket(String input) {
+		jiraTicket=input.split(':')[0].trim()
+		return jiraTicket
+	}
+	
 	private String getLastBuild(String url) {
 		String bid = ""
 		String bdate
@@ -646,7 +735,7 @@ Currently connected to : $job running on $server
 		def csize, consoleAnnotator
 		String ssize = ''
 		userSession.basicRemote.sendText("Attempting live poll")
-		def http1 = hBuilderService.httpConn(jenserver, jensuser, jenspass)
+		def http1 = hBuilder.httpConn(jenserver, jensuser, jenspass)
 
 		// while hasMore is true -
 		// jenkins html page defined as header values

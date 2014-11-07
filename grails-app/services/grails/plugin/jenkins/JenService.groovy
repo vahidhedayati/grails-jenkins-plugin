@@ -13,19 +13,21 @@ class JenService {
 
 	static transactional = false
 	def grailsApplication
-	def hBuilderService
+	//def hBuilderService
+	HBuilder hBuilder=new HBuilder()
 
 	private String jensApi = '/api/json'
 	private String userbase = '/user/'
 	private String userend = '/configure'
 
 	// Simply ensures URL is a successful URL.
-	String verifyUrl(String nurl, String server, user, pass) {
+	String verifyUrl(String nurl, String server, String user, String pass) {
 		String result = 'Failed'
+		
 		RESTClient http
 		try {
 			try {
-				http = hBuilderService.httpConn(server, user, pass)
+				http = hBuilder.httpConn(server, user ?: '', pass ?: '')
 			}
 			catch (HttpResponseException e) {
 				return "Failed error: $e.statusCode"
@@ -36,7 +38,6 @@ class JenService {
 			catch (Throwable e) {
 				return "Failed error: $e"
 			}
-
 			http?.request(GET, TEXT) { req ->
 				//http?.request(GET, HTML) { req ->
 				response.success = { resp ->
@@ -54,12 +55,12 @@ class JenService {
 	}
 
 	//This returns the Jenkins APIToken for a given username
-	String returnToken(String user, String jenserver, String userbase, String userend) {
+	String returnToken(String user, String jenserver) {
 		String url = userbase + user + userend
 		def token
 		int go = 0
 		try {
-			def http1 = hBuilderService.httpConn(jenserver, '', '')
+			def http1 = hBuilder.httpConn(jenserver, '', '')
 			HttpResponseDecorator html1 = http1.get(path: "${url}")
 			def html = html1?.data
 			def bd = html."**".findAll {it.@id.toString().contains("apiToken")}
@@ -90,7 +91,7 @@ class JenService {
 		def jensbuildend = config.jensbuildend  ?: '/build?delay=0sec'
 
 		if (jensuser && !jenspass) {
-			jenspass = returnToken(jensuser, jenserver, userbase, userend)
+			jenspass = returnToken(jensuser, jenserver)
 		}
 
 		def url1 = jenserver + jensurl + jensbuildend
@@ -119,7 +120,7 @@ class JenService {
 		def url1 = jensurl + jensbuildend
 
 		if (jensuser && !jenspass) {
-			jenspass = returnToken(jensuser, jenserver, userbase, userend)
+			jenspass = returnToken(jensuser, jenserver)
 		}
 
 
@@ -158,7 +159,7 @@ class JenService {
 		String bdate
 		try {
 			int go = 0
-			RESTClient http = hBuilderService.httpConn(jenserver, jensuser, jenspass)
+			RESTClient http = hBuilder.httpConn(jenserver, jensuser, jenspass)
 			HttpResponseDecorator html1 = http.get(path: "${url}")
 			def html = html1?.data
 			def bd = html."**".findAll {it.@class.toString().contains("build-details")}
@@ -190,12 +191,12 @@ class JenService {
 	
 	// This posts some form of action to Jenkins builds etc
 	HttpResponseDecorator jobControl(String url, String jensuser, String jenspass ) {
-		HttpResponseDecorator html1 = hBuilderService.httpConn('post',  url, jensuser ?: '', jenspass ?: '')
+		HttpResponseDecorator html1 = hBuilder.httpConn('post',  url, jensuser ?: '', jenspass ?: '')
 	}
 
 	// This posts some form of action to Jenkins builds etc
 	HttpResponseDecorator jobControl(String url, String bid, String jenserver, String jensuser, String jenspass ) {
-		HttpResponseDecorator html1 = hBuilderService.httpConn('post', jenserver + url, jensuser ?: '', jenspass ?: '')
+		HttpResponseDecorator html1 = hBuilder.httpConn('post', jenserver + url, jensuser ?: '', jenspass ?: '')
 	}
 	
 	//This is an asynchronous task that is given a new BuildID, it will poll the
@@ -213,7 +214,7 @@ class JenService {
 		def ubi=stripDouble(uri+"/"+bid.toString())
 		String url=ubi+jensApi
 		
-		def http1 = hBuilderService.httpConn(jenserver, jensuser, jenspass)
+		def http1 = hBuilder.httpConn(jenserver, jensuser, jenspass)
 		
 		try {
 			
@@ -251,7 +252,7 @@ class JenService {
 		}
 		
 		if (result) {
-			def http2 = hBuilderService.httpConn(processurl,'','')
+			def http2 = hBuilder.httpConn(processurl,'','')
 			http2.request( POST ) { req ->
 				requestContentType = URLENC
 				body = [

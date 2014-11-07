@@ -162,6 +162,10 @@ resize:both;
 		</g:if>
 
 <br/>
+
+${wshostname}
+
+
 	<h6>Current user: <div id="jenkinsUser${divId}"></h6>
 
 <div class="BuildHistory">

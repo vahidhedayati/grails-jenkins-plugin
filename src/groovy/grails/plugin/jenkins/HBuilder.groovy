@@ -9,14 +9,14 @@ import org.apache.http.HttpRequest
 import org.apache.http.HttpRequestInterceptor
 import org.apache.http.protocol.HttpContext
 
-class HBuilderService {
+class HBuilder {
 
 	static transactional = false
 
 
 	RESTClient httpConn(String host, String user, String key) {
 		try {
-			return createRestClient(host, user, key)
+			return createRestClient(host, user ?: '', key ?: '')
 		}
 		catch (e)  {
 			log.error("Failed error: $e", e)
@@ -41,14 +41,16 @@ class HBuilderService {
 		}
 	}
 
-	protected RESTClient createRestClient(String url, String user, String key) {
+	protected  RESTClient createRestClient(String url, String user, String key) {
 		RESTClient http = new RESTClient(url)
 		if (user && key) {
 			http.client.addRequestInterceptor(new BasicAuthRequestInterceptor(user, key))
 		}
-		http
+		return http
 	}
+	
 }
+
 class BasicAuthRequestInterceptor implements HttpRequestInterceptor {
 
 	final String user

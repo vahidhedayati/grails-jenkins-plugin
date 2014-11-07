@@ -360,3 +360,9 @@ def parseJenPlugin() {
 		render ""
 	}
 ```
+
+
+### Issues/Bugs
+
+##### Prefix jenkins servers.
+If you have a server with a prefix then you will find the quick connect method will not work for you, you need to use the manaully full detail connection method since the prefix is required for the url and uri.
