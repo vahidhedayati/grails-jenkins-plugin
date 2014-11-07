@@ -38,8 +38,8 @@ class JenkinsEndPoint implements ServletContextListener {
 	private JenService jenService
 	//private HBuilderService hBuilderService
 	private JiraRestService jiraRestService
-	private GrailsApplication grailsApplication
-	//def config
+	//private GrailsApplication grailsApplication
+	def config
 	private int httpConnTimeOut = 10*1000
 	private int httpSockTimeOut = 30*1000
 	HBuilder hBuilder=new HBuilder()
@@ -75,10 +75,10 @@ class JenkinsEndPoint implements ServletContextListener {
 
 			//jenkinsService = ctx.jenkinsService
 
-			grailsApplication = ctx.grailsApplication
+			def grailsApplication = ctx.grailsApplication
 
-			def config = grailsApplication.config
-			int defaultMaxSessionIdleTimeout = config.jenkins.timeout ?: 0
+			config = grailsApplication.config.jenkins
+			int defaultMaxSessionIdleTimeout = config.timeout ?: 0
 			serverContainer.defaultMaxSessionIdleTimeout = defaultMaxSessionIdleTimeout
 		}
 		catch (IOException e) {
@@ -99,8 +99,8 @@ class JenkinsEndPoint implements ServletContextListener {
 		jenService = ctx.jenService
 		//hBuilderService = ctx.hBuilderService
 		jiraRestService = ctx.jiraRestService
-		grailsApplication = ctx.grailsApplication
-		//def config = grailsApplication.config
+		def grailsApplication = ctx.grailsApplication
+		config = grailsApplication.config.jenkins
 	}
 
 	@OnMessage
@@ -154,20 +154,19 @@ class JenkinsEndPoint implements ServletContextListener {
 				String output=jobstat+sbb+jobconsole+sbb+changes
 				userSession.basicRemote.sendText(output)
 				
-				def config = grailsApplication.config
-				String sendtoJira = config.jenkins.sendtoJira
+				//def config = grailsApplication.config
+				String sendtoJira = config.sendtoJira
 				if (sendtoJira && sendtoJira.toLowerCase().equals('yes')) {
-					String jiraServer = config.jenkins.jiraServer
-					String jiraUser = config.jenkins.jiraUser
-					String jiraPass = config.jenkins.jiraPass
-					String jiraSendType = config.jenkins.jiraSendType
+					String jiraServer = config.jiraServer
+					String jiraUser = config.jiraUser
+					String jiraPass = config.jiraPass
+					String jiraSendType = config.jiraSendType
 
 					if (jiraSendType && jiraSendType.toLowerCase().equals('comment')) {
 						jiraRestService.addComment(jiraServer,jiraUser,jiraPass,jiraTicket,output)
 					}else if (jiraSendType && jiraSendType.toLowerCase().equals('customfield')) {
-						String jiracustomField = config.jenkins.customField
+						String jiracustomField = config.customField
 						jiraRestService.addCustomField(jiraServer,jiraUser,jiraPass,jiraTicket,jiracustomField,output)
-						jiraRestService.addComment(jiraServer,jiraUser,jiraPass,jiraTicket,"BO Selecta")
 					}
 					
 				}
@@ -555,10 +554,10 @@ Currently connected to : $job running on $server
 						 * a url defined upon success of a jenkins job that receives values 
 						 * and does something with built jobs 
 						 */
-						def config = grailsApplication.config
-						String processurl = config.jenkins.processurl
-						String wsprocessurl = config.jenkins.wsprocessurl
-						String wsprocessname = config.jenkins.wsprocessname
+						//def config = grailsApplication.config
+						String processurl = config.processurl
+						String wsprocessurl = config.wsprocessurl
+						String wsprocessname = config.wsprocessname
 						if ((wsprocessurl||processurl) && currentBuild) {
 							//This hogs websocket connection - so lets background it
 							def asyncProcess = new Thread({jenService.workOnBuild(userSession,processurl,wsprocessurl,wsprocessname,newBuild,url,jenserver, jensuser, jenspass,customParams,jensurl,jensApi)} as Runnable)

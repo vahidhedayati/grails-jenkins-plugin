@@ -189,6 +189,20 @@ jenkins.processurl="http://localhost:8080/testjenkins/test/parseJenPlugin"
 jenkins.wsprocessname="Deploy"
 jenkins.wsprocessurl="http://localhost:8080/testjenkins/test/parseJenPluginDeploy"
 
+
+
+/*
+* Jira configuration - refer to summary section below:
+
+jenkins.sendtoJira='yes'
+jenkins.jiraServer='http://jira-test.yourdomain.com'
+jenkins.jiraUser='automation_account'
+jenkins.jiraPass='automation_account_password'
+jenkins.jiraSendType='customfield' // customfield or comment - customfield works comment needs working on
+jenkins.customField='12330' // the id of your customfield
+*/
+
+
 ```
 
 
@@ -267,6 +281,22 @@ wsprocessurl="http://your_process_url/controller/action"
 wsprocessname="Deploy code"
 customParams="[appId: '123', appName: 'crazyApp', appEnv: 'test' ]"
 ```
+
+
+
+#### Summary information:
+
+There is a new option called summary that appears next to the build ID's this Summary tries to grab information from 3 segments of Jenkins and if configured will push this information to a customfield on Jira.
+
+It queries: 
+
+The build Logs and tries to grab working folder, produced file and a line called last trans if it exists.
+Change screen - grabs all related build changes to be pushed through 
+Api summary - a variety of information from the api output.
+
+Refer to above configuration items for the required jenkins configuration in your config.groovy.
+
+
 
 
 

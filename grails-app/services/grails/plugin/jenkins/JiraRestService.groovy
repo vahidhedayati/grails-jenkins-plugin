@@ -19,10 +19,10 @@ class JiraRestService {
 		def myMap = []
 		String url=jrapi+jiraticket
 		myMap=[ "fields":[ "customfield_${customfield}": "$input1" ] ]
-		println "${input1}"
 		updateJira(jiraserver, jirauser, jirapass, url, myMap)
 	}
 	
+	// Not working
 	def addComment(String jiraserver, String jirauser,String jirapass,String jiraticket,String input1) {
 		def myMap = []
 		String url=jrapi+jiraticket
@@ -30,6 +30,7 @@ class JiraRestService {
 		updateJira(jiraserver, jirauser, jirapass, url, myMap)
 	}
 	
+	// Untested
 	def updateDetail(String jiraserver, String jirauser,String jirapass,String jiraticket,String customfield, String input1,String input2) {
 		def myMap = []
 		String url=jrapi+jiraticket
