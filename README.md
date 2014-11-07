@@ -193,14 +193,19 @@ jenkins.wsprocessurl="http://localhost:8080/testjenkins/test/parseJenPluginDeplo
 
 /*
 * Jira configuration - refer to summary section below:
-
+*  Don't enable any of this if you are not looking to push anything to Jira.
+*/
 jenkins.sendtoJira='yes'
+
 jenkins.jiraServer='http://jira-test.yourdomain.com'
 jenkins.jiraUser='automation_account'
 jenkins.jiraPass='automation_account_password'
+
 jenkins.jiraSendType='customfield' // customfield or comment - customfield works comment needs working on
+
+// If you have defined working option customfield then define the customfield id for this configuration item:
 jenkins.customField='12330' // the id of your customfield
-*/
+
 
 
 ```
