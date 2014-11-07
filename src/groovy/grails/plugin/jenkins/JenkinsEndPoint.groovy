@@ -161,13 +161,15 @@ class JenkinsEndPoint implements ServletContextListener {
 					String jiraUser = config.jiraUser
 					String jiraPass = config.jiraPass
 					String jiraSendType = config.jiraSendType
-
-					if (jiraSendType && jiraSendType.toLowerCase().equals('comment')) {
+					String jiracustomField = config.customField
+					
+					
+					if (jiraSendType && jiraSendType.toLowerCase().equals('comment') && jiraTicket) {
 						jiraRestService.addComment(jiraServer,jiraUser,jiraPass,jiraTicket,output)
-					}else if (jiraSendType && jiraSendType.toLowerCase().equals('customfield')) {
-						String jiracustomField = config.customField
+					}else if (jiraSendType && jiraSendType.toLowerCase().equals('customfield') && jiraTicket && jiracustomField) {
 						jiraRestService.addCustomField(jiraServer,jiraUser,jiraPass,jiraTicket,jiracustomField,output)
 					}
+					
 					
 				}
 			}
@@ -413,7 +415,7 @@ class JenkinsEndPoint implements ServletContextListener {
 				col3 = sbn.collect {
 					[
 						cid : parseTicket(it.OL.LI.text()),
-						cinfo : it.OL.LI.text().split(':')[1].trim(),
+						cinfo : parseTicketInfo(it.OL.LI.text()),
 					]
 				}
 			}
@@ -667,8 +669,24 @@ Currently connected to : $job running on $server
 		}
 	}
 
+	private String parseTicketInfo(String input) {
+		def output=input
+		if (input.contains(':')) {
+			output=input.split(':')[1].trim()
+		} else if (input =~ /[A-z0-9]+ \- [A-z0-9]+/) {
+			def (k,v) = input.split(' - ')
+			output=v.trim()
+		}
+		return output
+	}
+	
 	private String parseTicket(String input) {
-		jiraTicket=input.split(':')[0].trim()
+		if (input.contains(':')) {
+			jiraTicket=input.split(':')[0].trim()
+		} else if (input =~ /[A-z0-9]+ \- [A-z0-9]+/) {
+			def (k,v) = input.split(' - ')
+			jiraTicket=k.trim()
+		}
 		return jiraTicket
 	}
 	
