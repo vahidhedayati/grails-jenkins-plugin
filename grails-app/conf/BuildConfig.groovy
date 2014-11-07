@@ -19,17 +19,9 @@ grails.project.dependency.resolution = {
 			excludes 'xml-apis'
 			excludes 'groovy'
 		}
-		
-		// Jira client
-		//compile 'net.rcarz:jira-client:0.5', { 
-		//		excludes ('junit')
-		//}
 	}
 
 	plugins {
-		//build (':rest:0.8') {
-		//	excludes 'commons-beanutil'
-		//}
 		build ':release:3.0.1', ':rest-client-builder:2.0.3',  {
 			export = false
 		}
