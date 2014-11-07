@@ -117,13 +117,11 @@ class JenTagLib {
 		String jensprot = url.protocol
 		String jenserver = url.host
 		//String jensport = url.port
-		println "----- aaaa "
 		if (jensuser && !jenspass) {
 			jenspass = jenService.returnToken(jensuser, jenserver)
 		}
 		
 		String validurl = jenService.verifyUrl(jensurl, jensurl, jensuser ?:'', jenspass ?:'')
-		println "----- bbb ${validurl}"
 		if (!validurl.startsWith('Success')) {
 			return
 		}
