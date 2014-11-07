@@ -23,7 +23,7 @@ class JenService {
 	// Simply ensures URL is a successful URL.
 	String verifyUrl(String nurl, String server, String user, String pass) {
 		String result = 'Failed'
-		
+
 		RESTClient http
 		try {
 			try {
@@ -188,7 +188,7 @@ class JenService {
 		}
 		return  bid
 	}
-	
+
 	// This posts some form of action to Jenkins builds etc
 	HttpResponseDecorator jobControl(String url, String jensuser, String jenspass ) {
 		HttpResponseDecorator html1 = hBuilder.httpConn('post',  url, jensuser ?: '', jenspass ?: '')
@@ -198,7 +198,7 @@ class JenService {
 	HttpResponseDecorator jobControl(String url, String bid, String jenserver, String jensuser, String jenspass ) {
 		HttpResponseDecorator html1 = hBuilder.httpConn('post', jenserver + url, jensuser ?: '', jenspass ?: '')
 	}
-	
+
 	//This is an asynchronous task that is given a new BuildID, it will poll the
 	// api page and once it has a result it will return this back to your own
 	// defined processcontrol url.
@@ -210,18 +210,18 @@ class JenService {
 		def result
 		int max = 120
 		int a = 0
-		
+
 		def ubi=stripDouble(uri+"/"+bid.toString())
 		String url=ubi+jensApi
-		
+
 		def http1 = hBuilder.httpConn(jenserver, jensuser, jenspass)
-		
+
 		try {
-			
+
 			while (!go && a < max) {
-				
+
 				a++
-				
+
 				http1.get(path: "${url}") { resp, json ->
 					result = json.result
 					if (result && result != 'null') {
@@ -246,11 +246,11 @@ class JenService {
 					sleep(10000)
 				}
 			}
-			
+
 		}catch (e) {
 			log.error "Problem communicating with ${jenserver + url}: ${e.message}", e
 		}
-		
+
 		if (result) {
 			def http2 = hBuilder.httpConn(processurl,'','')
 			http2.request( POST ) { req ->
@@ -332,13 +332,13 @@ class JenService {
 		return bid
 	}
 
-	
+
 	def returnArrary(String csv) {
 		List<String> block
 		if (csv.toString().indexOf(',')>-1) {
-				block =csv.split(',').collect { it.trim() }
-				return block
-		}	
+			block =csv.split(',').collect { it.trim() }
+			return block
+		}
 		return csv
 	}
 

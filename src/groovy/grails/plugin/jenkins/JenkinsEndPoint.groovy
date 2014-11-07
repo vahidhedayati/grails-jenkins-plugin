@@ -36,27 +36,32 @@ class JenkinsEndPoint implements ServletContextListener {
 	private final Logger log = LoggerFactory.getLogger(getClass().name)
 
 	private JenService jenService
+
+	// strange issue with this service -
 	//private HBuilderService hBuilderService
+	// instantiate it instead
+	HBuilder hBuilder = new HBuilder()
+
 	private JiraRestService jiraRestService
 	//private GrailsApplication grailsApplication
 	def config
 	private int httpConnTimeOut = 10*1000
 	private int httpSockTimeOut = 30*1000
-	HBuilder hBuilder=new HBuilder()
+
 
 	static final Set<Session> jsessions = ([] as Set).asSynchronized()
 
 	private String customParams,jensbuildend, jensprogressive, jensconlog, jensurl, jenserver, jensuser, jenspass, jenschoice, jensconurl = ''
 	private String processurl, wsprocessurl, wsprocessname,jiraTicket = ''
-	
+
 	private String jensApi = '/api/json'
 	private String userbase = '/user/'
 	private String userend = '/configure'
 	private String consoleText = '/consoleText'
 	private String changes = '/changes'
-	
-	
-	
+
+
+
 	RESTClient http
 
 	void contextInitialized(ServletContextEvent event) {
@@ -72,8 +77,6 @@ class JenkinsEndPoint implements ServletContextListener {
 			}
 
 			def ctx = servletContext.getAttribute(GA.APPLICATION_CONTEXT)
-
-			//jenkinsService = ctx.jenkinsService
 
 			def grailsApplication = ctx.grailsApplication
 
@@ -105,8 +108,6 @@ class JenkinsEndPoint implements ServletContextListener {
 
 	@OnMessage
 	String handleMessage(String message, Session userSession) throws IOException {
-		//def job = userSession.userProperties.get("job").toString()
-		//def server = userSession.userProperties.get("server").toString()
 		def data = JSON.parse(message)
 		if (!data) {
 			return
@@ -138,14 +139,14 @@ class JenkinsEndPoint implements ServletContextListener {
 		if (cmd.equals('parseHistory')) {
 			if (data.bid) {
 				clearPage(userSession)
-				
+
 				String url2 = jenserver+data.bid+consoleText
 				String cgurl=data.bid+changes
 				String jobstat=jobStatus(userSession,data.bid)
 				String jobconsole=definedParseJobConsole(userSession,url2,data.bid)
 				String changes=parseChanges(userSession,cgurl)
-				
-				
+
+
 				StringBuilder sb=new StringBuilder()
 				for (int a=0; a < 30; a++) {
 					sb.append('-')
@@ -153,8 +154,7 @@ class JenkinsEndPoint implements ServletContextListener {
 				String sbb="\n"+sb.toString()+"\n"
 				String output=jobstat+sbb+jobconsole+sbb+changes
 				userSession.basicRemote.sendText(output)
-				
-				//def config = grailsApplication.config
+
 				String sendtoJira = config.sendtoJira
 				if (sendtoJira && sendtoJira.toLowerCase().equals('yes')) {
 					String jiraServer = config.jiraServer
@@ -162,15 +162,15 @@ class JenkinsEndPoint implements ServletContextListener {
 					String jiraPass = config.jiraPass
 					String jiraSendType = config.jiraSendType
 					String jiracustomField = config.customField
-					
-					
+
+
 					if (jiraSendType && jiraSendType.toLowerCase().equals('comment') && jiraTicket) {
 						jiraRestService.addComment(jiraServer,jiraUser,jiraPass,jiraTicket,output)
 					}else if (jiraSendType && jiraSendType.toLowerCase().equals('customfield') && jiraTicket && jiracustomField) {
 						jiraRestService.addCustomField(jiraServer,jiraUser,jiraPass,jiraTicket,jiracustomField,output)
 					}
-					
-					
+
+
 				}
 			}
 		}
@@ -246,78 +246,65 @@ class JenkinsEndPoint implements ServletContextListener {
 	private String jobStatus(Session userSession,String uri) {
 		StringBuilder sb=new StringBuilder()
 		def changes=parseApiJson(uri + jensApi)
-		if (changes) { 
-		String result=changes?.result
-		String buildId=changes?.number
-		String bdate=changes?.id
-		String fdn=changes?.fullDisplayName
-		String changeSet=changes?.changeSet
-		String culprits=changes?.culprits
-		
-		def userId,userName
-		if (changes?.actions) {
-			changes.actions.each { ca->
-				ca.causes.each { cb->
-					userId=cb?.userId
-					userName=cb?.userName
-				}
-			}
-			/*if (changes.actions[0].causes[0] ) { 
-			def cb=changes?.actions[0]?.causes[0]
-			if (cb) {
-				userId=cb?.userId
-				userName=cb?.userName
-			}
-			}
-			*/
-		}
-		
-		if (fdn) {
-			sb.append("$fdn $bdate\n")
-		}
-		
-		if (buildId) {
-			sb.append("Build_ID: $buildId\n")
-			
-			sb.append("Status: $result\n")
-		}
-		
-		if (userId) {
-			sb.append("By: $userId $userName\n")
-		}
-		
-		/*if (changeSet) {
-			sb.append("Changed: $changeSet \n")
-		}
-		*/
-		/*
-		if (culprits) {
-			sb.append("Changes by:\n")
-			culprits.each  {cp->
-				if (cp) {
-					sb.append("${cp}\n")
-				}
-			}
-		}
-		*/
-		/*
-		userSession.basicRemote.sendText("$fdn $bdate\n")
-		userSession.basicRemote.sendText("Build id: $buildId | Status: $result\n")
-		userSession.basicRemote.sendText("By: $userId $userName\n")
+		if (changes) {
+			String result=changes?.result
+			String buildId=changes?.number
+			String bdate=changes?.id
+			String fdn=changes?.fullDisplayName
+			String changeSet=changes?.changeSet
+			String culprits=changes?.culprits
 
-		userSession.basicRemote.sendText("Changed: $changeSet \n")
-		userSession.basicRemote.sendText("Changes by:\n")
-		
-		if (culprits) {
-			culprits.each  {cp->
-				userSession.basicRemote.sendText("${cp.fullName}\n")
+			def userId,userName
+			if (changes?.actions) {
+				changes.actions.each { ca->
+					ca.causes.each { cb->
+						userId=cb?.userId
+						userName=cb?.userName
+					}
+				}
+				/*if (changes.actions[0].causes[0] ) { 
+				 def cb=changes?.actions[0]?.causes[0]
+				 if (cb) {
+				 userId=cb?.userId
+				 userName=cb?.userName
+				 }
+				 }
+				 */
 			}
-		}
-		*/
+
+			if (fdn) {
+				sb.append("$fdn $bdate\n")
+			}
+
+			if (buildId) {
+				sb.append("Build_ID: $buildId\n")
+
+				sb.append("Status: $result\n")
+			}
+
+			if (userId) {
+				sb.append("By: $userId $userName\n")
+			}
+
+			if (changeSet) {
+				sb.append("Changed: $changeSet \n")
+			}
+
+			/*
+			 if (culprits) {
+			 sb.append("Changes by:\n")
+			 culprits.each  {cp->
+			 if (cp) {
+			 sb.append("${cp}\n")
+			 }
+			 }
+			 }
+			 */
+
 		}
 		sb.toString()
 	}
-	
+
 	// Returns Summary results
 	private String definedParseJobConsole(Session userSession, String url,  String bid) {
 		String workspace,ftype,file
@@ -341,12 +328,12 @@ class JenkinsEndPoint implements ServletContextListener {
 		}
 		StringBuilder sb=new StringBuilder()
 		if (builds) {
-		builds.each { entry ->
-			entry.each { k,v->
-				//userSession.basicRemote.sendText("${k}: ${v}\n")
-				sb.append("${k}: ${v}\n")
+			builds.each { entry ->
+				entry.each { k,v->
+					//userSession.basicRemote.sendText("${k}: ${v}\n")
+					sb.append("${k}: ${v}\n")
+				}
 			}
-		}
 		}
 		sb.toString()
 	}
@@ -366,15 +353,15 @@ class JenkinsEndPoint implements ServletContextListener {
 			//bitem.put('ftype', matcher[0][2])
 			bitem.put('file', matcher[0][3])
 		}
-		
-		
+
+
 		matcher = (line =~ /Done creating (.*) (.*)/)
 		if (matcher.matches()){
 			//bitem.put('ftype', matcher[0][1])
 			bitem.put('file', matcher[0][2])
 		}
-		
-		
+
+
 		// Last transaction ID - is a block that is returned in Jenkins
 		// May not apply to all types of logs
 		matcher = (line =~ /(.*?)Last valid trans (.*)/)
@@ -403,13 +390,13 @@ class JenkinsEndPoint implements ServletContextListener {
 
 		def sbn = html."**".findAll {it.@id.toString().contains("main-panel")}
 		boolean go=true
-		
+
 		sbn.each {
 			if (it.toString().trim().replaceAll("(\\r\\n|\\n)", '').replaceAll("\\s+", " ").contains('No changes')) {
 				go=false
 			}
 		}
-		
+
 		if (go) {
 			if (sbn) {
 				col3 = sbn.collect {
@@ -510,7 +497,7 @@ Currently connected to : $job running on $server
 """)
 
 		getBuilds(userSession, jensurl)
-		
+
 	}
 
 	private dashboard(Session userSession) {
@@ -590,11 +577,11 @@ Currently connected to : $job running on $server
 		}
 	}
 
-	// Jenkins servers with prefix had issue with previous simple get method - 
+	// Jenkins servers with prefix had issue with previous simple get method -
 	// instead doing a full connection again a little OTT
 	// now moved to service for reuse
-	private getBuilds(Session userSession,String url) { 
-		
+	private getBuilds(Session userSession,String url) {
+
 		try {
 			def finalList = [:]
 			def hList = []
@@ -679,7 +666,7 @@ Currently connected to : $job running on $server
 		}
 		return output
 	}
-	
+
 	private String parseTicket(String input) {
 		if (input.contains(':')) {
 			jiraTicket=input.split(':')[0].trim()
@@ -689,7 +676,7 @@ Currently connected to : $job running on $server
 		}
 		return jiraTicket
 	}
-	
+
 	private String getLastBuild(String url) {
 		String bid = ""
 		String bdate

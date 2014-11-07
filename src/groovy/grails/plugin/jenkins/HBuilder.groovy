@@ -48,7 +48,7 @@ class HBuilder {
 		}
 		return http
 	}
-	
+
 }
 
 class BasicAuthRequestInterceptor implements HttpRequestInterceptor {
