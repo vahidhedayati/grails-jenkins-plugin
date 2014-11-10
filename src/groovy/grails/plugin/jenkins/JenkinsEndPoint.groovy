@@ -163,13 +163,18 @@ class JenkinsEndPoint implements ServletContextListener {
 					String jiraSendType = config.jiraSendType
 					String jiracustomField = config.customField
 
-
+					// different Jira calls
 					if (jiraSendType && jiraSendType.toLowerCase().equals('comment') && jiraTicket) {
 						jiraRestService.addComment(jiraServer,jiraUser,jiraPass,jiraTicket,output)
 					}else if (jiraSendType && jiraSendType.toLowerCase().equals('customfield') && jiraTicket && jiracustomField) {
 						jiraRestService.addCustomField(jiraServer,jiraUser,jiraPass,jiraTicket,jiracustomField,output)
+					}else if (jiraSendType && jiraSendType.toLowerCase().equals('updatecustomfield') && jiraTicket && jiracustomField) {
+						jiraRestService.updateCustomField(jiraServer,jiraUser,jiraPass,jiraTicket,jiracustomField,output)
+					}else if (jiraSendType && jiraSendType.toLowerCase().equals('description') && jiraTicket && jiracustomField) {
+						jiraRestService.updateDesc(jiraServer,jiraUser,jiraPass,jiraTicket,output)
+					}else if (jiraSendType && jiraSendType.toLowerCase().equals('comdesc') && jiraTicket && jiracustomField) {
+						jiraRestService.updateDescAddComm(jiraServer,jiraUser,jiraPass,jiraTicket,output,output)
 					}
-
 
 				}
 			}

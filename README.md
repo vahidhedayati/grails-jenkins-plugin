@@ -201,11 +201,19 @@ jenkins.jiraServer='http://jira-test.yourdomain.com'
 jenkins.jiraUser='automation_account'
 jenkins.jiraPass='automation_account_password'
 
-jenkins.jiraSendType='customfield' // customfield or comment - customfield works comment needs working on
 
+
+/* 
+ * There are various send types :
+ * comment -- adds the summary output as a comment to valid jira ticket 
+ * customfield -- adds the summary output to provided customfield ID - please note customfield must have correct screen perms for it to work
+ * updatecustomfield -- gets current input if different to new input adds them together to customfield
+ * description -- updates ticket description with the summary
+ * comdesc -- updates ticket description and adds a comment both containing the summary
+ */
+jenkins.jiraSendType='customfield' 
 // If you have defined working option customfield then define the customfield id for this configuration item:
 jenkins.customField='12330' // the id of your customfield
-
 
 
 ```
@@ -299,6 +307,22 @@ The build Logs and tries to grab working folder, produced file and a line called
 Change screen - grabs all related build changes to be pushed through 
 Api summary - a variety of information from the api output.
 
+The most important aspect of this is that within the changes logs, it looks for a ticket ID either seperated by  : or - 
+
+so
+
+``` 
+AB-1102 : Description  
+```
+
+or :
+
+```
+AB-1102 - Description
+```
+
+Where AB-1102 will be the ticket number, this will then update this jira ticket with the summary provided 
+ 
 Refer to above configuration items for the required jenkins configuration in your config.groovy.
 
 
