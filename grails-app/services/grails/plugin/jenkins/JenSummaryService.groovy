@@ -33,14 +33,14 @@ class JenSummaryService {
 		try {
 			HBuilder hBuilder=new HBuilder()
 			RESTClient http = hBuilder.httpConn(jenserver, jenuser ?: '', jenpass ?: '')
-			jenSummary(http,bid)
+			jenSummary(http,jenserver,bid)
 		}catch (HttpResponseException e) {
 			log.error "Failed error: $e.statusCode"
 		}
 
 	}
 	
-	String jenSummary(RESTClient http,String bid) {
+	String jenSummary(RESTClient http,String jenserver, String bid) {
 			String output
 		
 			

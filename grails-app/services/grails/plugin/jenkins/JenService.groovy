@@ -239,7 +239,7 @@ class JenService {
 						def config = grailsApplication.config.jenkins
 						
 						(config?.showhistory == "yes") {
-							def output=jenSummaryService.jenSummary(http1,bid.toString())
+							def output=jenSummaryService.jenSummary(http1,jenserver,bid.toString())
 							if (userSession) { 
 								userSession.basicRemote.sendText(output)
 							}

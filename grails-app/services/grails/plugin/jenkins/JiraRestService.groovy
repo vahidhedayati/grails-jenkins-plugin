@@ -14,7 +14,16 @@ import groovyx.net.http.RESTClient
 class JiraRestService {
 
 	def grailsApplication
-
+	
+	/* TODO - let otherside be variable if not provided set defaults
+	private Map config = grailsApplication.config.jenkins
+	private String jiraServer = config.jiraServer
+	private String jiraUser = config.jiraUser
+	private String jiraPass = config.jiraPass
+	private String jiraSendType = config.jiraSendType
+	private String jiracustomField = config.customField
+	*/
+	
 	static transactional = false
 
 	private String jrapi = '/rest/api/2/issue/'
