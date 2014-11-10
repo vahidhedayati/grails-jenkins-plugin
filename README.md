@@ -201,6 +201,11 @@ jenkins.jiraServer='http://jira-test.yourdomain.com'
 jenkins.jiraUser='automation_account'
 jenkins.jiraPass='automation_account_password'
 
+/*
+* This is the url usually to access the ticket for viewing - used to test if ticket is valid
+* if not defined will default to /browse/
+*/
+jenkins.jira.AccessUri="/browse/"
 
 
 /* 
@@ -328,7 +333,7 @@ Where AB-1102 will be the ticket number, this will then update this jira ticket 
  
 Refer to above configuration items for the required jenkins configuration in your config.groovy.
 
-
+It will parse through the changes logs, and for each ticket found - it will attempt to push the response to all tickets.
 
 
 

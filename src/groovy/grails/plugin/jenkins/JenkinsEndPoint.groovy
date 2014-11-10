@@ -52,8 +52,11 @@ class JenkinsEndPoint implements ServletContextListener {
 	static final Set<Session> jsessions = ([] as Set).asSynchronized()
 
 	private String customParams,jensbuildend, jensprogressive, jensconlog, jensurl, jenserver, jensuser, jenspass, jenschoice, jensconurl = ''
-	private String processurl, wsprocessurl, wsprocessname,jiraTicket = ''
-
+	private String processurl, wsprocessurl, wsprocessname = ''
+	 
+	private def jiraTicket = []
+	private def changeMap=[]
+	
 	private String jensApi = '/api/json'
 	private String userbase = '/user/'
 	private String userend = '/configure'
@@ -162,18 +165,18 @@ class JenkinsEndPoint implements ServletContextListener {
 					String jiraPass = config.jiraPass
 					String jiraSendType = config.jiraSendType
 					String jiracustomField = config.customField
-
+					
 					// different Jira calls
 					if (jiraSendType && jiraSendType.toLowerCase().equals('comment') && jiraTicket) {
-						jiraRestService.addComment(jiraServer,jiraUser,jiraPass,jiraTicket,output)
+						jiraRestService.addComment(jiraServer,jiraUser,jiraPass,jiraTicket,changeMap,output)
 					}else if (jiraSendType && jiraSendType.toLowerCase().equals('customfield') && jiraTicket && jiracustomField) {
-						jiraRestService.addCustomField(jiraServer,jiraUser,jiraPass,jiraTicket,jiracustomField,output)
+						jiraRestService.addCustomField(jiraServer,jiraUser,jiraPass,jiraTicket,changeMap,jiracustomField,output)
 					}else if (jiraSendType && jiraSendType.toLowerCase().equals('updatecustomfield') && jiraTicket && jiracustomField) {
-						jiraRestService.updateCustomField(jiraServer,jiraUser,jiraPass,jiraTicket,jiracustomField,output)
+						jiraRestService.updateCustomField(jiraServer,jiraUser,jiraPass,jiraTicket,changeMap,jiracustomField,output)
 					}else if (jiraSendType && jiraSendType.toLowerCase().equals('description') && jiraTicket && jiracustomField) {
-						jiraRestService.updateDesc(jiraServer,jiraUser,jiraPass,jiraTicket,output)
+						jiraRestService.updateDesc(jiraServer,jiraUser,jiraPass,jiraTicket,changeMap,output)
 					}else if (jiraSendType && jiraSendType.toLowerCase().equals('comdesc') && jiraTicket && jiracustomField) {
-						jiraRestService.updateDescAddComm(jiraServer,jiraUser,jiraPass,jiraTicket,output,output)
+						jiraRestService.updateDescAddComm(jiraServer,jiraUser,jiraPass,jiraTicket,changeMap,output,output)
 					}
 
 				}
@@ -268,11 +271,11 @@ class JenkinsEndPoint implements ServletContextListener {
 					}
 				}
 				/*if (changes.actions[0].causes[0] ) { 
-				 def cb=changes?.actions[0]?.causes[0]
-				 if (cb) {
-				 userId=cb?.userId
-				 userName=cb?.userName
-				 }
+				 	def cb=changes?.actions[0]?.causes[0]
+				 	if (cb) {
+				 		userId=cb?.userId
+				 		userName=cb?.userName
+				 	}
 				 }
 				 */
 			}
@@ -297,12 +300,12 @@ class JenkinsEndPoint implements ServletContextListener {
 
 			/*
 			 if (culprits) {
-			 sb.append("Changes by:\n")
-			 culprits.each  {cp->
-			 if (cp) {
-			 sb.append("${cp}\n")
-			 }
-			 }
+				sb.append("Changes by:\n")
+				culprits.each  {cp->
+					if (cp) {
+						sb.append("${cp}\n")
+					}
+				}
 			 }
 			 */
 
@@ -343,52 +346,10 @@ class JenkinsEndPoint implements ServletContextListener {
 		sb.toString()
 	}
 
-
-	private Map matchers (String line) {
-		def bitem=[:]
-		def matcher
-
-		matcher = (line =~ /Building (.*?)(?: .*)? workspace (.*)/)
-		if (matcher.matches()){
-			bitem.put('workspace', matcher[0][2])
-		}
-
-		matcher = (line =~ /(.*?)(?: .*)?Building (.*):(.*)/)
-		if (matcher.matches()){
-			//bitem.put('ftype', matcher[0][2])
-			bitem.put('file', matcher[0][3])
-		}
-
-
-		matcher = (line =~ /Done creating (.*) (.*)/)
-		if (matcher.matches()){
-			//bitem.put('ftype', matcher[0][1])
-			bitem.put('file', matcher[0][2])
-		}
-
-
-		// Last transaction ID - is a block that is returned in Jenkins
-		// May not apply to all types of logs
-		matcher = (line =~ /(.*?)Last valid trans (.*)/)
-		if (matcher.matches()){
-			def tid=matcher[0][2]
-			if (tid) {
-				tid=tid.toString().substring(1,tid.toString().length()-1)
-				def tid1=jenService.returnArrary(tid)
-				tid1.each {csv->
-					if (csv.toString() =~ /[A-z]+\=[A-z]+/) {
-						def (k,v) = csv.split('=')
-						if (k=="id") { k="Last_Transaction_ID: "}
-						bitem.put(k, v)
-					}
-				}
-			}
-		}
-		return bitem
-	}
-
 	private String parseChanges(Session userSession, String url) {
-		def col3
+		def col3=[]
+		def col4=[]
+
 		StringBuilder sb=new StringBuilder()
 		HttpResponseDecorator html1 = http.get(path: "$url")
 		def html = html1?.data
@@ -404,28 +365,31 @@ class JenkinsEndPoint implements ServletContextListener {
 
 		if (go) {
 			if (sbn) {
-				col3 = sbn.collect {
-					[
-						cid : parseTicket(it.OL.LI.text()),
-						cinfo : parseTicketInfo(it.OL.LI.text()),
-					]
+				sbn.OL.each { ol->
+					ol.LI.eachWithIndex { it, index ->
+						col3 += [nid: index, cid : parseTicket(it.text()), cinfo : parseTicketInfo(it.text())]
+					}
 				}
 			}
-
-			sbn = html."**".findAll {it.@class.toString().contains("changeset-message")}
-			if (sbn) {
-				col3 += sbn.collect {
-					[
-						message : it.toString().trim().replaceAll("(\\r\\n|\\n)", '').replaceAll("\\s+", " "),
-
-					]
+			int dd=0
+			def sbn1 = html."**".findAll {it.@class.toString().contains("changeset-message")}
+			if (sbn1) {
+				sbn1.each { mg->
+					col4 += [ nid: "${dd}", cid : "${col3[dd]?.cid}", message: mg.toString().trim().replaceAll("(\\r\\n|\\n)", '').replaceAll("\\s+", " ") ]
+					dd++
 				}
 			}
-
-			if (col3) {
-				col3.each { entry ->
+			
+			
+			if (col3&&col4) {
+				changeMap = (col3 + col4).groupBy { it.nid }.collect { it.value.collectEntries { it } }
+			}else{
+				changeMap=col3
+			}
+			
+			if (changeMap) {
+				changeMap.each { entry ->
 					entry.each { k,v->
-						//userSession.basicRemote.sendText("${k}: ${v}\n")
 						sb.append("${k}: ${v}\n")
 					}
 				}
@@ -660,26 +624,87 @@ Currently connected to : $job running on $server
 			log.error "Problem communicating with ${url}: ${e.message}", e
 		}
 	}
-
+	
+	
+	
+		private Map matchers (String line) {
+			def bitem=[:]
+			def matcher
+	
+			matcher = (line =~ /Building (.*?)(?: .*)? workspace (.*)/)
+			if (matcher.matches()){
+				bitem.put('workspace', matcher[0][2])
+			}
+	
+			matcher = (line =~ /(.*?)(?: .*)?Building (.*):(.*)/)
+			if (matcher.matches()){
+				//bitem.put('ftype', matcher[0][2])
+				bitem.put('file', matcher[0][3])
+			}
+	
+	
+			matcher = (line =~ /Done creating (.*) (.*)/)
+			if (matcher.matches()){
+				//bitem.put('ftype', matcher[0][1])
+				bitem.put('file', matcher[0][2])
+			}
+	
+	
+			// Last transaction ID - is a block that is returned in Jenkins
+			// May not apply to all types of logs
+			matcher = (line =~ /(.*?)Last valid trans (.*)/)
+			if (matcher.matches()){
+				def tid=matcher[0][2]
+				if (tid) {
+					tid=tid.toString().substring(1,tid.toString().length()-1)
+					def tid1=jenService.returnArrary(tid)
+					tid1.each {csv->
+						if (csv.toString() =~ /[A-z]+\=[A-z]+/) {
+							def (k,v) = csv.split('=')
+							if (k=="id") { k="Last_Transaction_ID: "}
+							bitem.put(k, v)
+						}
+					}
+				}
+			}
+			return bitem
+	}
+		
 	private String parseTicketInfo(String input) {
-		def output=input
-		if (input.contains(':')) {
+		def output
+		
+		if (input && input.contains(':')) {
 			output=input.split(':')[1].trim()
-		} else if (input =~ /[A-z0-9]+ \- [A-z0-9]+/) {
+		} else if (input && input =~ /[A-z0-9]+ \- [A-z0-9]+/) {
 			def (k,v) = input.split(' - ')
 			output=v.trim()
+		}else{
+			output=input
+		}
+		
+		if (!output) {
+			output="undefined"
 		}
 		return output
 	}
 
 	private String parseTicket(String input) {
+		def output
 		if (input.contains(':')) {
-			jiraTicket=input.split(':')[0].trim()
+			output=input.split(':')[0].trim()
 		} else if (input =~ /[A-z0-9]+ \- [A-z0-9]+/) {
 			def (k,v) = input.split(' - ')
-			jiraTicket=k.trim()
+			output=k.trim()
 		}
-		return jiraTicket
+		
+		if (output && output =~ /[A-z]+\-[0-9]+/)  {
+			jiraTicket.add(output)
+		} 
+		else{
+			output="undefined"
+		}
+		
+		return output
 	}
 
 	private String getLastBuild(String url) {
