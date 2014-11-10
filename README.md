@@ -321,7 +321,10 @@ or :
 AB-1102 - Description
 ```
 
+
 Where AB-1102 will be the ticket number, this will then update this jira ticket with the summary provided 
+
+![Jira ticket number](https://raw.githubusercontent.com/vahidhedayati/grails-jenkins-plugin/master/documentation/jen-changes.jpg)
  
 Refer to above configuration items for the required jenkins configuration in your config.groovy.
 
