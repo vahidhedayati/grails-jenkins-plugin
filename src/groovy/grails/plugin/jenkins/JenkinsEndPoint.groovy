@@ -36,6 +36,7 @@ class JenkinsEndPoint implements ServletContextListener {
 	private final Logger log = LoggerFactory.getLogger(getClass().name)
 
 	private JenService jenService
+	private JenSummaryService jenSummaryService
 
 	// strange issue with this service -
 	//private HBuilderService hBuilderService
@@ -54,16 +55,12 @@ class JenkinsEndPoint implements ServletContextListener {
 	private String customParams,jensbuildend, jensprogressive, jensconlog, jensurl, jenserver, jensuser, jenspass, jenschoice, jensconurl = ''
 	private String processurl, wsprocessurl, wsprocessname = ''
 	 
-	private def jiraTicket = []
-	private def changeMap=[]
-	
+
+
 	private String jensApi = '/api/json'
 	private String userbase = '/user/'
 	private String userend = '/configure'
 	private String consoleText = '/consoleText'
-	private String changes = '/changes'
-
-
 
 	RESTClient http
 
@@ -102,9 +99,12 @@ class JenkinsEndPoint implements ServletContextListener {
 		jsessions.add(userSession)
 
 		def ctx = SCH.servletContext.getAttribute(GA.APPLICATION_CONTEXT)
+		
 		jenService = ctx.jenService
 		//hBuilderService = ctx.hBuilderService
 		jiraRestService = ctx.jiraRestService
+		jenSummaryService = ctx.jenSummaryService
+		
 		def grailsApplication = ctx.grailsApplication
 		config = grailsApplication.config.jenkins
 	}
@@ -142,12 +142,15 @@ class JenkinsEndPoint implements ServletContextListener {
 		if (cmd.equals('parseHistory')) {
 			if (data.bid) {
 				clearPage(userSession)
-
+				def output=jenSummaryService.jenSummary(jenserver,jensuser,jenspass,data.bid)
+				userSession.basicRemote.sendText(output)
+				/*
 				String url2 = jenserver+data.bid+consoleText
 				String cgurl=data.bid+changes
-				String jobstat=jobStatus(userSession,data.bid)
-				String jobconsole=definedParseJobConsole(userSession,url2,data.bid)
-				String changes=parseChanges(userSession,cgurl)
+
+				String jobstat=jenSummaryService.jobStatus(http,data.bid)
+				String jobconsole=jenSummaryService.definedParseJobConsole(http,url2,data.bid)
+				String changes=jenSummaryService.parseChanges(http,cgurl)
 
 
 				StringBuilder sb=new StringBuilder()
@@ -168,18 +171,19 @@ class JenkinsEndPoint implements ServletContextListener {
 					
 					// different Jira calls
 					if (jiraSendType && jiraSendType.toLowerCase().equals('comment') && jiraTicket) {
-						jiraRestService.addComment(jiraServer,jiraUser,jiraPass,jiraTicket,changeMap,output)
+						jiraRestService.addComment(jiraServer,jiraUser,jiraPass,jiraTicket,output)
 					}else if (jiraSendType && jiraSendType.toLowerCase().equals('customfield') && jiraTicket && jiracustomField) {
-						jiraRestService.addCustomField(jiraServer,jiraUser,jiraPass,jiraTicket,changeMap,jiracustomField,output)
+						jiraRestService.addCustomField(jiraServer,jiraUser,jiraPass,jiraTicket,jiracustomField,output)
 					}else if (jiraSendType && jiraSendType.toLowerCase().equals('updatecustomfield') && jiraTicket && jiracustomField) {
-						jiraRestService.updateCustomField(jiraServer,jiraUser,jiraPass,jiraTicket,changeMap,jiracustomField,output)
+						jiraRestService.updateCustomField(jiraServer,jiraUser,jiraPass,jiraTicket,jiracustomField,output)
 					}else if (jiraSendType && jiraSendType.toLowerCase().equals('description') && jiraTicket && jiracustomField) {
-						jiraRestService.updateDesc(jiraServer,jiraUser,jiraPass,jiraTicket,changeMap,output)
+						jiraRestService.updateDesc(jiraServer,jiraUser,jiraPass,jiraTicket,output)
 					}else if (jiraSendType && jiraSendType.toLowerCase().equals('comdesc') && jiraTicket && jiracustomField) {
-						jiraRestService.updateDescAddComm(jiraServer,jiraUser,jiraPass,jiraTicket,changeMap,output,output)
+						jiraRestService.updateDescAddComm(jiraServer,jiraUser,jiraPass,jiraTicket,output,output)
 					}
 
 				}
+				*/
 			}
 		}
 
@@ -251,153 +255,8 @@ class JenkinsEndPoint implements ServletContextListener {
 		return server
 	}
 
-	private String jobStatus(Session userSession,String uri) {
-		StringBuilder sb=new StringBuilder()
-		def changes=parseApiJson(uri + jensApi)
-		if (changes) {
-			String result=changes?.result
-			String buildId=changes?.number
-			String bdate=changes?.id
-			String fdn=changes?.fullDisplayName
-			String changeSet=changes?.changeSet
-			String culprits=changes?.culprits
 
-			def userId,userName
-			if (changes?.actions) {
-				changes.actions.each { ca->
-					ca.causes.each { cb->
-						userId=cb?.userId
-						userName=cb?.userName
-					}
-				}
-				/*if (changes.actions[0].causes[0] ) { 
-				 	def cb=changes?.actions[0]?.causes[0]
-				 	if (cb) {
-				 		userId=cb?.userId
-				 		userName=cb?.userName
-				 	}
-				 }
-				 */
-			}
-
-			if (fdn) {
-				sb.append("$fdn $bdate\n")
-			}
-
-			if (buildId) {
-				sb.append("Build_ID: $buildId\n")
-
-				sb.append("Status: $result\n")
-			}
-
-			if (userId) {
-				sb.append("By: $userId $userName\n")
-			}
-
-			if (changeSet) {
-				sb.append("Changed: $changeSet \n")
-			}
-
-			/*
-			 if (culprits) {
-				sb.append("Changes by:\n")
-				culprits.each  {cp->
-					if (cp) {
-						sb.append("${cp}\n")
-					}
-				}
-			 }
-			 */
-
-		}
-		sb.toString()
-	}
-
-	// Returns Summary results
-	private String definedParseJobConsole(Session userSession, String url,  String bid) {
-		String workspace,ftype,file
-		def builds=[]
-		try {
-			http.request(Method.GET, ContentType.TEXT) { req ->
-				uri.path = bid+consoleText
-				requestContentType = TEXT
-
-				response.success = { resp, reader ->
-					reader.text.eachLine {line ->
-						def results=(matchers(line))
-						if (results) {
-							builds.add(results)
-						}
-					}
-				}
-			}
-		} catch (Exception e) {
-			e.printStackTrace()
-		}
-		StringBuilder sb=new StringBuilder()
-		if (builds) {
-			builds.each { entry ->
-				entry.each { k,v->
-					//userSession.basicRemote.sendText("${k}: ${v}\n")
-					sb.append("${k}: ${v}\n")
-				}
-			}
-		}
-		sb.toString()
-	}
-
-	private String parseChanges(Session userSession, String url) {
-		def col3=[]
-		def col4=[]
-
-		StringBuilder sb=new StringBuilder()
-		HttpResponseDecorator html1 = http.get(path: "$url")
-		def html = html1?.data
-
-		def sbn = html."**".findAll {it.@id.toString().contains("main-panel")}
-		boolean go=true
-
-		sbn.each {
-			if (it.toString().trim().replaceAll("(\\r\\n|\\n)", '').replaceAll("\\s+", " ").contains('No changes')) {
-				go=false
-			}
-		}
-
-		if (go) {
-			if (sbn) {
-				sbn.OL.each { ol->
-					ol.LI.eachWithIndex { it, index ->
-						col3 += [nid: index, cid : parseTicket(it.text()), cinfo : parseTicketInfo(it.text())]
-					}
-				}
-			}
-			int dd=0
-			def sbn1 = html."**".findAll {it.@class.toString().contains("changeset-message")}
-			if (sbn1) {
-				sbn1.each { mg->
-					col4 += [ nid: "${dd}", cid : "${col3[dd]?.cid}", message: mg.toString().trim().replaceAll("(\\r\\n|\\n)", '').replaceAll("\\s+", " ") ]
-					dd++
-				}
-			}
-			
-			
-			if (col3&&col4) {
-				changeMap = (col3 + col4).groupBy { it.nid }.collect { it.value.collectEntries { it } }
-			}else{
-				changeMap=col3
-			}
-			
-			if (changeMap) {
-				changeMap.each { entry ->
-					entry.each { k,v->
-						sb.append("${k}: ${v}\n")
-					}
-				}
-			}
-		}
-		sb.toString()
-	}
-
+	
 	private void parseJobConsole(Session userSession, String url, String bid) {
 		// Send user confirmation that you are going to parse Jenkins job
 		userSession.basicRemote.sendText("\nAbout to parse ${url}\n")
@@ -407,7 +266,8 @@ class JenkinsEndPoint implements ServletContextListener {
 		// If we have a class of console output then set start1 to true
 		// This means the job has actually finished building and jenkins content is now static
 
-		if (html."**".findAll{ it.@class.toString().contains("console-output") || it.@href.toString().contains("consoleText")}) {
+		if (html."**".findAll{ it.@class.toString().contains("console-output") || 
+			it.@href.toString().contains("consoleText")}) {
 			start1=true
 		}
 
@@ -440,13 +300,14 @@ class JenkinsEndPoint implements ServletContextListener {
 			 userSession.basicRemote.sendText(it.toString())
 			 }
 			 */
-			if (html."**".findAll{ it.@class.toString().contains("console-output")}) {
-				html."**".findAll{ it.@class.toString().contains("console-output")}.each {
+			def bn=html."**".findAll{ it.@class.toString().contains("console-output")}
+			if (bn) {
+				bn.each {
 					userSession.getBasicRemote().sendText(it.toString())
 				}
 			}else{
 				if (html."**".findAll{ it.@href.toString().contains("consoleText")}) {
-					String uri=jenService.stripDouble("${bid}/consoleText")
+					String uri=jenService.stripDouble("${bid}${consoleText}")
 					HttpResponseDecorator html2= http.get(path: "${uri}")
 					userSession.getBasicRemote().sendText(html2?.data.text.toString())
 
@@ -518,7 +379,8 @@ Currently connected to : $job running on $server
 						String wsprocessname = config.wsprocessname
 						if ((wsprocessurl||processurl) && currentBuild) {
 							//This hogs websocket connection - so lets background it
-							def asyncProcess = new Thread({jenService.workOnBuild(userSession,processurl,wsprocessurl,wsprocessname,newBuild,url,jenserver, jensuser, jenspass,customParams,jensurl,jensApi)} as Runnable)
+							def asyncProcess = new Thread({jenService.workOnBuild(userSession,processurl,wsprocessurl,
+								wsprocessname,newBuild,url,jenserver, jensuser, jenspass,customParams,jensurl,jensApi)} as Runnable)
 							//def asyncProcess = new Thread({jenService.workOnBuild(null,processurl,newBuild,url,jenserver, jensuser, jenspass,customParams,jensurl,jensApi)} as Runnable)
 							asyncProcess.start()
 						}
@@ -627,85 +489,6 @@ Currently connected to : $job running on $server
 	
 	
 	
-		private Map matchers (String line) {
-			def bitem=[:]
-			def matcher
-	
-			matcher = (line =~ /Building (.*?)(?: .*)? workspace (.*)/)
-			if (matcher.matches()){
-				bitem.put('workspace', matcher[0][2])
-			}
-	
-			matcher = (line =~ /(.*?)(?: .*)?Building (.*):(.*)/)
-			if (matcher.matches()){
-				//bitem.put('ftype', matcher[0][2])
-				bitem.put('file', matcher[0][3])
-			}
-	
-	
-			matcher = (line =~ /Done creating (.*) (.*)/)
-			if (matcher.matches()){
-				//bitem.put('ftype', matcher[0][1])
-				bitem.put('file', matcher[0][2])
-			}
-	
-	
-			// Last transaction ID - is a block that is returned in Jenkins
-			// May not apply to all types of logs
-			matcher = (line =~ /(.*?)Last valid trans (.*)/)
-			if (matcher.matches()){
-				def tid=matcher[0][2]
-				if (tid) {
-					tid=tid.toString().substring(1,tid.toString().length()-1)
-					def tid1=jenService.returnArrary(tid)
-					tid1.each {csv->
-						if (csv.toString() =~ /[A-z]+\=[A-z]+/) {
-							def (k,v) = csv.split('=')
-							if (k=="id") { k="Last_Transaction_ID: "}
-							bitem.put(k, v)
-						}
-					}
-				}
-			}
-			return bitem
-	}
-		
-	private String parseTicketInfo(String input) {
-		def output
-		
-		if (input && input.contains(':')) {
-			output=input.split(':')[1].trim()
-		} else if (input && input =~ /[A-z0-9]+ \- [A-z0-9]+/) {
-			def (k,v) = input.split(' - ')
-			output=v.trim()
-		}else{
-			output=input
-		}
-		
-		if (!output) {
-			output="undefined"
-		}
-		return output
-	}
-
-	private String parseTicket(String input) {
-		def output
-		if (input.contains(':')) {
-			output=input.split(':')[0].trim()
-		} else if (input =~ /[A-z0-9]+ \- [A-z0-9]+/) {
-			def (k,v) = input.split(' - ')
-			output=k.trim()
-		}
-		
-		if (output && output =~ /[A-z]+\-[0-9]+/)  {
-			jiraTicket.add(output)
-		} 
-		else{
-			output="undefined"
-		}
-		
-		return output
-	}
 
 	private String getLastBuild(String url) {
 		String bid = ""
@@ -747,14 +530,6 @@ Currently connected to : $job running on $server
 	 */
 	def parseApi(Session userSession,String uri) {
 		http.get(path: uri) { resp, json -> userSession.basicRemote.sendText(json.toString()) }
-	}
-
-	/*
-	 * Parse Jenkins API url - grab all but only using a few json values
-	 *  to calculate estimated duration of build
-	 */
-	def parseApiJson(String uri) {
-		http.get(path: uri) { resp, json -> return json  }
 	}
 
 

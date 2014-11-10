@@ -107,12 +107,14 @@ class JenService {
 		sleep(6000)
 
 		// Kick off a job to asynchronously check build and if we have result to trigger processurl
-		def asyncProcess = new Thread({workOnBuild(null,processurl,'','',newBuild,jensurl,jenserver, jensuser, jenspass,customParams,jensurl,jensApi)} as Runnable)
+		def asyncProcess = new Thread({workOnBuild(null,processurl,'','',newBuild,
+			jensurl,jenserver, jensuser, jenspass,customParams,jensurl,jensApi)} as Runnable)
 		asyncProcess.start()
 
 	}
 
-	def asyncBuilder(String jensurl, String jenserver, String jensuser, String jenspass,  String processurl, String customParams) {
+	def asyncBuilder(String jensurl, String jenserver, String jensuser, 
+		String jenspass,  String processurl, String customParams) {
 
 		def config = grailsApplication.config.jenkins
 		def jensbuildend = config.jensbuildend  ?: '/build?delay=0sec'
@@ -138,7 +140,9 @@ class JenService {
 		sleep(6000)
 
 		// Kick off a job to asynchronously check build and if we have result to trigger processurl
-		def asyncProcess = new Thread({workOnBuild(null,processurl,'','',newBuild,jensurl,jenserver, jensuser, jenspass,customParams,jensurl,jensApi)} as Runnable)
+		def asyncProcess = new Thread({workOnBuild(null,processurl,'','',
+			newBuild,jensurl,jenserver, jensuser, jenspass,customParams,
+			jensurl,jensApi)} as Runnable)
 		asyncProcess.start()
 
 	}
@@ -202,9 +206,9 @@ class JenService {
 	//This is an asynchronous task that is given a new BuildID, it will poll the
 	// api page and once it has a result it will return this back to your own
 	// defined processcontrol url.
-	def workOnBuild(Session userSession, String processurl, String wsprocessurl, String wsprocessname, int bid,String uri,
-			String jenserver, String jensuser, String jenspass, String customParams,
-			String jensurl, String jensApi) {
+	def workOnBuild(Session userSession, String processurl, String wsprocessurl,
+		 String wsprocessname, int bid,String uri, String jenserver, String jensuser,
+		  String jenspass, String customParams,	String jensurl, String jensApi) {
 
 		boolean go = false
 		def result
