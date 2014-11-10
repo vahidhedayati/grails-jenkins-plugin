@@ -70,6 +70,8 @@ class JenTagLib {
 		// Default: '/build?delay=0sec'
 		String jensbuildend = attrs.jensbuildend ?: config.buildend ?:  '/build?delay=0sec'
 
+		String autoSubmit = attrs.autosubmit ?: config.autosubmit ?:  'no'
+		
 		// jens uri to get to full logs:
 		// Default: '/consoleFull'
 		String jensconlog = attrs.jensLog ?: config.consoleLog ?: '/consoleFull'
@@ -88,7 +90,7 @@ class JenTagLib {
 		             jensjob:attrs.jensjob, jensuser:jensuser, jenspass:jenspass, appname:appname, wshostname:wshostname,
 		             jenserver:jenserver, jensurl:jensurl, jensprogressive:jensprogressive, jensbuildend:jensbuildend,
 		             jensconlog:jensconlog, customParams:attrs.customParams,processurl:processurl,wsprocessurl:wsprocessurl,
-					 wsprocessname:wsprocessname]
+					 autoSubmit:autoSubmit, wsprocessname:wsprocessname]
 		if (template) {
 			out << g.render(template:template, model: model)
 		}else{
@@ -140,14 +142,15 @@ class JenTagLib {
 		String processurl = attrs.processurl ?: config.processurl
 		String wsprocessurl = attrs.wsprocessurl ?: config.wsprocessurl
 		String wsprocessname = attrs.wsprocessname ?: config.wsprocessname
-
+		String autoSubmit = attrs.autosubmit ?: config.autosubmit ?:  'no'
+		
 		String appname = Metadata.current.getApplicationName()
 
 		def model = [hideButtons:hideButtons, hideTriggerButton:hideTriggerButton, hideDashBoardButton:hideDashBoardButton,
 		             jenschoice:jenschoice, divId:divId, jenfullserver:jensconurl, jensconurl:jensconurl, jensjob:attrs.jensjob,
 		             jensuser:jensuser, jenspass:jenspass, appname:appname, wshostname:wshostname, jenserver:jenserver,
-		             jensurl:jenspath, jensprogressive:jensprogressive, jensbuildend:jensbuildend, jensconlog:jensconlog,
-					 customParams:attrs.customParams,processurl:processurl,wsprocessurl:wsprocessurl,wsprocessname:wsprocessname]
+		             jensurl:jenspath, jensprogressive:jensprogressive, jensbuildend:jensbuildend, jensconlog:jensconlog, 
+					 autoSubmit:autoSubmit, customParams:attrs.customParams,processurl:processurl,wsprocessurl:wsprocessurl,wsprocessname:wsprocessname]
 		if (template) {
 			out << g.render(template:template, model: model)
 		}else{

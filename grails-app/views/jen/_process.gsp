@@ -243,7 +243,7 @@ function processMessage${divId}(message) {
 			var job = JSON.stringify(jsonData.feedback.job);
 			var server = JSON.stringify(jsonData.feedback.server);
 			var sb = [];
-			sb.push('<form method="post" action='+wsprocessurl+'>');
+			sb.push('<form method="post" id="submitForm${divId}" name="submitForm${divId}" action='+wsprocessurl+'>');
 			sb.push('<input type="hidden" name="result" value='+result+'>');
 			sb.push('<input type="hidden" name="buildUrl" value='+buildUrl+'>');
 			sb.push('<input type="hidden" name="buildId" value='+buildId+'>');
@@ -255,6 +255,10 @@ function processMessage${divId}(message) {
 			sb.push('<input type="submit" name="submit" value='+wsprocessname+'>');
 			sb.push('</form>');
 			$('#FeedBack${divId}').html(sb.join(""));	
+			var autoSubmit="${autoSubmit}";
+			if (autoSubmit == "yes") {
+				document.forms["submitForm${divId}"].submit();
+			}	
 		}
 		
 		

@@ -188,6 +188,8 @@ jenkins.processurl="http://localhost:8080/testjenkins/test/parseJenPlugin"
 */
 jenkins.wsprocessname="Deploy"
 jenkins.wsprocessurl="http://localhost:8080/testjenkins/test/parseJenPluginDeploy"
+//untested but theory if set to yes should autoo submit form to websocket process url 
+jenkins.autosubmit="yes"
 
 
 
