@@ -14,6 +14,9 @@ class JenService {
 	static transactional = false
 	def grailsApplication
 	//def hBuilderService
+	
+	def jenSummaryService
+	
 	HBuilder hBuilder=new HBuilder()
 
 	private String jensApi = '/api/json'
@@ -229,6 +232,17 @@ class JenService {
 				http1.get(path: "${url}") { resp, json ->
 					result = json.result
 					if (result && result != 'null') {
+						
+						// We have a result -->
+						// So lets check if user has enabled showhistory
+						// Load up build history which also calls jira calls if enabled
+						def config = grailsApplication.config.jenkins
+						
+						(config?.showhistory == "yes") {
+							def output=jenSummaryService.jenSummary(http1,bid.toString())
+							userSession.basicRemote.sendText(output)
+						}
+						
 						if (userSession && wsprocessurl) {
 							def ajson = new JsonBuilder()
 							ajson.feedback{

@@ -142,7 +142,7 @@ class JenkinsEndPoint implements ServletContextListener {
 		if (cmd.equals('parseHistory')) {
 			if (data.bid) {
 				clearPage(userSession)
-				def output=jenSummaryService.jenSummary(jenserver,jensuser,jenspass,data.bid)
+				def output=jenSummaryService.jenSummary(http,data.bid)
 				userSession.basicRemote.sendText(output)
 				/*
 				String url2 = jenserver+data.bid+consoleText

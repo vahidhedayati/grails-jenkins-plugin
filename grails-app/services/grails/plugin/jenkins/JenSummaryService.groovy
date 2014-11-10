@@ -26,13 +26,23 @@ class JenSummaryService {
 	//this method added so that a connection can be made 
 	// from non websocket calls - will call all methods 
 	// and if enabled will send results to Jira
-	String jenSummary(String jenserver, String jenuser,
-			String jenpass,String bid) {
-			String output
+	//String jenserver, String jenuser,
+	//
+	
+	RESTClient jenSummary(String jenserver, String jenuser,String jenpass,String bid) {
 		try {
 			HBuilder hBuilder=new HBuilder()
 			RESTClient http = hBuilder.httpConn(jenserver, jenuser ?: '', jenpass ?: '')
-			
+			jenSummary(http,bid)
+		}catch (HttpResponseException e) {
+			log.error "Failed error: $e.statusCode"
+		}
+
+	}
+	
+	String jenSummary(RESTClient http,String bid) {
+			String output
+		
 			
 			if (bid) {
 				
@@ -75,9 +85,6 @@ class JenSummaryService {
 					}
 
 				}
-			}
-		}catch (HttpResponseException e) {
-				log.error "Failed error: $e.statusCode"
 			}
 		
 			return output

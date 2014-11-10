@@ -191,6 +191,14 @@ jenkins.wsprocessurl="http://localhost:8080/testjenkins/test/parseJenPluginDeplo
 
 
 
+// This is an important option to enable
+// With this enabled - after a build has completed and has a result
+// So long as your jira details are correct 
+// and the ticket convention is as below appears in changes logs...
+// Then this enabled with the jira info below should mean your build history should appear 
+// under all logged tickets under changes screen of a given build id.
+jenkins.showhistory="yes"
+
 /*
 * Jira configuration - refer to summary section below:
 *  Don't enable any of this if you are not looking to push anything to Jira.
