@@ -240,7 +240,9 @@ class JenService {
 						
 						(config?.showhistory == "yes") {
 							def output=jenSummaryService.jenSummary(http1,bid.toString())
-							userSession.basicRemote.sendText(output)
+							if (userSession) { 
+								userSession.basicRemote.sendText(output)
+							}
 						}
 						
 						if (userSession && wsprocessurl) {
