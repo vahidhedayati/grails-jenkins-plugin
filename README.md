@@ -4,7 +4,7 @@ jenkins 0.1
 
 Grails Jenkins plugin, will interact with Jenkins front end html interface using HTTPBuilder and push summary information to Jira if configured.
 
-You can use websocket feature to watch live builds / view historical build information. Or trigger a background process that will do the build. So long as userID is provided and Jenkins has authentication enabled, it will attempt to log in as that user without a password (by grabbing token off of Jenkins) This in short means you now have visibility of who triggered a build via Jenkins.
+You can use websocket feature to watch live builds / view historical build information or trigger a background process that will do the build. So long as userID is provided and Jenkins has authentication enabled, it will attempt to log in as that user without a password (by grabbing token off of Jenkins) This in short means you now have visibility of who triggered a build via Jenkins.
 
 Hooks/Triggers can be put in place to do two additional tasks.
 
