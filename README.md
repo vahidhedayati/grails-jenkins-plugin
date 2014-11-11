@@ -345,6 +345,15 @@ Refer to above configuration items for the required jenkins configuration in you
 
 It will parse through the changes logs, and for each ticket found - it will attempt to push the response to all tickets.
 
+For the summary information to work properly I found I had to add two blank configuration items to my config.groovy:
+ 
+```
+jenkins.processurl=""
+
+jenkins.wsprocessurl=""
+```
+
+These could actually be filled with a value, its just if not defined it returns some groovy object 
 
 
 ####Async Build (Non Websocket)
