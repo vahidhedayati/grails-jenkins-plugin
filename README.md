@@ -2,7 +2,15 @@ jenkins 0.1
 =========
 
 
-Grails Jenkins plugin, will interact with Jenkins front end html interface using HTTPBuilder. Currently has two features that are by default available via a new controller that the plugin adds to your project:
+Grails Jenkins plugin, will interact with Jenkins front end html interface using HTTPBuilder and push summary information to Jira if configured.
+
+You can use websocket feature to watch live builds / view historical build information. Or trigger a background process that will do the build. So long as userID is provided and Jenkins has authentication enabled, it will attempt to log in as that user without a password (by grabbing token off of Jenkins).
+
+Hooks/Triggers can be put in place to do two additional tasks.
+
+After build trigger known as processurl or if via websocket wsprocessurl 
+
+After build summary - which with correct Jira details it will push this summary to all defined tickets within the changelog.  
 
 
 Dependency, in your conf/BuildConfig.groovy under plugins add:
