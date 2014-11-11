@@ -1,11 +1,12 @@
 package grails.plugin.jenkins
 
+import static groovyx.net.http.ContentType.*
+import static groovyx.net.http.Method.*
 import groovyx.net.http.ContentType
 import groovyx.net.http.HttpResponseDecorator
 import groovyx.net.http.HttpResponseException
 import groovyx.net.http.Method
 import groovyx.net.http.RESTClient
-
 
 class JenSummaryService {
 
@@ -47,12 +48,11 @@ class JenSummaryService {
 			if (bid) {
 				
 				def config = grailsApplication.config.jenkins
-				
-				String url2 = jenserver+bid+consoleText
+				//String url2 = jenserver+"/"+bid+consoleText
 				String cgurl=bid+changes
 
 				String jobstat=jobStatus(http,bid)
-				String jobconsole=definedParseJobConsole(http,url2,bid)
+				String jobconsole=definedParseJobConsole(http,bid)
 				String changes=parseChanges(http,cgurl)
 
 
@@ -94,6 +94,9 @@ class JenSummaryService {
 	
 	 String jobStatus(RESTClient http, String uri) {
 		StringBuilder sb=new StringBuilder()
+		if (!uri.startsWith('/')) {
+			uri='/'+uri
+		}
 		def changes=parseApiJson(http, uri + jensApi)
 		if (changes) {
 			String result=changes?.result
@@ -212,7 +215,7 @@ class JenSummaryService {
  
 	 
 	 // Returns Summary results
-	  String definedParseJobConsole(RESTClient http, String url,  String bid) {
+	  String definedParseJobConsole(RESTClient http, String bid) {
 		 String workspace,ftype,file
 		 def builds=[]
 		 try {

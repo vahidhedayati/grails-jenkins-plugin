@@ -144,46 +144,6 @@ class JenkinsEndPoint implements ServletContextListener {
 				clearPage(userSession)
 				def output=jenSummaryService.jenSummary(http,jenserver,data.bid)
 				userSession.basicRemote.sendText(output)
-				/*
-				String url2 = jenserver+data.bid+consoleText
-				String cgurl=data.bid+changes
-
-				String jobstat=jenSummaryService.jobStatus(http,data.bid)
-				String jobconsole=jenSummaryService.definedParseJobConsole(http,url2,data.bid)
-				String changes=jenSummaryService.parseChanges(http,cgurl)
-
-
-				StringBuilder sb=new StringBuilder()
-				for (int a=0; a < 30; a++) {
-					sb.append('-')
-				}
-				String sbb="\n"+sb.toString()+"\n"
-				String output=jobstat+sbb+jobconsole+sbb+changes
-				userSession.basicRemote.sendText(output)
-
-				String sendtoJira = config.sendtoJira
-				if (sendtoJira && sendtoJira.toLowerCase().equals('yes')) {
-					String jiraServer = config.jiraServer
-					String jiraUser = config.jiraUser
-					String jiraPass = config.jiraPass
-					String jiraSendType = config.jiraSendType
-					String jiracustomField = config.customField
-					
-					// different Jira calls
-					if (jiraSendType && jiraSendType.toLowerCase().equals('comment') && jiraTicket) {
-						jiraRestService.addComment(jiraServer,jiraUser,jiraPass,jiraTicket,output)
-					}else if (jiraSendType && jiraSendType.toLowerCase().equals('customfield') && jiraTicket && jiracustomField) {
-						jiraRestService.addCustomField(jiraServer,jiraUser,jiraPass,jiraTicket,jiracustomField,output)
-					}else if (jiraSendType && jiraSendType.toLowerCase().equals('updatecustomfield') && jiraTicket && jiracustomField) {
-						jiraRestService.updateCustomField(jiraServer,jiraUser,jiraPass,jiraTicket,jiracustomField,output)
-					}else if (jiraSendType && jiraSendType.toLowerCase().equals('description') && jiraTicket && jiracustomField) {
-						jiraRestService.updateDesc(jiraServer,jiraUser,jiraPass,jiraTicket,output)
-					}else if (jiraSendType && jiraSendType.toLowerCase().equals('comdesc') && jiraTicket && jiracustomField) {
-						jiraRestService.updateDescAddComm(jiraServer,jiraUser,jiraPass,jiraTicket,output,output)
-					}
-
-				}
-				*/
 			}
 		}
 
@@ -374,10 +334,11 @@ Currently connected to : $job running on $server
 						 * and does something with built jobs 
 						 */
 						//def config = grailsApplication.config
-						String processurl = config.processurl
-						String wsprocessurl = config.wsprocessurl
-						String wsprocessname = config.wsprocessname
-						if ((wsprocessurl||processurl) && currentBuild) {
+						String processurl = config.processurl?.toString() ?: ''
+						String wsprocessurl = config.wsprocessurl?.toString() ?: ''
+						String wsprocessname = config.wsprocessname?.toString() ?: ''
+						String showhistory = config.showhistory?.toString() ?: ''
+						if (((wsprocessurl||processurl) && currentBuild)|| ((showhistory.toString().equals('yes')) && currentBuild)) {
 							//This hogs websocket connection - so lets background it
 							def asyncProcess = new Thread({jenService.workOnBuild(userSession,processurl,wsprocessurl,
 								wsprocessname,newBuild,url,jenserver, jensuser, jenspass,customParams,jensurl,jensApi)} as Runnable)

@@ -220,9 +220,12 @@ class JenService {
 
 		def ubi=stripDouble(uri+"/"+bid.toString())
 		String url=ubi+jensApi
-
+		
+		def config = grailsApplication.config.jenkins
+		String showhistory=config.showhistory?.toString() ?: ''
+		
 		def http1 = hBuilder.httpConn(jenserver, jensuser, jenspass)
-
+		
 		try {
 
 			while (!go && a < max) {
@@ -236,11 +239,11 @@ class JenService {
 						// We have a result -->
 						// So lets check if user has enabled showhistory
 						// Load up build history which also calls jira calls if enabled
-						def config = grailsApplication.config.jenkins
+				
 						
-						(config?.showhistory == "yes") {
-							def output=jenSummaryService.jenSummary(http1,jenserver,bid.toString())
-							if (userSession) { 
+						if (showhistory.toLowerCase().equals("yes")) {
+							def output=jenSummaryService.jenSummary(http1, jenserver, ubi)
+							if (userSession && output) { 
 								userSession.basicRemote.sendText(output)
 							}
 						}
@@ -271,7 +274,7 @@ class JenService {
 			log.error "Problem communicating with ${jenserver + url}: ${e.message}", e
 		}
 
-		if (result) {
+		if (result && processurl) {
 			def http2 = hBuilder.httpConn(processurl,'','')
 			http2.request( POST ) { req ->
 				requestContentType = URLENC
