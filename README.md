@@ -100,20 +100,18 @@ GSP Page for build.gsp
 Configure properties by adding following to grails-app/conf/Config.groovy under the "jenkins" key:
 
 ```groovy
-
-
 /*
 * This is the most important configuration
 * in my current version the hostname is being defined by tomcat start up setenv.sh
 * In my tomcat setenv.sh I have
-* HOSTNAME=$(hostname)
+* HOSTNAME = $(hostname)
 * JAVA_OPTS="$JAVA_OPTS -DSERVERURL=$HOSTNAME"
 *
 * Now as per below the hostname is getting set to this value
 * if not defined wschat will default it localhost:8080
 *
 */
-jenkins.wshostname=System.getProperty('SERVERURL')+":8080"
+jenkins.wshostname = System.getProperty('SERVERURL')+":8080"
 // can be overridden via tag lib :  wshostname="something"
 
 
@@ -121,7 +119,7 @@ jenkins.wshostname=System.getProperty('SERVERURL')+":8080"
 * This is the default timeout value for websocket connection
 * If you wish to get user to be timed out if inactive set this to a millisecond value
 */
-jenkins.timeout=0
+jenkins.timeout = 0
 
 /*
 * Optional : not required - unless different to defaults
@@ -129,7 +127,7 @@ jenkins.timeout=0
 * choices : no/yes
 * Choose if default index page from plugin can be loaded
 */
-jenkins.hideLoginPage='no'
+jenkins.hideLoginPage = 'no'
 
 
 
@@ -137,7 +135,7 @@ jenkins.hideLoginPage='no'
 * Optional : not required - unless different to defaults
 * Jenkins internal consoleLog : default  '/consoleFull'
 */
-jenkins.consoleLog='/consoleFull'
+jenkins.consoleLog = '/consoleFull'
 // can be overridden via tag lib by definining: jensLog="something"
 
 
@@ -146,7 +144,7 @@ jenkins.consoleLog='/consoleFull'
 * Optional : not required - unless different to defaults
 * Jenkins internal buildend : default  '/build?delay=0sec'
 */
-jenkins.buildend='/build?delay=0sec'
+jenkins.buildend = '/build?delay=0sec'
 // can be overridden via tag lib : jensbuildend="something"
 
 
@@ -154,7 +152,7 @@ jenkins.buildend='/build?delay=0sec'
 * Optional : not required - unless different to defaults
 * Jenkins internal progressiveuri : default  '/logText/progressiveHtml'
 */
-jenkins.progressiveuri='/logText/progressiveHtml'
+jenkins.progressiveuri = '/logText/progressiveHtml'
 // can be overridden via tag lib : jensprogressive="something"
 
 
@@ -164,28 +162,28 @@ jenkins.progressiveuri='/logText/progressiveHtml'
 * choices : no/yes
 */
 
-jenkins.hideButtons='no'
+jenkins.hideButtons = 'no'
 
 /*
 * Optional : not required - unless different to defaults
 * Jenkins hide build button : default  'no'
 * choices : no/yes
 */
-jenkins.hideTriggerButton='no'
+jenkins.hideTriggerButton = 'no'
 
 /*
 * Optional : not required - unless different to defaults
 * Jenkins hide dashboard/buildhistory button : default  'no'
 * choices : no/yes
 */
-jenkins.hideDashBoardButton='no'
+jenkins.hideDashBoardButton = 'no'
 
 /*
 * Optional : your own custom processing url for when builds are triggered
 * provide a full url back to a controll action so that when it completes a build
 * notification is sent to controller and you can then call  further services on output
 */
-jenkins.processurl="http://localhost:8080/testjenkins/test/parseJenPlugin"
+jenkins.processurl = "http://localhost:8080/testjenkins/test/parseJenPlugin"
 
 
 /*
@@ -194,10 +192,13 @@ jenkins.processurl="http://localhost:8080/testjenkins/test/parseJenPlugin"
 * action button is provided
 * the process url could in theory call another end point to lets say jssh and do a live deployment
 */
-jenkins.wsprocessname="Deploy"
-jenkins.wsprocessurl="http://localhost:8080/testjenkins/test/parseJenPluginDeploy"
-//untested but theory if set to yes should autoo submit form to websocket process url 
-jenkins.autosubmit="yes"
+jenkins.wsprocessname = "Deploy"
+jenkins.wsprocessurl = "http://localhost:8080/testjenkins/test/parseJenPluginDeploy"
+
+
+
+// Auto submit wsprocess url ?
+jenkins.autosubmit = yes"
 
 
 
@@ -207,23 +208,23 @@ jenkins.autosubmit="yes"
 // and the ticket convention is as below appears in changes logs...
 // Then this enabled with the jira info below should mean your build history should appear 
 // under all logged tickets under changes screen of a given build id.
-jenkins.showhistory="yes"
+jenkins.showsummary = "yes"
 
 /*
 * Jira configuration - refer to summary section below:
 *  Don't enable any of this if you are not looking to push anything to Jira.
 */
-jenkins.sendtoJira='yes'
+jenkins.sendtoJira = 'yes'
 
-jenkins.jiraServer='http://jira-test.yourdomain.com'
-jenkins.jiraUser='automation_account'
-jenkins.jiraPass='automation_account_password'
+jenkins.jiraServer = 'http://jira-test.yourdomain.com'
+jenkins.jiraUser = 'automation_account'
+jenkins.jiraPass = 'automation_account_password'
 
 /*
 * This is the url usually to access the ticket for viewing - used to test if ticket is valid
 * if not defined will default to /browse/
 */
-jenkins.jira.AccessUri="/browse/"
+jenkins.jira.AccessUri = "/browse/"
 
 
 /* 
@@ -234,11 +235,24 @@ jenkins.jira.AccessUri="/browse/"
  * description -- updates ticket description with the summary
  * comdesc -- updates ticket description and adds a comment both containing the summary
  */
-jenkins.jiraSendType='customfield' 
+jenkins.jiraSendType = 'customfield' 
 // If you have defined working option customfield then define the customfield id for this configuration item:
-jenkins.customField='12330' // the id of your customfield
+jenkins.customField = '12330' // the id of your customfield
 
 
+
+/*
+* API ChangeSet - send this as part of summary?
+*/
+
+jenkins.sendChangeSet = true  // true/false - by default false
+
+
+/*
+* API culprits - send this as part of summary?
+*/
+
+jenkins.sendCulprits = true  // true/false - by default false
 ```
 
 

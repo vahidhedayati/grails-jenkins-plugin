@@ -222,8 +222,8 @@ class JenService {
 		String url=ubi+jensApi
 		
 		def config = grailsApplication.config.jenkins
-		String showhistory=config.showhistory?.toString() ?: ''
-		
+		String showsummary=config.showsummary
+		String jiraSendType=config.jiraSendType?.toString() ?: 'comment'
 		def http1 = hBuilder.httpConn(jenserver, jensuser, jenspass)
 		
 		try {
@@ -236,13 +236,12 @@ class JenService {
 					result = json.result
 					if (result && result != 'null') {
 						
-						// We have a result -->
-						// So lets check if user has enabled showhistory
+
+						// So lets check if user has enabled showsummary
 						// Load up build history which also calls jira calls if enabled
-				
 						
-						if (showhistory.toLowerCase().equals("yes")) {
-							def output=jenSummaryService.jenSummary(http1, jenserver, ubi)
+						if (showsummary.toLowerCase().equals("yes")) {
+							def output=jenSummaryService.jenSummary(http1, jenserver, ubi, jiraSendType)
 							if (userSession && output) { 
 								userSession.basicRemote.sendText(output)
 							}

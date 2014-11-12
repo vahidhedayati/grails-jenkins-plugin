@@ -61,7 +61,8 @@ class JenkinsEndPoint implements ServletContextListener {
 	private String userbase = '/user/'
 	private String userend = '/configure'
 	private String consoleText = '/consoleText'
-
+	private String changes = '/changes'
+	
 	RESTClient http
 
 	void contextInitialized(ServletContextEvent event) {
@@ -142,11 +143,46 @@ class JenkinsEndPoint implements ServletContextListener {
 		if (cmd.equals('parseHistory')) {
 			if (data.bid) {
 				clearPage(userSession)
-				def output=jenSummaryService.jenSummary(http,jenserver,data.bid)
-				userSession.basicRemote.sendText(output)
+				def output=jenSummaryService.jenSummary(http,jenserver,data.bid,'none')
+				if (output) {
+					userSession.basicRemote.sendText(output)
+				}
 			}
 		}
-
+		
+		if (cmd.equals('parseFiles')) {
+			if (data.bid) {
+				clearPage(userSession)
+				def output=jenSummaryService.generatedFiles(http,jenserver,data.bid)
+				if (output) {
+					output.each { op->
+						userSession.basicRemote.sendText("Produced: ${op} \n")
+					}
+				}
+			}
+		}
+		
+		if (cmd.equals('parseChanges')) {
+			if (data.bid) {
+				clearPage(userSession)
+				def output=jenSummaryService.parseChanges(http,data.bid+changes)
+				if (output) {
+					userSession.basicRemote.sendText("${output}")
+				}
+			}
+		}
+		
+		
+		if (cmd.equals('parseSendHistory')) {
+			if (data.bid && data.jiraSendType) {
+				clearPage(userSession)
+				def output=jenSummaryService.jenSummary(http,jenserver,data.bid,data.jiraSendType)
+				if (output) {
+					userSession.basicRemote.sendText(output)
+				}
+			}
+		}
+		
 		if (cmd.equals('stopBuild')) {
 			if (data.bid) {
 				jenService.jobControl(jenService.stripDouble(data.bid+'/stop'),data.bid,jenserver, jensuser, jenspass)

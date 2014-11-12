@@ -121,24 +121,54 @@ resize:both;
 
 .failed {
 	background: #FFB2B2;
+	border-style: solid;
+border-width: thin;
+border-color: black;
 }
 
 .queued {
 	background: #CCEBCC;
+	border-style: solid;
+	border-width: thin;
+	border-color: black;
 }
 
 .cancelled {
 	background: #FFD6AD;
+	border-style: solid;
+	border-width: thin;
+	border-color: black;
 }
 
 .building {
 	background:#B2E0FF;
+	border-style: solid;
+	border-width: thin;
+	border-color: black;
 }
+
 
 .queued {
 	background:#EEE;
+	border-style: solid;
+	border-width: thin;
+	border-color: black;
+}
+.passed {
+	border-style: solid;
+	border-width: thin;
+	border-color: black;
+}
+.heading {
+	font-size: 1.1em;
 }
 
+.jira {
+ background:#FFEEDD;
+}
+.summary {
+ background:#CCDDEE;
+}
 </style>
 	<body>
 	<div style="clear:both;"></div>
@@ -311,7 +341,7 @@ function processMessage${divId}(message) {
 			jsonData.historyQueue.forEach(function(entry) {
 				switch(entry.bstatus) {
 					case 'queued':
-						sb.push('\n<li class='+entry.bstatus+' >'+entry.jobid+' : <small>has been queued | <a onclick="javascript:cancelQueue${divId}('+wrapIt(entry.bid)+');">CANCEL</a></small>\n</li>');			
+						sb.push('\n<li class='+entry.bstatus+' ><span class="heading">'+entry.jobid+' : <small>has been queued |</span> <a onclick="javascript:cancelQueue${divId}('+wrapIt(entry.bid)+');">CANCEL</a></small>\n</li>');			
 						break;
 					case 'building':
 						///sb.push('\n<li class='+entry.bstatus+'><a onclick="javascript:viewHistory${divId}('+wrapIt(entry.bid)+');">'+entry.jobid+' : <small>'+entry.bstatus+'</small></a>\n');
@@ -334,23 +364,33 @@ function processMessage${divId}(message) {
 				var cclass=''
 					switch(entry.bstatus) {
 						case 'passed':
-							sb.push('\n<li class='+entry.bstatus+'><a onclick="javascript:viewHistory${divId}('+wrapIt(entry.bid)+');">'+entry.jobid+' : ');
-							sb.push('<small>'+entry.bstatus+' '+entry.bdate+'</small></a>');
-							sb.push(' <small>| <a onclick="javascript:parseHistory${divId}('+wrapIt(entry.bid)+');">SUMMARY</a></small>');
+							sb.push('\n<li class='+entry.bstatus+'><span class="heading"><a onclick="javascript:viewHistory${divId}('+wrapIt(entry.bid)+');">'+entry.jobid+' : ');
+							sb.push('<small>'+entry.bstatus+' '+entry.bdate+'</small></span></a>');
+							sb.push(' <br><small><span class="summary">SUMMARY: <a onclick="javascript:parseHistory${divId}('+wrapIt(entry.bid)+');">View</a> |');
+							sb.push(' <a onclick="javascript:parseFiles${divId}('+wrapIt(entry.bid)+');">Files</a> | ');
+							sb.push(' <a onclick="javascript:parseChanges${divId}('+wrapIt(entry.bid)+');">Changes</a> | ');
+							sb.push('</span>');
+							sb.push('<br><span class="jira"> JIRA: | ');
+							sb.push('<a onclick="javascript:parseSendHistory${divId}('+wrapIt(entry.bid)+', \'customfield\');">UpdateField</a> | ');
+							sb.push('<a onclick="javascript:parseSendHistory${divId}('+wrapIt(entry.bid)+', \'updatecustomfield\');">Add2Field</a> | ');
+							sb.push('<a onclick="javascript:parseSendHistory${divId}('+wrapIt(entry.bid)+', \'comment\');">Comment</a>');							
+							sb.push(' | </span></small>');
+
+																
 							sb.push('\n</li>');
 							break;
 						//case 'queued':
-						//	sb.push('\n<li class='+entry.bstatus+' >'+entry.jobid+' : <small>has been queued | <a onclick="javascript:cancelQueue${divId}('+wrapIt(entry.bid)+');">CANCEL</a></small>\n</li>');			
+						//	sb.push('\n<li class='+entry.bstatus+' ><span class="heading">'+entry.jobid+' : <small>has been queued </span>| <a onclick="javascript:cancelQueue${divId}('+wrapIt(entry.bid)+');">CANCEL</a></small>\n</li>');			
 						//	break;
 						case 'failed':
-							sb.push('\n<li class='+entry.bstatus+'><a onclick="javascript:viewHistory${divId}('+wrapIt(entry.bid)+');">'+entry.jobid+' : ');
-							sb.push('<small>'+entry.bstatus+' '+entry.bdate+'</small></a>');
+							sb.push('\n<li class='+entry.bstatus+'><span class="heading"><a onclick="javascript:viewHistory${divId}('+wrapIt(entry.bid)+');">'+entry.jobid+' : ');
+							sb.push('<small>'+entry.bstatus+' '+entry.bdate+'</small></span></a>');
 							//sb.push(' | Other Act');
 							sb.push('\n</li>');						
 							break;
 						case 'building':
-							sb.push('\n<li class='+entry.bstatus+'><a onclick="javascript:viewHistory${divId}('+wrapIt(entry.bid)+');">'+entry.jobid+' : <small>'+entry.bstatus+' '+entry.bdate+'</small></a>\n');
-							sb.push('\n<a onclick="javascript:stopBuild${divId}('+wrapIt(entry.bid)+');"><small>STOP</small></a>\n');
+							sb.push('\n<li class='+entry.bstatus+'><span class="heading"><a onclick="javascript:viewHistory${divId}('+wrapIt(entry.bid)+');">'+entry.jobid+' : <small>'+entry.bstatus+' '+entry.bdate+'</small></a>\n');
+							sb.push('\n<a onclick="javascript:stopBuild${divId}('+wrapIt(entry.bid)+');"></span><small>STOP</small></a>\n');
 							sb.push('<br/><small><span id="BuildEstimation${divId}" class="redfont">');
 							sb.push('<div class="jbutton">Estimated Time:');
 							sb.push('<span id="hoursBox${divId}"></span>:');
@@ -364,7 +404,7 @@ function processMessage${divId}(message) {
 							//},600);			
 							break;
 						case 'cancelled':
-							sb.push('\n<li class='+entry.bstatus+' ><a onclick="javascript:viewHistory${divId}('+wrapIt(entry.bid)+');">'+entry.jobid+' : <small>'+entry.bstatus+' '+entry.bdate+'</small></a>\n</li>');
+							sb.push('\n<li class='+entry.bstatus+' ><span class="heading"><a onclick="javascript:viewHistory${divId}('+wrapIt(entry.bid)+');">'+entry.jobid+' : <small>'+entry.bstatus+' '+entry.bdate+'</small></span></a>\n</li>');
 							break;			
 					}			
 			});
@@ -380,6 +420,22 @@ function processMessage${divId}(message) {
 function parseHistory${divId}(bid) {
 	webSocket${divId}.send(JSON.stringify({'cmd': 'parseHistory', 'bid': bid }));
 }
+
+function parseFiles${divId}(bid) {
+	webSocket${divId}.send(JSON.stringify({'cmd': 'parseFiles', 'bid': bid }));
+}
+
+function parseChanges${divId}(bid) {
+	webSocket${divId}.send(JSON.stringify({'cmd': 'parseChanges', 'bid': bid }));
+}
+
+function parseSendHistory${divId}(bid,jiraSendType) {
+	webSocket${divId}.send(JSON.stringify({'cmd': 'parseSendHistory', 'bid': bid, 'jiraSendType' : jiraSendType }));
+}
+
+
+
+	
 
 function cdtd${divId}() {
 	var future = new Date(iDate${divId});
