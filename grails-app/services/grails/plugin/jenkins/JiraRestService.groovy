@@ -14,16 +14,16 @@ import groovyx.net.http.RESTClient
 class JiraRestService {
 
 	def grailsApplication
-	
+
 	/* TODO - let otherside be variable if not provided set defaults
-	private Map config = grailsApplication.config.jenkins
-	private String jiraServer = config.jiraServer
-	private String jiraUser = config.jiraUser
-	private String jiraPass = config.jiraPass
-	private String jiraSendType = config.jiraSendType
-	private String jiracustomField = config.customField
-	*/
-	
+	 private Map config = grailsApplication.config.jenkins
+	 private String jiraServer = config.jiraServer
+	 private String jiraUser = config.jiraUser
+	 private String jiraPass = config.jiraPass
+	 private String jiraSendType = config.jiraSendType
+	 private String jiracustomField = config.customField
+	 */
+
 	static transactional = false
 
 	private String jrapi = '/rest/api/2/issue/'
@@ -61,18 +61,34 @@ class JiraRestService {
 			ArrayList jiraticket, String customfield, String input1) {
 
 		jiraticket.each { jt ->
-
+			def today = new Date()
 			def current=viewCustomField(jiraserver,jirauser,jirapass,jt,customfield)
 
-			if (input1 != current) {
-				def today = new Date()
-				input1=current+"\n----------------------${today}--------------------------\n"+input1
+			if (current.toString().contains("[AUTOMATION]")) {
+				def centry=current.toString().split(/\n\[AUTOMATION\](.*)\n/)
+				boolean go=true
+				centry.each { cent ->
+					if (input1==cent) {
+						go=false
+						println "Summary information block found not adding again"
+					}
+				}
+				if (go) {
+					log.info "Adding New entry ${input1}"
+					input1=current+"\n[AUTOMATION]----------------------${today}--------------------------\n"+input1
+					def myMap=[ "fields":[ "customfield_${customfield}": "$input1" ] ]
+					updateJira(jiraserver, jirauser, jirapass, jrapi+jt, myMap)
+				}
+			}else{
+
+				if (input1==current) {
+					input1=current+"\n[AUTOMATION]----------------------${today}--------------------------\n"+input1
+					def myMap=[ "fields":[ "customfield_${customfield}": "$input1" ] ]
+					updateJira(jiraserver, jirauser, jirapass, jrapi+jt, myMap)
+				}else{
+					log.info  "customField Append Entry matches existing entry not adding again"
+				}
 			}
-
-			def myMap=[ "fields":[ "customfield_${customfield}": "$input1" ] ]
-
-			updateJira(jiraserver, jirauser, jirapass, jrapi+jt, myMap)
-
 		}
 	}
 
