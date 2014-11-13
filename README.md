@@ -200,7 +200,7 @@ jenkins.wsprocessurl = "http://localhost:8080/testjenkins/test/parseJenPluginDep
 
 
 // Auto submit wsprocess url ?
-jenkins.autosubmit = yes"
+jenkins.autosubmit = "yes"
 
 
 
