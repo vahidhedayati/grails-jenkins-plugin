@@ -327,7 +327,9 @@ class JenSummaryService {
 		}
 
 		if (output && output =~ /[A-z]+\-[0-9]+/)  {
-			jiraTicket.add(output)
+			if (!jiraTicket.contains(output)) { 
+				jiraTicket.add(output)
+			}
 		}
 		else{
 			output="undefined"
