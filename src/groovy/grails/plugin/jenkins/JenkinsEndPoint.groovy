@@ -54,7 +54,7 @@ class JenkinsEndPoint implements ServletContextListener {
 
 	private String customParams,jensbuildend, jensprogressive, jensconlog, jensurl, jenserver, jensuser, jenspass, jenschoice, jensconurl = ''
 	private String processurl, wsprocessurl, wsprocessname = ''
-	 
+
 
 
 	private String jensApi = '/api/json'
@@ -62,7 +62,7 @@ class JenkinsEndPoint implements ServletContextListener {
 	private String userend = '/configure'
 	private String consoleText = '/consoleText'
 	private String changes = '/changes'
-	
+
 	RESTClient http
 
 	void contextInitialized(ServletContextEvent event) {
@@ -100,12 +100,12 @@ class JenkinsEndPoint implements ServletContextListener {
 		jsessions.add(userSession)
 
 		def ctx = SCH.servletContext.getAttribute(GA.APPLICATION_CONTEXT)
-		
+
 		jenService = ctx.jenService
 		//hBuilderService = ctx.hBuilderService
 		jiraRestService = ctx.jiraRestService
 		jenSummaryService = ctx.jenSummaryService
-		
+
 		def grailsApplication = ctx.grailsApplication
 		config = grailsApplication.config.jenkins
 	}
@@ -149,7 +149,7 @@ class JenkinsEndPoint implements ServletContextListener {
 				}
 			}
 		}
-		
+
 		if (cmd.equals('parseFiles')) {
 			if (data.bid) {
 				clearPage(userSession)
@@ -161,7 +161,7 @@ class JenkinsEndPoint implements ServletContextListener {
 				}
 			}
 		}
-		
+
 		if (cmd.equals('parseChanges')) {
 			if (data.bid) {
 				clearPage(userSession)
@@ -171,8 +171,8 @@ class JenkinsEndPoint implements ServletContextListener {
 				}
 			}
 		}
-		
-		
+
+
 		if (cmd.equals('parseSendHistory')) {
 			if (data.bid && data.jiraSendType) {
 				clearPage(userSession)
@@ -182,7 +182,7 @@ class JenkinsEndPoint implements ServletContextListener {
 				}
 			}
 		}
-		
+
 		if (cmd.equals('stopBuild')) {
 			if (data.bid) {
 				jenService.jobControl(jenService.stripDouble(data.bid+'/stop'),data.bid,jenserver, jensuser, jenspass)
@@ -252,7 +252,7 @@ class JenkinsEndPoint implements ServletContextListener {
 	}
 
 
-	
+
 	private void parseJobConsole(Session userSession, String url, String bid) {
 		// Send user confirmation that you are going to parse Jenkins job
 		userSession.basicRemote.sendText("\nAbout to parse ${url}\n")
@@ -262,7 +262,7 @@ class JenkinsEndPoint implements ServletContextListener {
 		// If we have a class of console output then set start1 to true
 		// This means the job has actually finished building and jenkins content is now static
 
-		if (html."**".findAll{ it.@class.toString().contains("console-output") || 
+		if (html."**".findAll{ it.@class.toString().contains("console-output") ||
 			it.@href.toString().contains("consoleText")}) {
 			start1=true
 		}
@@ -483,9 +483,9 @@ Currently connected to : $job running on $server
 			log.error "Problem communicating with ${url}: ${e.message}", e
 		}
 	}
-	
-	
-	
+
+
+
 
 	private String getLastBuild(String url) {
 		String bid = ""

@@ -2,6 +2,7 @@ package grails.plugin.jenkins
 
 import static groovyx.net.http.ContentType.*
 import static groovyx.net.http.Method.*
+import grails.converters.JSON
 import groovy.json.JsonBuilder
 import groovyx.net.http.HttpResponseDecorator
 import groovyx.net.http.HttpResponseException
@@ -14,9 +15,9 @@ class JenService {
 	static transactional = false
 	def grailsApplication
 	//def hBuilderService
-	
+
 	def jenSummaryService
-	
+
 	HBuilder hBuilder=new HBuilder()
 
 	private String jensApi = '/api/json'
@@ -116,8 +117,8 @@ class JenService {
 
 	}
 
-	def asyncBuilder(String jensurl, String jenserver, String jensuser, 
-		String jenspass,  String processurl, String customParams) {
+	def asyncBuilder(String jensurl, String jenserver, String jensuser,
+			String jenspass,  String processurl, String customParams) {
 
 		def config = grailsApplication.config.jenkins
 		def jensbuildend = config.jensbuildend  ?: '/build?delay=0sec'
@@ -210,8 +211,8 @@ class JenService {
 	// api page and once it has a result it will return this back to your own
 	// defined processcontrol url.
 	def workOnBuild(Session userSession, String processurl, String wsprocessurl,
-		 String wsprocessname, int bid,String uri, String jenserver, String jensuser,
-		  String jenspass, String customParams,	String jensurl, String jensApi) {
+			String wsprocessname, int bid,String uri, String jenserver, String jensuser,
+			String jenspass, String customParams,	String jensurl, String jensApi) {
 
 		boolean go = false
 		def result
@@ -220,12 +221,12 @@ class JenService {
 
 		def ubi=stripDouble(uri+"/"+bid.toString())
 		String url=ubi+jensApi
-		
+
 		def config = grailsApplication.config.jenkins
 		String showsummary=config.showsummary
 		String jiraSendType=config.jiraSendType?.toString() ?: 'comment'
 		def http1 = hBuilder.httpConn(jenserver, jensuser, jenspass)
-		
+
 		try {
 
 			while (!go && a < max) {
@@ -235,19 +236,27 @@ class JenService {
 				http1.get(path: "${url}") { resp, json ->
 					result = json.result
 					if (result && result != 'null') {
-						
+
 
 						// So lets check if user has enabled showsummary
 						// Load up build history which also calls jira calls if enabled
-						
+
 						if (showsummary.toLowerCase().equals("yes")) {
-							def output=jenSummaryService.jenSummary(http1, jenserver, ubi, jiraSendType)
-							if (userSession && output) { 
+							def output=jenSummaryService?.jenSummary(http1, jenserver, ubi, jiraSendType)
+							if (userSession && output) {
 								userSession.basicRemote.sendText(output)
 							}
 						}
-						
+
 						if (userSession && wsprocessurl) {
+
+							def files=jenSummaryService?.generatedFiles(http1,jenserver,ubi)
+							def myFiles=[:]
+							files.each {k,v ->
+								//	myFiles += [file:[type: k,name:v]]
+								myFiles += [type: k,name:v]
+							}
+
 							def ajson = new JsonBuilder()
 							ajson.feedback{
 								delegate.wsprocessurl "$wsprocessurl"
@@ -260,6 +269,7 @@ class JenService {
 								delegate.user "${jensuser}"
 								delegate.token "${jenspass}"
 								delegate.job "${jensurl}"
+								delegate.files "${myFiles as JSON}"
 							}
 							userSession.basicRemote.sendText(ajson.toString())
 						}

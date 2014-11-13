@@ -1,8 +1,8 @@
-jenkins 0.1
+jenjir 0.1
 =========
 
 
-Grails Jenkins plugin, will interact with Jenkins front end html interface using HTTPBuilder and push summary information to Jira if configured.
+Grails Jenjir plugin, will interact with Jenkins front end html interface using HTTPBuilder and push summary information to Jira if configured.
 
 You can use websocket feature to watch live builds / view historical build information or trigger a background process that will do the build. So long as userID is provided and Jenkins has authentication enabled, it will attempt to log in as that user without a password (by grabbing token off of Jenkins) This in short means you now have visibility of who triggered a build via Jenkins.
 
@@ -477,6 +477,17 @@ This is our example parseJenplugin call, the results are actually in JSON format
 ```groovy
 def parseJenPlugin() { 
 		println ":::> ${params} <:::"
+		
+		// Retrieve created build files using this method: 
+		if (params.files) {
+			JSONObject files1=JSON.parse(params.files)
+			files1.each { k,v->
+				println "-- FILE_TYPE: $k ||| FILE_NAME: $v"
+	
+			}
+		}
+		
+		
 		def pp=params.customParams
 		def apps
 		if (pp) {
@@ -494,7 +505,7 @@ def parseJenPlugin() {
 					
 					which has produced:
 					
-					:::> [result:SUCCESS, token:9cf496bb07021a1d788f8838159291cf, buildUrl:http://localhost:9090/job/my_build/182, customParams:{appId=123, appName=crazyApp, appEnv=test}, buildId:182, job:/job/my_build, server:http://localhost:9090, user:cc, action:parseJenPlugin, format:null, controller:test] <:::
+					:::>[files:{"type":"WAR","name":"target/testmodaldynamix-0.1.war"},result:SUCCESS, token:9cf496bb07021a1d788f8838159291cf, buildUrl:http://localhost:9090/job/my_build/182, customParams:{appId=123, appName=crazyApp, appEnv=test}, buildId:182, job:/job/my_build, server:http://localhost:9090, user:cc, action:parseJenPlugin, format:null, controller:test] <:::
 --- Our Custom values passed from initial taglib call are:
  AppID: 123 | AppName: crazyApp | AppEnv: test
 

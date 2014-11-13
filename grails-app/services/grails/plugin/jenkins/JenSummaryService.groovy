@@ -57,7 +57,7 @@ class JenSummaryService {
 
 			boolean sendChanges = isConfigEnabled(config?.sendChanges.toString())
 			boolean sendApi = isConfigEnabled(config?.sendApi.toString())
-			boolean sendParseConsole = isConfigEnabled(config?.sendParsedConsole.toString())
+			boolean sendParseConsole = isConfigEnabled(config?.sendParseConsole.toString())
 
 			String changes,jobstat,jobconsole=''
 
@@ -243,6 +243,7 @@ class JenSummaryService {
 		boolean parseLastTrans = isConfigEnabled(config?.parseLastTrans.toString())
 
 		def builds=[]
+
 		try {
 			http.request(Method.GET, ContentType.TEXT) { req ->
 				uri.path = bid+consoleText
@@ -300,6 +301,7 @@ class JenSummaryService {
 				createdFiles.put(matcher[0][2],matcher[0][3])
 			}
 		}
+
 		// Last transaction ID - is a block that is returned in Jenkins
 		// May not apply to all types of logs
 		if (parseLastTrans) {

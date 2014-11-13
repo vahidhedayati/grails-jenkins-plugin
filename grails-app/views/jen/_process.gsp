@@ -179,7 +179,11 @@ border-color: black;
 		<div class="container">
 			<g:if test="${((!hideTriggerButton) || (!hideTriggerButton.toLowerCase().equals('yes')))}">
 				
-				<a class="jbutton" onclick="javascript:newBuild${divId}('build');">Trigger a build</a> 
+				<a class="jbutton" onclick="javascript:newBuild${divId}('build');">Build
+				<g:if test="${wsprocessname}">
+				&amp; ${wsprocessname}
+				</g:if>
+				</a> 
 			</g:if>
 			<g:if test="${((!hideDashBoardButton) || (!hideDashBoardButton.toLowerCase().equals('yes')))}">	
 				<a class="jbutton" onclick="javascript:newBuild${divId}('dashboard');">Dashboard</a>
@@ -283,6 +287,8 @@ function processMessage${divId}(message) {
 			var customParams = JSON.stringify(jsonData.feedback.customParams);
 			var job = JSON.stringify(jsonData.feedback.job);
 			var server = JSON.stringify(jsonData.feedback.server);
+
+			
 			var sb = [];
 			var formId="submitForm${divId}"
 			sb.push('<form method="post" id='+formId+' name='+formId+' action='+wsprocessurl+'>');
@@ -294,6 +300,7 @@ function processMessage${divId}(message) {
 			sb.push('<input type="hidden" name="customParams" value='+customParams+'>');
 			sb.push('<input type="hidden" name="job" value='+job+'>');
 			sb.push('<input type="hidden" name="server" value='+server+'>');
+			sb.push('<input type="hidden" name="files" value='+jsonData.feedback.files+'>');
 			sb.push('<input type="submit" name="doit" value='+wsprocessname+'>');
 			sb.push('</form>');
 			var autoSubmit="${autoSubmit}";

@@ -69,9 +69,9 @@ class JiraRestService {
 				boolean go=true
 				centry.each { cent ->
 					if (input1==cent) {
-					//if (input1.toString().trim().equals(cent.toString().trim())) {
+						//if (input1.toString().trim().equals(cent.toString().trim())) {
 						go=false
-						println "Summary information block found not adding again"
+						log.error "Summary information block found not adding again"
 					}
 				}
 				if (go) {
@@ -83,12 +83,12 @@ class JiraRestService {
 			}else{
 
 				if (input1!=current) {
-				//if (input1.toString().trim().equals(current.toString().trim())) {
+					//if (input1.toString().trim().equals(current.toString().trim())) {
 					String finalinput=current+"\n[AUTOMATION]----------------------${today}--------------------------\n"+input1
 					def myMap=[ "fields":[ "customfield_${customfield}": "$finalinput" ] ]
 					updateJira(jiraserver, jirauser, jirapass, jrapi+jt, myMap)
 				}else{
-					log.info  "customField Append Entry matches existing entry not adding again"
+					log.error  "customField Append Entry matches existing entry not adding again"
 				}
 			}
 		}
