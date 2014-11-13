@@ -336,7 +336,7 @@ customParams - if you have configured a processurl in your config you can pass v
 
 Results are typically returned to process url like this:
 ```
-[result:SUCCESS, token:9cf496bb07021a1d788f8838159291cf, buildUrl:http://localhost:9090/job/my_build/175, customParams:{appId=123, appName=crazyApp, appEnv=test}, buildId:175, job:/job/my_build, server:http://localhost:9090, user:cc, action:parseJenPlugin, format:null, controller:test]
+[files:{"type":"WAR","name":"target/testmodaldynamix-0.1.war"},result:SUCCESS, token:9cf496bb07021a1d788f8838159291cf, buildUrl:http://localhost:9090/job/my_build/175, customParams:{appId=123, appName=crazyApp, appEnv=test}, buildId:175, job:/job/my_build, server:http://localhost:9090, user:cc, action:parseJenPlugin, format:null, controller:test]
 ```
 
 ##### Refer further down on information on how to retrieve customParams
