@@ -478,7 +478,16 @@ This is our example parseJenplugin call, the results are actually in JSON format
 def parseJenPlugin() { 
 		println ":::> ${params} <:::"
 		
-		// Retrieve created build files using this method: 
+		// This is an example itterating through files:
+		// files:{"type":"WAR","name":"target/testmodaldynamix-0.1.war"}
+		// where key will be type or name
+		// value will by type of file and file name as per jenkins output in the build logs.
+		// you may wish to set :
+		// jenkins.parseBuildingWorkSpace = false
+		//jenkins.parseBuilding = false
+		// in config.groovy so that Building files also do not appear in :
+		//jenkins.parseDoneCreating = true
+
 		if (params.files) {
 			JSONObject files1=JSON.parse(params.files)
 			files1.each { k,v->
