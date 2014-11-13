@@ -68,8 +68,8 @@ class JiraRestService {
 				def centry=current.toString().split(/\n\[AUTOMATION\](.*)\n/)
 				boolean go=true
 				centry.each { cent ->
-					//if (input1==cent) {
-					if (input1.toString().trim().equals(cent.toString().trim())) {
+					if (input1==cent) {
+					//if (input1.toString().trim().equals(cent.toString().trim())) {
 						go=false
 						println "Summary information block found not adding again"
 					}
@@ -82,8 +82,8 @@ class JiraRestService {
 				}
 			}else{
 
-				//if (input1==current) {
-				if (input1.toString().trim().equals(current.toString().trim())) {
+				if (input1!=current) {
+				//if (input1.toString().trim().equals(current.toString().trim())) {
 					input1=current+"\n[AUTOMATION]----------------------${today}--------------------------\n"+input1
 					def myMap=[ "fields":[ "customfield_${customfield}": "$input1" ] ]
 					updateJira(jiraserver, jirauser, jirapass, jrapi+jt, myMap)
