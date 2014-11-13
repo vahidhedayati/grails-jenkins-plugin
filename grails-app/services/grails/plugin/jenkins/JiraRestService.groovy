@@ -76,16 +76,16 @@ class JiraRestService {
 				}
 				if (go) {
 					log.info "Adding New entry ${input1}"
-					input1=current+"\n[AUTOMATION]----------------------${today}--------------------------\n"+input1
-					def myMap=[ "fields":[ "customfield_${customfield}": "$input1" ] ]
+					String finalinput=current+"\n[AUTOMATION]----------------------${today}--------------------------\n"+input1
+					def myMap=[ "fields":[ "customfield_${customfield}": "$finalinput" ] ]
 					updateJira(jiraserver, jirauser, jirapass, jrapi+jt, myMap)
 				}
 			}else{
 
 				if (input1!=current) {
 				//if (input1.toString().trim().equals(current.toString().trim())) {
-					input1=current+"\n[AUTOMATION]----------------------${today}--------------------------\n"+input1
-					def myMap=[ "fields":[ "customfield_${customfield}": "$input1" ] ]
+					String finalinput=current+"\n[AUTOMATION]----------------------${today}--------------------------\n"+input1
+					def myMap=[ "fields":[ "customfield_${customfield}": "$finalinput" ] ]
 					updateJira(jiraserver, jirauser, jirapass, jrapi+jt, myMap)
 				}else{
 					log.info  "customField Append Entry matches existing entry not adding again"
