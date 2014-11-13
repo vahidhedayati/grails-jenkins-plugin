@@ -83,6 +83,16 @@ class JenTagLib {
 		String hideButtons = attrs.hideButtons ?: config.hideButtons ?: 'no'
 		String hideTriggerButton = attrs.hideTriggerButton ?: config.hideTriggerButton ?: 'no'
 		String hideDashBoardButton = attrs.hideDashBoardButton ?: config.hideDashBoardButton ?: 'no'
+		
+		String summaryViewButtons = attrs.summaryViewButtons ?: config.summaryViewButtons ?: 'yes'
+		String summaryFileButton = attrs.summaryFileButton ?: config.summaryFileButton ?: 'yes'
+		String summaryChangesButton = attrs.summaryChangesButton ?: config.summaryChangesButton ?: 'yes'
+		
+		String jiraButtons = attrs.jiraButtons ?: config.jiraButtons ?: 'yes'
+		String jiraOverwriteButton = attrs.jiraOverwriteButton ?: config.jiraOverwriteButton ?: 'yes'
+		String jiraAppendButton = attrs.jiraAppendButton ?: config.jiraAppendButton ?: 'yes'
+		String jiraCommentButton = attrs.jiraCommentButton ?: config.jiraCommentButton ?: 'yes'
+		
 
 		String appname = Metadata.current.getApplicationName()
 		def model = [hideButtons:hideButtons, hideTriggerButton:hideTriggerButton, hideDashBoardButton:hideDashBoardButton,
@@ -90,7 +100,11 @@ class JenTagLib {
 		             jensjob:attrs.jensjob, jensuser:jensuser, jenspass:jenspass, appname:appname, wshostname:wshostname,
 		             jenserver:jenserver, jensurl:jensurl, jensprogressive:jensprogressive, jensbuildend:jensbuildend,
 		             jensconlog:jensconlog, customParams:attrs.customParams,processurl:processurl,wsprocessurl:wsprocessurl,
-					 autoSubmit:autoSubmit, wsprocessname:wsprocessname]
+					 autoSubmit:autoSubmit, wsprocessname:wsprocessname,
+					 summaryViewButtons:summaryViewButtons,summaryFileButton:summaryFileButton,
+					 summaryChangesButton:summaryChangesButton,jiraButtons:jiraButtons,
+					 jiraOverwriteButton:jiraOverwriteButton,jiraAppendButton:jiraAppendButton,
+					 jiraCommentButton:jiraCommentButton]
 		if (template) {
 			out << g.render(template:template, model: model)
 		}else{
@@ -143,6 +157,13 @@ class JenTagLib {
 		String wsprocessurl = attrs.wsprocessurl ?: config.wsprocessurl
 		String wsprocessname = attrs.wsprocessname ?: config.wsprocessname
 		String autoSubmit = attrs.autosubmit ?: config.autosubmit ?:  'no'
+		String summaryViewButtons = attrs.summaryViewButtons ?: config.summaryViewButtons ?: 'yes'
+		String summaryFileButton = attrs.summaryFileButton ?: config.summaryFileButton ?: 'yes'
+		String summaryChangesButton = attrs.summaryChangesButton ?: config.summaryChangesButton ?: 'yes'		
+		String jiraButtons = attrs.jiraButtons ?: config.jiraButtons ?: 'yes'
+		String jiraOverwriteButton = attrs.jiraOverwriteButton ?: config.jiraOverwriteButton ?: 'yes'
+		String jiraAppendButton = attrs.jiraAppendButton ?: config.jiraAppendButton ?: 'yes'
+		String jiraCommentButton = attrs.jiraCommentButton ?: config.jiraCommentButton ?: 'yes'
 		
 		String appname = Metadata.current.getApplicationName()
 
@@ -150,7 +171,10 @@ class JenTagLib {
 		             jenschoice:jenschoice, divId:divId, jenfullserver:jensconurl, jensconurl:jensconurl, jensjob:attrs.jensjob,
 		             jensuser:jensuser, jenspass:jenspass, appname:appname, wshostname:wshostname, jenserver:jenserver,
 		             jensurl:jenspath, jensprogressive:jensprogressive, jensbuildend:jensbuildend, jensconlog:jensconlog, 
-					 autoSubmit:autoSubmit, customParams:attrs.customParams,processurl:processurl,wsprocessurl:wsprocessurl,wsprocessname:wsprocessname]
+					 autoSubmit:autoSubmit, customParams:attrs.customParams,processurl:processurl,wsprocessurl:wsprocessurl,
+					 wsprocessname:wsprocessname,summaryViewButtons:summaryViewButtons,summaryFileButton:summaryFileButton,
+					 summaryChangesButton:summaryChangesButton,jiraButtons:jiraButtons,jiraOverwriteButton:jiraOverwriteButton,jiraAppendButton:jiraAppendButton,
+					 jiraCommentButton:jiraCommentButton]
 		if (template) {
 			out << g.render(template:template, model: model)
 		}else{

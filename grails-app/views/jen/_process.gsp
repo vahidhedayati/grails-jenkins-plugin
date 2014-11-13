@@ -210,12 +210,23 @@ ${wshostname}
 </pre>
 
 
-<script>
+<g:javascript>
 var iDate${divId}='';
 var jed${divId}=0;
 function wrapIt(value) {
 	return "'"+value+"'"
 }
+
+// Various websocket buttons configured via config.groovy as jenkins.name below
+var summaryViewButtons="${summaryViewButtons }";
+var summaryFileButton="${summaryFileButton }";
+var summaryChangesButton="${summaryChangesButton }";
+
+var jiraButtons="${jiraButtons }";
+var jiraOverwriteButton="${jiraOverwriteButton }";
+var jiraAppendButton="${jiraAppendButton }";
+var jiraCommentButton="${jiraCommentButton }";
+// end buttons
 
 var hidebuildTimer="${hideBuildTimer}";
 
@@ -366,16 +377,30 @@ function processMessage${divId}(message) {
 						case 'passed':
 							sb.push('\n<li class='+entry.bstatus+'><span class="heading"><a onclick="javascript:viewHistory${divId}('+wrapIt(entry.bid)+');">'+entry.jobid+' : ');
 							sb.push('<small>'+entry.bstatus+' '+entry.bdate+'</small></span></a>');
-							sb.push(' <br><small><span class="summary">SUMMARY: <a onclick="javascript:parseHistory${divId}('+wrapIt(entry.bid)+');">View</a> |');
-							sb.push(' <a onclick="javascript:parseFiles${divId}('+wrapIt(entry.bid)+');">Files</a> | ');
-							sb.push(' <a onclick="javascript:parseChanges${divId}('+wrapIt(entry.bid)+');">Changes</a> | ');
-							sb.push('</span>');
-							sb.push('<br><span class="jira"> JIRA: | ');
-							sb.push('<a onclick="javascript:parseSendHistory${divId}('+wrapIt(entry.bid)+', \'customfield\');">UpdateField</a> | ');
-							sb.push('<a onclick="javascript:parseSendHistory${divId}('+wrapIt(entry.bid)+', \'updatecustomfield\');">Add2Field</a> | ');
-							sb.push('<a onclick="javascript:parseSendHistory${divId}('+wrapIt(entry.bid)+', \'comment\');">Comment</a>');							
-							sb.push(' | </span></small>');
-
+							if (summaryViewButtons == "yes") {
+								sb.push(' <br><small><span class="summary">SUMMARY: <a onclick="javascript:parseHistory${divId}('+wrapIt(entry.bid)+');">View</a> |');
+								if (summaryFileButton == "yes") {
+									sb.push(' <a onclick="javascript:parseFiles${divId}('+wrapIt(entry.bid)+');">Files</a> | ');
+								}
+								if (summaryChangesButton == "yes") {
+									sb.push(' <a onclick="javascript:parseChanges${divId}('+wrapIt(entry.bid)+');">Changes</a> | ');
+								}
+								sb.push('</span>');
+							}
+							if (jiraButtons == "yes") {
+								
+								sb.push('<br><span class="jira"> JIRA: | ');
+								if (jiraOverwriteButton == "yes") {
+									sb.push('<a onclick="javascript:parseSendHistory${divId}('+wrapIt(entry.bid)+', \'customfield\');">Overwrite Field</a> | ');
+								}
+								if (jiraAppendButton == "yes") {
+									sb.push('<a onclick="javascript:parseSendHistory${divId}('+wrapIt(entry.bid)+', \'updatecustomfield\');">Append Field</a> | ');
+								}
+								if (jiraCommentButton == "yes") {
+									sb.push('<a onclick="javascript:parseSendHistory${divId}('+wrapIt(entry.bid)+', \'comment\');">As Comment</a>');							
+								}
+								sb.push(' | </span></small>');
+							}
 																
 							sb.push('\n</li>');
 							break;
@@ -509,7 +534,7 @@ window.onbeforeunload = function() {
 	webSocket${divId}.onclose = function() { }
 	webSocket${divId}.close();
 }
-</script>
+</g:javascript>
 
 
 

@@ -242,19 +242,56 @@ jenkins.jiraSendType = 'customfield'
 jenkins.customField = '12330' // the id of your customfield
 
 
-
 /*
-* API ChangeSet - send this as part of summary?
+* API Api Info - send this as part of summary?
 */
-
+jenkins.sendApi = true  // true/false - by default false
+// SendApi - sub fields:
+/* API ChangeSet - send this as part of summary?*/
 jenkins.sendChangeSet = true  // true/false - by default false
-
+/*API culprits - send this as part of summary?*/
+jenkins.sendCulprits = true  // true/false - by default false
+/*API full display name - send this as part of summary?*/
+jenkins.sendFdn = true  // true/false - by default false
+/*API Build Id - send this as part of summary?*/
+jenkins.sendBuildId = true  // true/false - by default false
+/*API Build UserID/Name - send this as part of summary?*/
+jenkins.sendBuildUser = true  // true/false - by default false
 
 /*
-* API culprits - send this as part of summary?
+* Jenkins BuildID Change Logs - send this as part of summary?
 */
+jenkins.sendChanges = true  // true/false - by default false
 
-jenkins.sendCulprits = true  // true/false - by default false
+/*
+* Jenkins BuildID Specific parse Info - send this as part of summary?
+*/
+jenkins.sendParseConsole = true  // true/false - by default false
+/*LogParser Look for Building Work space ? send this as part of summary?*/
+jenkins.parseBuildingWorkSpace = true  // true/false - by default false
+/*LogParser Look for Building ? send this as part of summary?*/
+jenkins.parseBuilding = true  // true/false - by default false
+/*LogParser Look for Done Creating? send this as part of summary?*/
+jenkins.parseDoneCreating = true  // true/false - by default false
+/*LogParser Look for Last valid trans ? send this as part of summary?*/
+jenkins.parseLastTrans = true  // true/false - by default false
+
+
+/* Buttons on websocket page :
+* set these as you see here change to no if you wish 
+* not for them to appear on the webpage.
+* you can override these values from within either taglib call too
+*/
+jenkins.summaryViewButtons = "yes"
+jenkins.summaryFileButton = "yes"
+jenkins.summaryChangesButton = "yes"
+
+jenkins.jiraButtons = "yes"
+jenkins.jiraOverwriteButton = "yes"
+jenkins.jiraAppendButton = "yes"
+jenkins.jiraCommentButton = "yes"
+
+
 ```
 
 

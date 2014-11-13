@@ -55,17 +55,37 @@ class JenSummaryService {
 			//String url2 = jenserver+"/"+bid+consoleText
 			String cgurl=bid+changes
 
-			String jobstat=jobStatus(http,bid)
-			String jobconsole=definedParseJobConsole(http,bid)
-			String changes=parseChanges(http,cgurl)
+			boolean sendChanges = isConfigEnabled(config?.sendChanges.toString())
+			boolean sendApi = isConfigEnabled(config?.sendApi.toString())
+			boolean sendParseConsole = isConfigEnabled(config?.sendParsedConsole.toString())
 
+			String changes,jobstat,jobconsole=''
+
+			if (sendApi) {
+				jobstat=jobStatus(http,bid)
+			}
+
+			if (sendParseConsole) {
+				jobconsole=definedParseJobConsole(http,bid)
+			}
+
+			if (sendChanges) {
+				changes=parseChanges(http,cgurl)
+			}
 
 			StringBuilder sb=new StringBuilder()
 			for (int a=0; a < 30; a++) {
 				sb.append('-')
 			}
 			String sbb="\n"+sb.toString()+"\n"
-			output=jobstat+sbb+jobconsole+sbb+changes
+
+			if (jobstat) {
+				jobstat=jobstat+sbb
+			}
+			if (jobconsole) {
+				jobconsole=jobconsole+sbb
+			}
+			output=jobstat+jobconsole+changes
 
 			String sendtoJira = config.sendtoJira
 			if ((sendtoJira && sendtoJira.toLowerCase().equals('yes'))&&((sendSummary) && (!sendSummary.equals('none')))) {
@@ -106,6 +126,10 @@ class JenSummaryService {
 
 		boolean sendChangeSet = isConfigEnabled(config?.sendChangeSet.toString())
 		boolean sendCulprits = isConfigEnabled(config?.sendCulprits.toString())
+		boolean sendFdn = isConfigEnabled(config?.sendFdn.toString())
+		boolean sendBuildId = isConfigEnabled(config?.sendBuildId.toString())
+		boolean sendBuildUser = isConfigEnabled(config?.sendBuildUser.toString())
+
 
 		def changes=parseApiJson(http, uri + jensApi)
 
@@ -128,16 +152,16 @@ class JenSummaryService {
 				}
 			}
 
-			if (fdn) {
+			if (fdn&& sendFdn ) {
 				sb.append("$fdn $bdate\n")
 			}
 
-			if (buildId) {
+			if (buildId && sendBuildId) {
 				sb.append("Build_ID: $buildId\n")
 				sb.append("Status: $result\n")
 			}
 
-			if (userId) {
+			if (userId && sendBuildUser) {
 				sb.append("By: $userId $userName\n")
 			}
 
@@ -199,9 +223,8 @@ class JenSummaryService {
 			}
 
 			if (changeMap) {
-				String ls="\n---------------------------------------\n"
 				changeMap.eachWithIndex { entry,index ->
-					sb.append("${ls} ${index}> ${entry.cid} : ${entry.cinfo ?: 'No title'}\n${entry.message ?: 'No Message'}${ls}\n")
+					sb.append("\n\n${index}> ${entry.cid} : ${entry.cinfo ?: 'No title'}\n${entry.message ?: 'No Message'}\n")
 				}
 			}
 		}
@@ -212,6 +235,13 @@ class JenSummaryService {
 	// Returns Summary results
 	String definedParseJobConsole(RESTClient http, String bid) {
 		String workspace,ftype,file
+		def config = grailsApplication.config.jenkins
+
+		boolean parseBuildingWorkSpace = isConfigEnabled(config?.parseBuildingWorkSpace.toString())
+		boolean parseBuilding = isConfigEnabled(config?.parseBuilding.toString())
+		boolean parseDoneCreating = isConfigEnabled(config?.parseDoneCreating.toString())
+		boolean parseLastTrans = isConfigEnabled(config?.parseLastTrans.toString())
+
 		def builds=[]
 		try {
 			http.request(Method.GET, ContentType.TEXT) { req ->
@@ -220,7 +250,7 @@ class JenSummaryService {
 
 				response.success = { resp, reader ->
 					reader.text.eachLine {line ->
-						def results=(matchers(line))
+						def results=(matchers(line,parseBuildingWorkSpace,parseBuilding,parseDoneCreating,parseLastTrans))
 						if (results) {
 							builds.add(results)
 						}
@@ -243,44 +273,48 @@ class JenSummaryService {
 	}
 
 
-	private Map matchers (String line) {
+	private Map matchers (String line, boolean parseBuildingWorkSpace, boolean parseBuilding, boolean parseDoneCreating, boolean parseLastTrans) {
 		def bitem=[:]
 		def matcher
-
-		matcher = (line =~ /Building (.*?)(?: .*)? workspace (.*)/)
-		if (matcher.matches()){
-			bitem.put('workspace', matcher[0][2])
+		if (parseBuildingWorkSpace) {
+			matcher = (line =~ /Building (.*?)(?: .*)? workspace (.*)/)
+			if (matcher.matches()){
+				bitem.put('workspace', matcher[0][2])
+			}
 		}
 
-		matcher = (line =~ /(.*?)(?: .*)?Building (.*):(.*)/)
-		if (matcher.matches()){
-			//bitem.put('ftype', matcher[0][2])
-			bitem.put('file', matcher[0][3])
-			createdFiles.put(matcher[0][2],matcher[0][3])
+		if (parseBuilding) {
+			matcher = (line =~ /(.*?)(?: .*)?Building (.*):(.*)/)
+			if (matcher.matches()){
+				//bitem.put('ftype', matcher[0][2])
+				bitem.put('file', matcher[0][3])
+				createdFiles.put(matcher[0][2],matcher[0][3])
+			}
 		}
 
-
-		matcher = (line =~ /(.*?)(?: .*)?Done creating (.*) (.*)/)
-		if (matcher.matches()){
-			bitem.put('ftype', matcher[0][2])
-			bitem.put('file', matcher[0][3])
-			createdFiles.put(matcher[0][2],matcher[0][3])
+		if (parseDoneCreating) {
+			matcher = (line =~ /(.*?)(?: .*)?Done creating (.*) (.*)/)
+			if (matcher.matches()){
+				bitem.put('ftype', matcher[0][2])
+				bitem.put('file', matcher[0][3])
+				createdFiles.put(matcher[0][2],matcher[0][3])
+			}
 		}
-
-
 		// Last transaction ID - is a block that is returned in Jenkins
 		// May not apply to all types of logs
-		matcher = (line =~ /(.*?)Last valid trans (.*)/)
-		if (matcher.matches()){
-			def tid=matcher[0][2]
-			if (tid) {
-				tid=tid.toString().substring(1,tid.toString().length()-1)
-				def tid1=jenService.returnArrary(tid)
-				tid1.each {csv->
-					if (csv.toString() =~ /[A-z]+\=[A-z]+/) {
-						def (k,v) = csv.split('=')
-						if (k=="id") { k="Last_Transaction_ID: "}
-						bitem.put(k, v)
+		if (parseLastTrans) {
+			matcher = (line =~ /(.*?)Last valid trans (.*)/)
+			if (matcher.matches()){
+				def tid=matcher[0][2]
+				if (tid) {
+					tid=tid.toString().substring(1,tid.toString().length()-1)
+					def tid1=jenService.returnArrary(tid)
+					tid1.each {csv->
+						if (csv.toString() =~ /[A-z]+\=[A-z]+/) {
+							def (k,v) = csv.split('=')
+							if (k=="id") { k="Last_Transaction_ID: "}
+							bitem.put(k, v)
+						}
 					}
 				}
 			}
@@ -327,7 +361,7 @@ class JenSummaryService {
 		}
 
 		if (output && output =~ /[A-z]+\-[0-9]+/)  {
-			if (!jiraTicket.contains(output)) { 
+			if (!jiraTicket.contains(output)) {
 				jiraTicket.add(output)
 			}
 		}
