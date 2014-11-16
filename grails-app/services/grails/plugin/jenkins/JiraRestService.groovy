@@ -13,7 +13,7 @@ import groovyx.net.http.RESTClient
 
 class JiraRestService {
 
-	
+	def grailsApplication
 
 	/* TODO - let otherside be variable if not provided set defaults
 	 * def grailsApplication
@@ -28,7 +28,6 @@ class JiraRestService {
 	static transactional = false
 
 	private String jrapi = '/rest/api/2/issue/'
-
 
 	// Updates a given custom field with the provided value
 	def addCustomField(String jiraserver, String jirauser, String jirapass,
@@ -140,7 +139,7 @@ class JiraRestService {
 
 		try {
 			HBuilder hBuilder=new HBuilder()
-			RESTClient http = hBuilder.httpConn(jiraserver, jirauser, jirapass)
+			RESTClient http = hBuilder.httpConn(jiraserver, jirauser, jirapass,httpConnTimeOut,httpSockTimeOut)
 			http.request(Method.GET ) { req ->
 				uri.path = url
 				response.success = { resp, json ->
@@ -171,7 +170,7 @@ class JiraRestService {
 
 		try {
 			HBuilder hBuilder=new HBuilder()
-			RESTClient http = hBuilder.httpConn(jiraserver, jirauser, jirapass)
+			RESTClient http = hBuilder.httpConn(jiraserver, jirauser, jirapass,httpConnTimeOut,httpSockTimeOut)
 			http.request( PUT, ContentType.JSON ) { req ->
 				uri.path = url
 
@@ -189,7 +188,16 @@ class JiraRestService {
 		}
 	}
 
+	private int getHttpConnTimeOut() {
+		return config.http.connection.timeout ?: 10
+	}
 
+	private int getHttpSockTimeOut() {
+		return config.http.connection.timeout ?: 30
+	}
+	private getConfig() {
+		grailsApplication.config.jenkins
+	}
 
 }
 

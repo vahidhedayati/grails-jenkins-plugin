@@ -11,41 +11,46 @@ import org.apache.http.protocol.HttpContext
 
 class HBuilder {
 
-	static transactional = false
 
-
-	RESTClient httpConn(String host, String user, String key) {
+	RESTClient httpConn(String host, String user, String key, int cTimeOut, int sTimeOut) {
 		try {
-			return createRestClient(host, user ?: '', key ?: '')
+			return createRestClient(host, user ?: '', key ?: '',  cTimeOut, sTimeOut)
 		}
 		catch (e)  {
 			log.error("Failed error: $e", e)
 		}
 	}
 
-	HttpResponseDecorator httpConn(String type, String host, String uri, String user, String key) {
+	HttpResponseDecorator httpConn(String type, String host, String uri, String user, String key, int cTimeOut, int sTimeOut) {
 		try {
-			return createRestClient(host, user, key)."${type}"(path: uri)
+			return createRestClient(host, user, key, cTimeOut, sTimeOut)."${type}"(path: uri)
 		}
 		catch (e) {
 			log.error "Problem communicating with ${uri}: ${e.message}", e
 		}
 	}
 
-	HttpResponseDecorator httpConn(String type, String url, String user, String key) {
+	HttpResponseDecorator httpConn(String type, String url, String user, String key, int cTimeOut, int sTimeOut) {
 		try {
-			return createRestClient(url, user, key)."${type}"([:])
+			return createRestClient(url, user, key, cTimeOut, sTimeOut)."${type}"([:])
 		}
 		catch(e) {
 			log.error "Problem communicating with ${url}: ${e.message}", e
 		}
 	}
 
-	protected  RESTClient createRestClient(String url, String user, String key) {
+	protected  RESTClient createRestClient(String url, String user, String key, int cTimeOut, int sTimeOut) {
 		RESTClient http = new RESTClient(url)
+
+		int connTimeOut=cTimeOut * 1000
+		int sockTimeOut=sTimeOut * 1000
+		http.client.params.setParameter("http.connection.timeout", new Integer(connTimeOut))
+		http.client.params.setParameter("http.socket.timeout", new Integer(sockTimeOut))
+
 		if (user && key) {
 			http.client.addRequestInterceptor(new BasicAuthRequestInterceptor(user, key))
 		}
+
 		return http
 	}
 

@@ -46,8 +46,7 @@ class JenkinsEndPoint implements ServletContextListener {
 	private JiraRestService jiraRestService
 	//private GrailsApplication grailsApplication
 	private Map config
-	private int httpConnTimeOut = 10*1000
-	private int httpSockTimeOut = 30*1000
+
 
 
 	static final Set<Session> jsessions = ([] as Set).asSynchronized()
@@ -64,6 +63,11 @@ class JenkinsEndPoint implements ServletContextListener {
 	private String changes = '/changes'
 
 	RESTClient http
+
+	private int httpConnTimeOut
+	// = config.http.connection.timeout ?: 10
+	private int httpSockTimeOut
+	// = config.http.connection.timeout ?: 30
 
 	void contextInitialized(ServletContextEvent event) {
 		ServletContext servletContext = event.servletContext
@@ -108,6 +112,9 @@ class JenkinsEndPoint implements ServletContextListener {
 
 		def grailsApplication = ctx.grailsApplication
 		config = grailsApplication.config.jenkins
+
+		httpConnTimeOut = config.http.connection.timeout ?: 10
+		httpSockTimeOut = config.http.connection.timeout ?: 30
 	}
 
 	@OnMessage
@@ -116,6 +123,7 @@ class JenkinsEndPoint implements ServletContextListener {
 		if (!data) {
 			return
 		}
+
 		String cmd = data.cmd
 		if (cmd.equals('connect')) {
 			jenserver = data.jenserver
@@ -238,7 +246,7 @@ class JenkinsEndPoint implements ServletContextListener {
 			userSession.basicRemote.sendText('JenkinsConnect failed to connect to: '+jensconurl)
 			return
 		}
-		http = hBuilder.httpConn(jenserver, jensuser, jenspass)
+		http = hBuilder.httpConn(jenserver, jensuser, jenspass,httpConnTimeOut,httpSockTimeOut)
 
 		userSession.basicRemote.sendText('Jenkins plugin connected to: ' + jensconurl)
 		// try to get apiToken if only user has provided
@@ -251,7 +259,7 @@ class JenkinsEndPoint implements ServletContextListener {
 	private void parseJobConsole(Session userSession, String url, String bid) {
 		// Send user confirmation that you are going to parse Jenkins job
 		userSession.basicRemote.sendText("\nAbout to parse ${url}\n")
-		HttpResponseDecorator html1 = hBuilder.httpConn('get', jenserver, url, jensuser, jenspass)
+		HttpResponseDecorator html1 = hBuilder.httpConn('get', jenserver, url, jensuser, jenspass,httpConnTimeOut,httpSockTimeOut)
 		def html = html1?.data
 		boolean start, start1 = false
 		// If we have a class of console output then set start1 to true
@@ -298,9 +306,9 @@ class JenkinsEndPoint implements ServletContextListener {
 				}
 			}else{
 				//if (html."**".findAll{ it.@href.toString().contains("consoleText")}) {
-					String uri=jenService.stripDouble("${bid}${consoleText}")
-					HttpResponseDecorator html2= http.get(path: "${uri}")
-					userSession.getBasicRemote().sendText(html2?.data.text.toString())
+				String uri=jenService.stripDouble("${bid}${consoleText}")
+				HttpResponseDecorator html2= http.get(path: "${uri}")
+				userSession.getBasicRemote().sendText(html2?.data.text.toString())
 
 				//}
 			}
@@ -479,7 +487,7 @@ Currently connected to : $job running on $server
 		}
 	}
 
-	
+
 	/*
 	 * Parse Jenkins API url - grab all but only using a few json values
 	 *  to calculate estimated duration of build
@@ -500,7 +508,7 @@ Currently connected to : $job running on $server
 		def csize, consoleAnnotator
 		String ssize = ''
 		userSession.basicRemote.sendText("Attempting live poll")
-		def http1 = hBuilder.httpConn(jenserver, jensuser, jenspass)
+		def http1 = hBuilder.httpConn(jenserver, jensuser, jenspass,httpConnTimeOut,httpSockTimeOut)
 
 		// while hasMore is true -
 		// jenkins html page defined as header values

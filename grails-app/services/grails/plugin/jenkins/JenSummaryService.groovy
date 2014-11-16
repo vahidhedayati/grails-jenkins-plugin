@@ -26,11 +26,10 @@ class JenSummaryService {
 	private String consoleText = '/consoleText'
 	private String changes = '/changes'
 
-
 	RESTClient jenSummary(String jenserver, String jenuser,String jenpass,String bid,String sendSummary) {
 		try {
 			HBuilder hBuilder=new HBuilder()
-			RESTClient http = hBuilder.httpConn(jenserver, jenuser ?: '', jenpass ?: '')
+			RESTClient http = hBuilder.httpConn(jenserver, jenuser ?: '', jenpass ?: '',httpConnTimeOut,httpSockTimeOut)
 			jenSummary(http,jenserver,bid,sendSummary)
 		}catch (HttpResponseException e) {
 			log.error "Failed error: $e.statusCode"
@@ -373,8 +372,15 @@ class JenSummaryService {
 	boolean isConfigEnabled(String config) {
 		return Boolean.valueOf(config ?: false)
 	}
+	private int getHttpConnTimeOut() {
+		return config.http.connection.timeout ?: 10
+	}
 
+	private int getHttpSockTimeOut() {
+		return config.http.connection.timeout ?: 30
+	}
 	private getConfig() {
 		grailsApplication.config.jenkins
+
 	}
 }

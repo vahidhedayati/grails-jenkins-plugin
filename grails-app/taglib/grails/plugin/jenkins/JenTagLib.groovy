@@ -41,21 +41,21 @@ class JenTagLib {
 		if (attrs.jensport) {
 			jenurl.append(':').append(attrs.jensport)
 		}
-		
+
 		String jensprefix = ''
 		if (attrs.jensprefix) {
 			jensprefix = jenService.seperator(attrs?.jensprefix)
 			jenurl.append(jensprefix)
 		}
-		
+
 		// Full url to jenkins server - main url
 		String jensconurl = jenurl
-		
+
 		// Full url to jenkins server - main url
 		String jenfullserver = jenurl
-		
 
-		// Both connection URL and URI need the prefix for it work 
+
+		// Both connection URL and URI need the prefix for it work
 		// Relative UrI to get to folder/job (can now be appended to above)
 		String jensurl = jensprefix + jenService.seperator(attrs?.jensfolder) + jenService.seperator(attrs?.jensjob)
 
@@ -69,40 +69,40 @@ class JenTagLib {
 		String jensbuildend = attrs.jensbuildend ?: config.buildend ?:  '/build?delay=0sec'
 
 		String autoSubmit = attrs.autosubmit ?: config.autosubmit ?:  'no'
-		
+
 		// jens uri to get to full logs:
 		// Default: '/consoleFull'
 		String jensconlog = attrs.jensLog ?: config.consoleLog ?: '/consoleFull'
-		
-		String processurl = attrs.processurl ?: config.processurl  
+
+		String processurl = attrs.processurl ?: config.processurl
 		String wsprocessurl = attrs.wsprocessurl ?: config.wsprocessurl
 		String wsprocessname = attrs.wsprocessname ?: config.wsprocessname
 
 		String hideButtons = attrs.hideButtons ?: config.hideButtons ?: 'no'
 		String hideTriggerButton = attrs.hideTriggerButton ?: config.hideTriggerButton ?: 'no'
 		String hideDashBoardButton = attrs.hideDashBoardButton ?: config.hideDashBoardButton ?: 'no'
-		
+
 		String summaryViewButtons = attrs.summaryViewButtons ?: config.summaryViewButtons ?: 'yes'
 		String summaryFileButton = attrs.summaryFileButton ?: config.summaryFileButton ?: 'yes'
 		String summaryChangesButton = attrs.summaryChangesButton ?: config.summaryChangesButton ?: 'yes'
-		
+
 		String jiraButtons = attrs.jiraButtons ?: config.jiraButtons ?: 'yes'
 		String jiraOverwriteButton = attrs.jiraOverwriteButton ?: config.jiraOverwriteButton ?: 'yes'
 		String jiraAppendButton = attrs.jiraAppendButton ?: config.jiraAppendButton ?: 'yes'
 		String jiraCommentButton = attrs.jiraCommentButton ?: config.jiraCommentButton ?: 'yes'
-		
+
 
 		String appname = Metadata.current.getApplicationName()
 		def model = [hideButtons:hideButtons, hideTriggerButton:hideTriggerButton, hideDashBoardButton:hideDashBoardButton,
-		             jenschoice:jenschoice, divId:divId, jenfullserver:jenfullserver, jensconurl:jensconurl,
-		             jensjob:attrs.jensjob, jensuser:jensuser, jenspass:jenspass, appname:appname, wshostname:wshostname,
-		             jenserver:jenserver, jensurl:jensurl, jensprogressive:jensprogressive, jensbuildend:jensbuildend,
-		             jensconlog:jensconlog, customParams:attrs.customParams,processurl:processurl,wsprocessurl:wsprocessurl,
-					 autoSubmit:autoSubmit, wsprocessname:wsprocessname,
-					 summaryViewButtons:summaryViewButtons,summaryFileButton:summaryFileButton,
-					 summaryChangesButton:summaryChangesButton,jiraButtons:jiraButtons,
-					 jiraOverwriteButton:jiraOverwriteButton,jiraAppendButton:jiraAppendButton,
-					 jiraCommentButton:jiraCommentButton]
+			jenschoice:jenschoice, divId:divId, jenfullserver:jenfullserver, jensconurl:jensconurl,
+			jensjob:attrs.jensjob, jensuser:jensuser, jenspass:jenspass, appname:appname, wshostname:wshostname,
+			jenserver:jenserver, jensurl:jensurl, jensprogressive:jensprogressive, jensbuildend:jensbuildend,
+			jensconlog:jensconlog, customParams:attrs.customParams,processurl:processurl,wsprocessurl:wsprocessurl,
+			autoSubmit:autoSubmit, wsprocessname:wsprocessname,
+			summaryViewButtons:summaryViewButtons,summaryFileButton:summaryFileButton,
+			summaryChangesButton:summaryChangesButton,jiraButtons:jiraButtons,
+			jiraOverwriteButton:jiraOverwriteButton,jiraAppendButton:jiraAppendButton,
+			jiraCommentButton:jiraCommentButton]
 		if (template) {
 			out << g.render(template:template, model: model)
 		}else{
@@ -110,7 +110,7 @@ class JenTagLib {
 		}
 	}
 
-	// Shorter method to do the same as above 
+	// Shorter method to do the same as above
 	def dirconnect = {attrs ->
 
 		if (!attrs.jensjob) {
@@ -118,7 +118,7 @@ class JenTagLib {
 		}
 
 		String jensurl = attrs.remove('jensurl')
-		
+
 		String jensuser = attrs.remove('jensuser')
 		String jenspass = attrs.remove('jenspass')
 
@@ -131,19 +131,19 @@ class JenTagLib {
 		String jensprot = url.protocol
 		String jenserver = url.host
 		//String jensport = url.port
-		
+
 		String jensconurl = jensprot + '://' + jensauthority
 
 		if (jensuser && !jenspass) {
 			jenspass = jenService.returnToken(jensuser, jensconurl)
 		}
-		
+
 		String validurl = jenService.verifyUrl(jensurl, jensurl, jensuser ?:'', jenspass ?:'')
 		if (!validurl.startsWith('Success')) {
 			return
 		}
 
-		
+
 		def wshostname = attrs.wshostname ?: config.wshostname ?: 'localhost:8080'
 		String jensprogressive = attrs.jensprogressive ?: config.progressiveuri ?: '/logText/progressiveHtml'
 		String jensbuildend = attrs.jensbuildend ?: config.buildend ?:  '/build?delay=0sec'
@@ -157,29 +157,29 @@ class JenTagLib {
 		String autoSubmit = attrs.autosubmit ?: config.autosubmit ?:  'no'
 		String summaryViewButtons = attrs.summaryViewButtons ?: config.summaryViewButtons ?: 'yes'
 		String summaryFileButton = attrs.summaryFileButton ?: config.summaryFileButton ?: 'yes'
-		String summaryChangesButton = attrs.summaryChangesButton ?: config.summaryChangesButton ?: 'yes'		
+		String summaryChangesButton = attrs.summaryChangesButton ?: config.summaryChangesButton ?: 'yes'
 		String jiraButtons = attrs.jiraButtons ?: config.jiraButtons ?: 'yes'
 		String jiraOverwriteButton = attrs.jiraOverwriteButton ?: config.jiraOverwriteButton ?: 'yes'
 		String jiraAppendButton = attrs.jiraAppendButton ?: config.jiraAppendButton ?: 'yes'
 		String jiraCommentButton = attrs.jiraCommentButton ?: config.jiraCommentButton ?: 'yes'
-		
+
 		String appname = Metadata.current.getApplicationName()
 
 		def model = [hideButtons:hideButtons, hideTriggerButton:hideTriggerButton, hideDashBoardButton:hideDashBoardButton,
-		             jenschoice:jenschoice, divId:divId, jenfullserver:jensconurl, jensconurl:jensconurl, jensjob:attrs.jensjob,
-		             jensuser:jensuser, jenspass:jenspass, appname:appname, wshostname:wshostname, jenserver:jenserver,
-		             jensurl:jenspath, jensprogressive:jensprogressive, jensbuildend:jensbuildend, jensconlog:jensconlog, 
-					 autoSubmit:autoSubmit, customParams:attrs.customParams,processurl:processurl,wsprocessurl:wsprocessurl,
-					 wsprocessname:wsprocessname,summaryViewButtons:summaryViewButtons,summaryFileButton:summaryFileButton,
-					 summaryChangesButton:summaryChangesButton,jiraButtons:jiraButtons,jiraOverwriteButton:jiraOverwriteButton,jiraAppendButton:jiraAppendButton,
-					 jiraCommentButton:jiraCommentButton]
+			jenschoice:jenschoice, divId:divId, jenfullserver:jensconurl, jensconurl:jensconurl, jensjob:attrs.jensjob,
+			jensuser:jensuser, jenspass:jenspass, appname:appname, wshostname:wshostname, jenserver:jenserver,
+			jensurl:jenspath, jensprogressive:jensprogressive, jensbuildend:jensbuildend, jensconlog:jensconlog,
+			autoSubmit:autoSubmit, customParams:attrs.customParams,processurl:processurl,wsprocessurl:wsprocessurl,
+			wsprocessname:wsprocessname,summaryViewButtons:summaryViewButtons,summaryFileButton:summaryFileButton,
+			summaryChangesButton:summaryChangesButton,jiraButtons:jiraButtons,jiraOverwriteButton:jiraOverwriteButton,jiraAppendButton:jiraAppendButton,
+			jiraCommentButton:jiraCommentButton]
 		if (template) {
 			out << g.render(template:template, model: model)
 		}else{
 			out << g.render(contextPath: pluginContextPath, template: '/jen/process', model: model)
 		}
 	}
-	
+
 	// Non WebSocket build task - that triggers build
 	// Upon success calls a process URL if any
 	def asyncBuild = {attrs ->
@@ -187,19 +187,19 @@ class JenTagLib {
 		String jenspass = attrs.remove('jenspass')
 		String url = attrs.remove('url')
 		String customParams = attrs.remove('customParams')
-		
+
 		String jensurl = attrs.remove('jensurl')
 		String jenserver = attrs.remove('jenserver')
-		
-		
+
+
 		def config = grailsApplication.config.jenkins
 		String processurl = attrs.processurl  ?: config.processurl
-		if (jensurl&&jenserver) {  
+		if (jensurl&&jenserver) {
 			jenService.asyncBuilder(jensurl, jenserver, url, jensuser, jenspass, processurl, customParams)
 		} else{
 			jenService.asyncBuilder(url, jensuser, jenspass, processurl, customParams)
-		}	
-		
+		}
+
 		out << "Build Triggered Awaiting processing to take place once it completes"
 	}
 
