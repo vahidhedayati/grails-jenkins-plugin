@@ -13,9 +13,10 @@ import groovyx.net.http.RESTClient
 
 class JiraRestService {
 
-	def grailsApplication
+	
 
 	/* TODO - let otherside be variable if not provided set defaults
+	 * def grailsApplication
 	 private Map config = grailsApplication.config.jenkins
 	 private String jiraServer = config.jiraServer
 	 private String jiraUser = config.jiraUser

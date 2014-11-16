@@ -64,6 +64,7 @@ class JenService {
 		def token
 		int go = 0
 		try {
+		
 			def http1 = hBuilder.httpConn(jenserver, '', '')
 			HttpResponseDecorator html1 = http1.get(path: "${url}")
 			def html = html1?.data
@@ -78,7 +79,7 @@ class JenService {
 			}
 		}
 		catch (e)  {
-			log.error "Failed error: ${e}", e
+			log.error "Failed error: ${e}"
 		}
 		return token
 	}
@@ -91,7 +92,6 @@ class JenService {
 		String jensurl=aurl.path
 		String jenserver=jensprot + '://' + jensauthority
 
-		def config = grailsApplication.config.jenkins
 		def jensbuildend = config.jensbuildend  ?: '/build?delay=0sec'
 
 		if (jensuser && !jenspass) {
@@ -120,7 +120,6 @@ class JenService {
 	def asyncBuilder(String jensurl, String jenserver, String jensuser,
 			String jenspass,  String processurl, String customParams) {
 
-		def config = grailsApplication.config.jenkins
 		def jensbuildend = config.jensbuildend  ?: '/build?delay=0sec'
 
 		def url1 = jensurl + jensbuildend
@@ -138,8 +137,6 @@ class JenService {
 		// Increment existing buildID with 1
 		int newBuild=currentBuild+1
 
-
-
 		// Sleep a while
 		sleep(6000)
 
@@ -152,7 +149,7 @@ class JenService {
 	}
 
 	private int currentBuildId(String url, String jenserver, String jensuser, String jenspass) {
-		def lastbid = getLastBuild(url, jenserver, jensuser ?: '', jenspass ?: '')
+		def lastbid = lastBuild(url, jenserver, jensuser ?: '', jenspass ?: '')
 		//int currentBuild = jenkinsService.currentJob(lastbid)
 		if (lastbid) {
 			def cj=currentJob(lastbid)
@@ -161,13 +158,17 @@ class JenService {
 			}
 		}
 	}
+	
+	String lastBuild(String url, String jenserver, String jensuser, String jenspass) {
+		RESTClient http = hBuilder.httpConn(jenserver, jensuser, jenspass)
+		return lastBuild(http,url)
+	}
 
-	private String getLastBuild(String url, String jenserver, String jensuser, String jenspass) {
+	String lastBuild(RESTClient http,String url) {
 		String bid = ""
 		String bdate
 		try {
 			int go = 0
-			RESTClient http = hBuilder.httpConn(jenserver, jensuser, jenspass)
 			HttpResponseDecorator html1 = http.get(path: "${url}")
 			def html = html1?.data
 			def bd = html."**".findAll {it.@class.toString().contains("build-details")}
@@ -181,7 +182,7 @@ class JenService {
 				}
 			}
 			else {
-				bd = html."**".find { it.@class.toString().contains("tip model-link") }
+				bd = html."**".find { it.@class.toString().contains("tip") }
 				bd.each {
 					go++
 					if (go == 1) {
@@ -222,41 +223,53 @@ class JenService {
 		def ubi=stripDouble(uri+"/"+bid.toString())
 		String url=ubi+jensApi
 
-		def config = grailsApplication.config.jenkins
 		String showsummary=config.showsummary
+		
 		String jiraSendType=config.jiraSendType?.toString() ?: 'comment'
-		def http1 = hBuilder.httpConn(jenserver, jensuser, jenspass)
-
+		
+		boolean sendSummary = jenSummaryService.isConfigEnabled(config?.sendSummary.toString())
+		if (!sendSummary) {
+			jiraSendType='none'
+		}
+		
+		boolean processSuccess = jenSummaryService.isConfigEnabled(config.process.on.success.toString())
+		
 		try {
-
+			def http1 = hBuilder.httpConn(jenserver, jensuser, jenspass)
+			boolean goahead=false
+				
 			while (!go && a < max) {
 
 				a++
 
 				http1.get(path: "${url}") { resp, json ->
-					result = json.result
+					result = json?.result
 					if (result && result != 'null') {
-
-
-						// So lets check if user has enabled showsummary
+						if (processSuccess) {
+							goahead=verifyResult(result,'SUCCESS')
+						}else{
+							goahead = true
+						}
+					}
+					
+					if (goahead) {
 						// Load up build history which also calls jira calls if enabled
-
+						// if sendSummary as above is also enabled
 						if (showsummary.toLowerCase().equals("yes")) {
 							def output=jenSummaryService?.jenSummary(http1, jenserver, ubi, jiraSendType)
 							if (userSession && output) {
 								userSession.basicRemote.sendText(output)
 							}
 						}
+						
+						def files=jenSummaryService?.generatedFiles(http1,jenserver,ubi)
+						def myFiles=[:]
+						files.each {k,v ->
+							//	myFiles += [file:[type: k,name:v]]
+							myFiles += [type: k,name:v]
+						}
 
 						if (userSession && wsprocessurl) {
-
-							def files=jenSummaryService?.generatedFiles(http1,jenserver,ubi)
-							def myFiles=[:]
-							files.each {k,v ->
-								//	myFiles += [file:[type: k,name:v]]
-								myFiles += [type: k,name:v]
-							}
-
 							def ajson = new JsonBuilder()
 							ajson.feedback{
 								delegate.wsprocessurl "$wsprocessurl"
@@ -273,6 +286,13 @@ class JenService {
 							}
 							userSession.basicRemote.sendText(ajson.toString())
 						}
+						if (result && processurl) {
+							String buildUrl = jenserver+ubi
+							String buildId = bid as String
+							String job=jensurl
+							sendToProcess(processurl,result,buildUrl,buildId,customParams,jenserver, jensuser,jenspass,job,myFiles)
+						}
+						
 						go = true
 					}
 					sleep(10000)
@@ -283,32 +303,36 @@ class JenService {
 			log.error "Problem communicating with ${jenserver + url}: ${e.message}", e
 		}
 
-		if (result && processurl) {
-			def http2 = hBuilder.httpConn(processurl,'','')
-			http2.request( POST ) { req ->
-				requestContentType = URLENC
-				body = [
-					result : result,
-					buildUrl : jenserver+ubi,
-					buildId: bid as String,
-					customParams: customParams,
-					server : jenserver,
-					user : jensuser,
-					token : jenspass,
-					job : jensurl
-				]
-				response.success = { resp ->
-					log.debug "Process URL Success! ${resp.status}"
-				}
-
-				response.failure = { resp ->
-					log.error "Process URL failed with status ${resp.status}"
-				}
-			}
-		}
+		
 	}
 
+	
+	private void sendToProcess(String processurl, String result, String buildUrl,String buildId,String customParams, 
+		String server,	String user,String pass,String  job, Map myFiles) {
+		def http2 = hBuilder.httpConn(processurl,'','')
+		http2.request( POST ) { req1 ->
+			requestContentType = URLENC
+			body = [
+				result : result,
+				buildUrl : buildUrl,
+				buildId: buildId,
+				customParams: customParams,
+				server : server,
+				user : user,
+				token : pass,
+				job : job,
+				files: "${myFiles as JSON}"
+			]
+			response.success = { resp1 ->
+				log.debug "Process URL Success! ${resp1.status}"
+			}
 
+			response.failure = { resp1 ->
+				log.error "Process URL failed with status ${resp1.status}"
+			}
+		}
+	}	
+			
 	String verifyStatus(String img) {
 		String output = "unknown"
 		if (img.contains("blue_anime") || (img.contains("aborted_anime")) || (img.contains("job")) && (img.contains("stop"))) {
@@ -388,6 +412,17 @@ class JenService {
 			input = '/' + input
 		}
 		return input
+	}
+
+	private boolean verifyResult(String result,String rtype) {
+		boolean go=false
+		if (result && result == rtype) {
+			go=true
+		}
+		return go
+	}	
+	private getConfig() {
+		grailsApplication.config.jenkins
 	}
 }
 

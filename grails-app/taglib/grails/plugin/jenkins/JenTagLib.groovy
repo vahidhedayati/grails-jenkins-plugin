@@ -24,8 +24,6 @@ class JenTagLib {
 		String jenschoice = attrs.remove('jenschoice')
 		//String jensprefix = attrs.remove('jensprefix')
 
-		def config = grailsApplication.config.jenkins
-
 		// websocket url
 		String wshostname = attrs.wshostname ?: config.wshostname ?: 'localhost:8080'
 
@@ -133,19 +131,19 @@ class JenTagLib {
 		String jensprot = url.protocol
 		String jenserver = url.host
 		//String jensport = url.port
+		
+		String jensconurl = jensprot + '://' + jensauthority
+
 		if (jensuser && !jenspass) {
-			jenspass = jenService.returnToken(jensuser, jenserver)
+			jenspass = jenService.returnToken(jensuser, jensconurl)
 		}
 		
 		String validurl = jenService.verifyUrl(jensurl, jensurl, jensuser ?:'', jenspass ?:'')
 		if (!validurl.startsWith('Success')) {
 			return
 		}
+
 		
-		String jensconurl = jensprot + '://' + jensauthority
-
-		def config = grailsApplication.config.jenkins
-
 		def wshostname = attrs.wshostname ?: config.wshostname ?: 'localhost:8080'
 		String jensprogressive = attrs.jensprogressive ?: config.progressiveuri ?: '/logText/progressiveHtml'
 		String jensbuildend = attrs.jensbuildend ?: config.buildend ?:  '/build?delay=0sec'
@@ -205,5 +203,7 @@ class JenTagLib {
 		out << "Build Triggered Awaiting processing to take place once it completes"
 	}
 
-	
+	private getConfig() {
+		grailsApplication.config.jenkins
+	}
 }

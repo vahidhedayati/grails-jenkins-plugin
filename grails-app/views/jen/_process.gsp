@@ -191,17 +191,16 @@ border-color: black;
 		</div>
 	</g:if>	
 	
-		<g:if test="${((!hideBuildTimer) || (!hideBuildTimer.toLowerCase().equals('yes')))}">	
-		
-		</g:if>
-
 <br/>
 
-${wshostname}
+<g:if test="${jensuser }">
+<div class="jbutton">
+	UserId: ${jensuser}
+</div>
+</g:if>
 
-
-	<h6>Current user: <div id="jenkinsUser${divId}"></h6>
-
+<span id="jenkinsUser${divId}"></span>
+<br/>
 <div class="BuildHistory">
 <div id="FeedBack${divId}" ></div>
 <div id="BuildHistory1${divId}" ></div>
@@ -330,7 +329,7 @@ function processMessage${divId}(message) {
 			jsonData.actions.forEach(function(entry) {
 				if (entry.causes!=null) {
 					entry.causes.forEach(function(en) {
-						$('#jenkinsUser${divId}').html(en.userName);
+						$('#jenkinsUser${divId}').html("<div class=\"jbutton\">Build user: "+en.userName+"</div>");
 					});
 				}
 			});
@@ -385,7 +384,7 @@ function processMessage${divId}(message) {
 							sb.push('\n<li class='+entry.bstatus+'><span class="heading"><a onclick="javascript:viewHistory${divId}('+wrapIt(entry.bid)+');">'+entry.jobid+' : ');
 							sb.push('<small>'+entry.bstatus+' '+entry.bdate+'</small></span></a>');
 							if (summaryViewButtons == "yes") {
-								sb.push(' <br><small><span class="summary">SUMMARY: <a onclick="javascript:parseHistory${divId}('+wrapIt(entry.bid)+');">View</a> |');
+								sb.push(' <br><small><span class="summary">SUMMARY: | <a onclick="javascript:parseHistory${divId}('+wrapIt(entry.bid)+');">View</a> |');
 								if (summaryFileButton == "yes") {
 									sb.push(' <a onclick="javascript:parseFiles${divId}('+wrapIt(entry.bid)+');">Files</a> | ');
 								}
@@ -398,13 +397,13 @@ function processMessage${divId}(message) {
 								
 								sb.push('<br><span class="jira"> JIRA: | ');
 								if (jiraOverwriteButton == "yes") {
-									sb.push('<a onclick="javascript:parseSendHistory${divId}('+wrapIt(entry.bid)+', \'customfield\');">Overwrite Field</a> | ');
+									sb.push('<a  title="Overwrite content of custom field" onclick="javascript:parseSendHistory${divId}('+wrapIt(entry.bid)+', \'customfield\');">customField</a> | ');
 								}
 								if (jiraAppendButton == "yes") {
-									sb.push('<a onclick="javascript:parseSendHistory${divId}('+wrapIt(entry.bid)+', \'updatecustomfield\');">Append Field</a> | ');
+									sb.push('<a title="Append to your custom field" onclick="javascript:parseSendHistory${divId}('+wrapIt(entry.bid)+', \'updatecustomfield\');">Append CF</a> | ');
 								}
 								if (jiraCommentButton == "yes") {
-									sb.push('<a onclick="javascript:parseSendHistory${divId}('+wrapIt(entry.bid)+', \'comment\');">As Comment</a>');							
+									sb.push('<a title="add as a comment to Jira" onclick="javascript:parseSendHistory${divId}('+wrapIt(entry.bid)+', \'comment\');">Comment</a>');							
 								}
 								sb.push(' | </span></small>');
 							}

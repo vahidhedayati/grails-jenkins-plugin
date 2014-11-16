@@ -50,8 +50,6 @@ class JenSummaryService {
 		createdFiles = [:]
 
 		if (bid) {
-
-			def config = grailsApplication.config.jenkins
 			//String url2 = jenserver+"/"+bid+consoleText
 			String cgurl=bid+changes
 
@@ -122,7 +120,6 @@ class JenSummaryService {
 		if (!uri.startsWith('/')) {
 			uri='/'+uri
 		}
-		def config = grailsApplication.config.jenkins
 
 		boolean sendChangeSet = isConfigEnabled(config?.sendChangeSet.toString())
 		boolean sendCulprits = isConfigEnabled(config?.sendCulprits.toString())
@@ -235,7 +232,6 @@ class JenSummaryService {
 	// Returns Summary results
 	String definedParseJobConsole(RESTClient http, String bid) {
 		String workspace,ftype,file
-		def config = grailsApplication.config.jenkins
 
 		boolean parseBuildingWorkSpace = isConfigEnabled(config?.parseBuildingWorkSpace.toString())
 		boolean parseBuilding = isConfigEnabled(config?.parseBuilding.toString())
@@ -374,8 +370,11 @@ class JenSummaryService {
 		return output
 	}
 
-	private boolean isConfigEnabled(String config) {
+	boolean isConfigEnabled(String config) {
 		return Boolean.valueOf(config ?: false)
 	}
 
+	private getConfig() {
+		grailsApplication.config.jenkins
+	}
 }

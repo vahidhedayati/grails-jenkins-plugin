@@ -45,7 +45,7 @@ class JenkinsEndPoint implements ServletContextListener {
 
 	private JiraRestService jiraRestService
 	//private GrailsApplication grailsApplication
-	def config
+	private Map config
 	private int httpConnTimeOut = 10*1000
 	private int httpSockTimeOut = 30*1000
 
@@ -247,11 +247,6 @@ class JenkinsEndPoint implements ServletContextListener {
 		}
 	}
 
-	private String echoJob(String server,String job) {
-		return server
-	}
-
-
 
 	private void parseJobConsole(Session userSession, String url, String bid) {
 		// Send user confirmation that you are going to parse Jenkins job
@@ -302,12 +297,12 @@ class JenkinsEndPoint implements ServletContextListener {
 					userSession.getBasicRemote().sendText(it.toString())
 				}
 			}else{
-				if (html."**".findAll{ it.@href.toString().contains("consoleText")}) {
+				//if (html."**".findAll{ it.@href.toString().contains("consoleText")}) {
 					String uri=jenService.stripDouble("${bid}${consoleText}")
 					HttpResponseDecorator html2= http.get(path: "${uri}")
 					userSession.getBasicRemote().sendText(html2?.data.text.toString())
 
-				}
+				//}
 			}
 
 		}
@@ -322,16 +317,16 @@ ${jensuser ?: 'Guest'} welcome to Grails Jenkins Plugin
 Currently connected to : $job running on $server
 """)
 
-		getBuilds(userSession, jensurl)
+		listBuilds(userSession, jensurl)
 
 	}
 
 	private dashboard(Session userSession) {
-		getBuilds(userSession, jensurl)
+		listBuilds(userSession, jensurl)
 	}
 
 	private int currentBuildId(String url) {
-		def lastbid = getLastBuild(url)
+		def lastbid = jenService.lastBuild(http, url)
 		//int currentBuild = jenkinsService.currentJob(lastbid)
 		if (lastbid) {
 			def cj=jenService.currentJob(lastbid)
@@ -357,7 +352,7 @@ Currently connected to : $job running on $server
 			while (!go && a < 6) {
 				a++
 				//newBuild = currentBuildId(url)
-				lastbid1 = getLastBuild(url)
+				lastbid1 = jenService.lastBuild(http,url)
 				if (lastbid1) {
 					newBuild = jenService.currentJob(lastbid1)
 					userSession.basicRemote.sendText("[${newBuild}].")
@@ -408,7 +403,7 @@ Currently connected to : $job running on $server
 	// Jenkins servers with prefix had issue with previous simple get method -
 	// instead doing a full connection again a little OTT
 	// now moved to service for reuse
-	private getBuilds(Session userSession,String url) {
+	private listBuilds(Session userSession,String url) {
 
 		try {
 			def finalList = [:]
@@ -484,43 +479,7 @@ Currently connected to : $job running on $server
 		}
 	}
 
-
-
-
-	private String getLastBuild(String url) {
-		String bid = ""
-		String bdate
-		try {
-			int go = 0
-			HttpResponseDecorator html1 = http.get(path: "${url}")
-			def html = html1?.data
-			def bd = html."**".findAll {it.@class.toString().contains("build-details")}
-			if (bd) {
-				bd.each {
-					go++
-					if (go == 1) {
-						bid = it.A[0].@href.text()
-						bdate = it.toString().trim()
-					}
-				}
-			}
-			else {
-				bd = html."**".find { it.@class.toString().contains("tip") }
-				bd.each {
-					go++
-					if (go == 1) {
-						bid = it.@href.text()
-						bdate = it.toString().trim()
-					}
-				}
-			}
-		}
-		catch(e) {
-			log.error "Problem communicating with ${url}: ${e.message}", e
-		}
-		return  bid
-	}
-
+	
 	/*
 	 * Parse Jenkins API url - grab all but only using a few json values
 	 *  to calculate estimated duration of build
@@ -561,9 +520,9 @@ Currently connected to : $job running on $server
 				}
 
 				// On success get latest output back from headers
-				if (jensuser && jenspass) {
-					headers.'Authorization' = 'Basic ' + "$jensuser:$jenspass".bytes.encodeBase64()
-				}
+				//if (jensuser && jenspass) {
+				//	headers.'Authorization' = 'Basic ' + "$jensuser:$jenspass".bytes.encodeBase64()
+				//}
 
 				response.failure = { resp, reader ->
 					hasMore = false

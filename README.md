@@ -202,15 +202,20 @@ jenkins.wsprocessurl = "http://localhost:8080/testjenkins/test/parseJenPluginDep
 // Auto submit wsprocess url ?
 jenkins.autosubmit = "yes"
 
+// Enhanced option for secondary action 
+// If this is set as true it will only attempt to call 
+// processurl/wsprocess url triggers if result was successfull
+jenkins.process.on.success = true
 
 
-// This is an important option to enable
-// With this enabled - after a build has completed and has a result
-// So long as your jira details are correct 
-// and the ticket convention is as below appears in changes logs...
-// Then this enabled with the jira info below should mean your build history should appear 
-// under all logged tickets under changes screen of a given build id.
+
+// If once built you wish to send summary enable this as true
+jenkins.sendSummary = true
+
+// This must also be set to yes to show summary and send it once built. 
 jenkins.showsummary = "yes"
+
+
 
 /*
 * Jira configuration - refer to summary section below:
