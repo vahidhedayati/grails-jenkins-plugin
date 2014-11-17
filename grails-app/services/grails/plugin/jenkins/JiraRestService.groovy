@@ -193,7 +193,7 @@ class JiraRestService {
 	}
 
 	private int getHttpSockTimeOut() {
-		return config.http.connection.timeout ?: 30
+		return config.http.socket.timeout ?: 30
 	}
 	private getConfig() {
 		grailsApplication.config.jenkins

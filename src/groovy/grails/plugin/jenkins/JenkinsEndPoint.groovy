@@ -64,10 +64,7 @@ class JenkinsEndPoint implements ServletContextListener {
 
 	RESTClient http
 
-	private int httpConnTimeOut
-	// = config.http.connection.timeout ?: 10
-	private int httpSockTimeOut
-	// = config.http.connection.timeout ?: 30
+	private int httpConnTimeOut, httpSockTimeOut=10
 
 	void contextInitialized(ServletContextEvent event) {
 		ServletContext servletContext = event.servletContext
@@ -114,7 +111,7 @@ class JenkinsEndPoint implements ServletContextListener {
 		config = grailsApplication.config.jenkins
 
 		httpConnTimeOut = config.http.connection.timeout ?: 10
-		httpSockTimeOut = config.http.connection.timeout ?: 30
+		httpSockTimeOut = config.http.socket.timeout ?: 30
 	}
 
 	@OnMessage
@@ -253,6 +250,8 @@ class JenkinsEndPoint implements ServletContextListener {
 		if (jensuser && !jenspass) {
 			jenspass = jenService.returnToken(jensuser, jenserver)
 		}
+		
+		println "------- ${jenspass} ${httpConnTimeOut} ${httpSockTimeOut}"
 	}
 
 

@@ -1,4 +1,4 @@
-jenjir 0.1
+jenjir 0.2
 =========
 
 
@@ -15,7 +15,7 @@ After build summary - which with correct Jira details it will push this summary 
 
 Dependency, in your conf/BuildConfig.groovy under plugins add:
 ```groovy
-	compile ":jenjir:0.1"
+	compile ":jenjir:0.2"
 ```
 
 ###### Plugin will work with tomcat 7.0.54 + (inc. 8) running java 1.7+
@@ -122,6 +122,15 @@ jenkins.wshostname = System.getProperty('SERVERURL')+":8080"
 * If you wish to get user to be timed out if inactive set this to a millisecond value
 */
 jenkins.timeout = 0
+
+
+/*
+* HTTP Builder socket/connection timeouts by default values are as below
+*/
+jenkins.http.connection.timeout=10
+jenkins.http.socket.timeout=30
+
+
 
 /*
 * Optional : not required - unless different to defaults
@@ -532,6 +541,15 @@ def parseJenPlugin() {
 	}
 ```
 
+
+# Change information:
+```
+0.2 - 	Tidy up - moved getlastBuild as lastBuild into jenService - removed duplicate calls. 
+		Fixed wsprocess/process urls to both include files produced json as output params
+		Added socket/http connection timeouts to HTTPBuilder calls.
+		
+0.1 - release
+```
 
 ### Issues/Bugs
 
