@@ -22,19 +22,19 @@ Dependency, in your conf/BuildConfig.groovy under plugins add:
 
 
 ### Video
-[Part 1 : Older look](http://youtu.be/XfsrBAa8aAg)
+[Jenir Part 1 : Older look](http://youtu.be/XfsrBAa8aAg)
 
-[Part 2 : Update showing multiple builds, basic grails build in Jenkins](https://www.youtube.com/watch?v=CKv3TqWq4AQ)
+[Jenir Part 2 : Update showing multiple builds, basic grails build in Jenkins](https://www.youtube.com/watch?v=CKv3TqWq4AQ)
 
-[Part 3 : Update showing Jenkins authentication](https://www.youtube.com/watch?v=LOREp25Vz2Y)
+[Jenir Part 3 : Update showing Jenkins authentication](https://www.youtube.com/watch?v=LOREp25Vz2Y)
 
-[Part 4 : Non token authentication, custom Parameters](https://www.youtube.com/watch?v=bO3s8e4Qakc)
+[Jenir Part 4 : Non token authentication, custom Parameters](https://www.youtube.com/watch?v=bO3s8e4Qakc)
 
-[part 5 : Automated build/deploy via jssh websockets async non websocket build ](https://www.youtube.com/watch?v=665QHQ-8q0U)
+[Jenir part 5 : Automated build/deploy via jssh websockets async non websocket build ](https://www.youtube.com/watch?v=665QHQ-8q0U)
 
-[part 6 : Automated summary to Jira - From Jenkins change log to Jira ticket(s)](https://www.youtube.com/watch?v=5LYrnobvLns)
+[Jenir part 6 : Automated summary to Jira - From Jenkins change log to Jira ticket(s)](https://www.youtube.com/watch?v=5LYrnobvLns)
 
-[Test website testjenkins - used in videos](https://github.com/vahidhedayati/testjenkins)
+[Jenir Test website testjenkins - used in videos](https://github.com/vahidhedayati/testjenkins)
 
 
 ### Walkthrough
@@ -547,7 +547,7 @@ def parseJenPlugin() {
 ```
 
 
-# Change information:
+# Jenjir Change information:
 ```
 0.2 - 	Tidy up - moved getlastBuild as lastBuild into jenService - removed duplicate calls. 
 		Fixed wsprocess/process urls to both include files produced json as output params
@@ -556,7 +556,7 @@ def parseJenPlugin() {
 0.1 - release
 ```
 
-### Issues/Bugs
+### Jenir Issues/Bugs:
 
-##### Prefix jenkins servers.
+##### 1. Prefix jenkins servers.
 If you have a server with a prefix then you will find the quick connect method will not work for you, you need to use the manaully full detail connection method since the prefix is required for the url and uri.
