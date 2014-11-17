@@ -251,7 +251,6 @@ class JenkinsEndPoint implements ServletContextListener {
 			jenspass = jenService.returnToken(jensuser, jenserver)
 		}
 		
-		println "------- ${jenspass} ${httpConnTimeOut} ${httpSockTimeOut}"
 	}
 
 
