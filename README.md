@@ -57,6 +57,8 @@ This triggers a build and attempts to parse the live Jenkins console output, sin
 
 
 #### How to use
+![Quick Connect](https://raw.githubusercontent.com/vahidhedayati/grails-jenkins-plugin/master/documentation/quick-connect.jpg)
+
 ![Connection details](https://raw.githubusercontent.com/vahidhedayati/grails-jenkins-plugin/master/documentation/connect.jpg)
 
 ##### Example : Using taglib to make multiple calls to jenkins:
@@ -93,6 +95,9 @@ GSP Page for build.gsp
 
 
 ![Output from dual builds](https://raw.githubusercontent.com/vahidhedayati/grails-jenkins-plugin/master/documentation/double-build.jpg)
+
+
+![Output from jenjir 0.2 all buttons](https://raw.githubusercontent.com/vahidhedayati/grails-jenkins-plugin/master/documentation/jenjir-buttons.jpg)
 
 
 
