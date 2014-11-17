@@ -22,17 +22,18 @@ Dependency, in your conf/BuildConfig.groovy under plugins add:
 
 
 ### Video
-[Jenir Part 1 : Older look](http://youtu.be/XfsrBAa8aAg)
 
-[Jenir Part 2 : Update showing multiple builds, basic grails build in Jenkins](https://www.youtube.com/watch?v=CKv3TqWq4AQ)
+[Jenir Part 1 : Older look](https://www.youtube.com/watch?v=XfsrBAa8aAg&index=5&list=PLfZr1vB6p8XJEQD5Dmox_PM_Y-_0y1Hz1)
 
-[Jenir Part 3 : Update showing Jenkins authentication](https://www.youtube.com/watch?v=LOREp25Vz2Y)
+[Jenir Part 2 : Update showing multiple builds, basic grails build in Jenkins](https://www.youtube.com/watch?v=CKv3TqWq4AQ&list=PLfZr1vB6p8XJEQD5Dmox_PM_Y-_0y1Hz1&index=4)
 
-[Jenir Part 4 : Non token authentication, custom Parameters](https://www.youtube.com/watch?v=bO3s8e4Qakc)
+[Jenir Part 3 : Update showing Jenkins authentication](https://www.youtube.com/watch?v=LOREp25Vz2Y&list=PLfZr1vB6p8XJEQD5Dmox_PM_Y-_0y1Hz1&index=3)
 
-[Jenir part 5 : Automated build/deploy via jssh websockets async non websocket build ](https://www.youtube.com/watch?v=665QHQ-8q0U)
+[Jenir Part 4 : Non token authentication, custom Parameters](https://www.youtube.com/watch?v=bO3s8e4Qakc&index=2&list=PLfZr1vB6p8XJEQD5Dmox_PM_Y-_0y1Hz1)
 
-[Jenir part 6 : Automated summary to Jira - From Jenkins change log to Jira ticket(s)](https://www.youtube.com/watch?v=5LYrnobvLns)
+[Jenir part 5 : Automated build/deploy via jssh websockets async non websocket build ](https://www.youtube.com/watch?v=665QHQ-8q0U&index=1&list=PLfZr1vB6p8XJEQD5Dmox_PM_Y-_0y1Hz1)
+
+[Jenir part 6 : Automated summary to Jira - From Jenkins change log to Jira ticket(s)](https://www.youtube.com/watch?v=5LYrnobvLns&index=8&list=PLfZr1vB6p8XJEQD5Dmox_PM_Y-_0y1Hz1)
 
 [Jenir Test website testjenkins - used in videos](https://github.com/vahidhedayati/testjenkins)
 
