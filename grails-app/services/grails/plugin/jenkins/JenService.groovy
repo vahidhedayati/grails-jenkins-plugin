@@ -13,11 +13,10 @@ import javax.websocket.Session
 class JenService {
 
 	static transactional = false
-	def grailsApplication
-	//def hBuilderService
 
 	def jenSummaryService
-
+	def jenJirConfService
+	
 	HBuilder hBuilder=new HBuilder()
 
 	private String jensApi = '/api/json'
@@ -31,7 +30,7 @@ class JenService {
 		RESTClient http
 		try {
 			try {
-				http = hBuilder.httpConn(server, user ?: '', pass ?: '',httpConnTimeOut,httpSockTimeOut)
+				http = hBuilder.httpConn(server, user ?: '', pass ?: '',jenJirConfService.httpConnTimeOut,jenJirConfService.httpSockTimeOut)
 			}
 			catch (HttpResponseException e) {
 				return "Failed error: $e.statusCode"
@@ -65,7 +64,7 @@ class JenService {
 		int go = 0
 		try {
 
-			def http1 = hBuilder.httpConn(jenserver, '', '',httpConnTimeOut,httpSockTimeOut)
+			def http1 = hBuilder.httpConn(jenserver, '', '',jenJirConfService.httpConnTimeOut,jenJirConfService.httpSockTimeOut)
 			HttpResponseDecorator html1 = http1.get(path: "${url}")
 			def html = html1?.data
 			def bd = html."**".findAll {it.@id.toString().contains("apiToken")}
@@ -92,7 +91,7 @@ class JenService {
 		String jensurl=aurl.path
 		String jenserver=jensprot + '://' + jensauthority
 
-		def jensbuildend = config.jensbuildend  ?: '/build?delay=0sec'
+		def jensbuildend = jenJirConfService.config.jensbuildend  ?: '/build?delay=0sec'
 
 		if (jensuser && !jenspass) {
 			jenspass = returnToken(jensuser, jenserver)
@@ -120,7 +119,7 @@ class JenService {
 	def asyncBuilder(String jensurl, String jenserver, String jensuser,
 			String jenspass,  String processurl, String customParams) {
 
-		def jensbuildend = config.jensbuildend  ?: '/build?delay=0sec'
+		def jensbuildend = jenJirConfService.config.jensbuildend  ?: '/build?delay=0sec'
 
 		def url1 = jensurl + jensbuildend
 
@@ -160,7 +159,7 @@ class JenService {
 	}
 
 	String lastBuild(String url, String jenserver, String jensuser, String jenspass) {
-		RESTClient http = hBuilder.httpConn(jenserver, jensuser, jenspass,httpConnTimeOut,httpSockTimeOut)
+		RESTClient http = hBuilder.httpConn(jenserver, jensuser, jenspass,jenJirConfService.httpConnTimeOut,jenJirConfService.httpSockTimeOut)
 		return lastBuild(http,url)
 	}
 
@@ -200,12 +199,12 @@ class JenService {
 
 	// This posts some form of action to Jenkins builds etc
 	HttpResponseDecorator jobControl(String url, String jensuser, String jenspass ) {
-		HttpResponseDecorator html1 = hBuilder.httpConn('post',  url, jensuser ?: '', jenspass ?: '',httpConnTimeOut,httpSockTimeOut)
+		HttpResponseDecorator html1 = hBuilder.httpConn('post',  url, jensuser ?: '', jenspass ?: '',jenJirConfService.httpConnTimeOut,jenJirConfService.httpSockTimeOut)
 	}
 
 	// This posts some form of action to Jenkins builds etc
 	HttpResponseDecorator jobControl(String url, String bid, String jenserver, String jensuser, String jenspass ) {
-		HttpResponseDecorator html1 = hBuilder.httpConn('post', jenserver + url, jensuser ?: '', jenspass ?: '',httpConnTimeOut,httpSockTimeOut)
+		HttpResponseDecorator html1 = hBuilder.httpConn('post', jenserver + url, jensuser ?: '', jenspass ?: '',jenJirConfService.httpConnTimeOut,jenJirConfService.httpSockTimeOut)
 	}
 
 	//This is an asynchronous task that is given a new BuildID, it will poll the
@@ -223,19 +222,19 @@ class JenService {
 		def ubi=stripDouble(uri+"/"+bid.toString())
 		String url=ubi+jensApi
 
-		String showsummary=config.showsummary
+		String showsummary=jenJirConfService.config.showsummary
 
-		String jiraSendType=config.jiraSendType?.toString() ?: 'comment'
+		String jiraSendType=jenJirConfService.config.jiraSendType?.toString() ?: 'comment'
 
-		boolean sendSummary = jenSummaryService.isConfigEnabled(config?.sendSummary.toString())
+		boolean sendSummary = jenJirConfService.isConfigEnabled(jenJirConfService.config?.sendSummary.toString())
 		if (!sendSummary) {
 			jiraSendType='none'
 		}
 
-		boolean processSuccess = jenSummaryService.isConfigEnabled(config.process.on.success.toString())
+		boolean processSuccess = jenJirConfService.isConfigEnabled(jenJirConfService.config.process.on.success.toString())
 
 		try {
-			def http1 = hBuilder.httpConn(jenserver, jensuser, jenspass,httpConnTimeOut,httpSockTimeOut)
+			def http1 = hBuilder.httpConn(jenserver, jensuser, jenspass,jenJirConfService.httpConnTimeOut,jenJirConfService.httpSockTimeOut)
 			boolean goahead=false
 
 			while (!go && a < max) {
@@ -309,7 +308,7 @@ class JenService {
 
 	private void sendToProcess(String processurl, String result, String buildUrl,String buildId,String customParams,
 			String server,	String user,String pass,String  job, Map myFiles) {
-		def http2 = hBuilder.httpConn(processurl,'','',httpConnTimeOut,httpSockTimeOut)
+		def http2 = hBuilder.httpConn(processurl,'','',jenJirConfService.httpConnTimeOut,jenJirConfService.httpSockTimeOut)
 		http2.request( POST ) { req1 ->
 			requestContentType = URLENC
 			body = [
@@ -422,18 +421,5 @@ class JenService {
 		return go
 	}
 
-	private int getHttpConnTimeOut() {
-		return config.http.connection.timeout ?: 10
-	}
-
-	private int getHttpSockTimeOut() {
-		return config.http.socket.timeout ?: 30
-	}
-
-	private getConfig() {
-		grailsApplication.config.jenkins
-
-
-	}
 }
 

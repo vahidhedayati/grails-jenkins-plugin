@@ -1,4 +1,4 @@
-jenjir 0.2
+jenjir 0.3
 =========
 
 
@@ -15,7 +15,7 @@ After build summary - which with correct Jira details it will push this summary 
 
 Dependency, in your conf/BuildConfig.groovy under plugins add:
 ```groovy
-	compile ":jenjir:0.2"
+	compile ":jenjir:0.3"
 ```
 
 ###### Plugin will work with tomcat 7.0.54 + (inc. 8) running java 1.7+
@@ -105,7 +105,10 @@ GSP Page for build.gsp
 
 # Config.groovy variables required:
 
+Please refer to [configuration](https://github.com/vahidhedayati/grails-jenkins-plugin/wiki/configuration-items), this is all of below without comments
+
 Configure properties by adding following to grails-app/conf/Config.groovy under the "jenkins" key:
+
 
 ```groovy
 /*
@@ -222,6 +225,11 @@ jenkins.autosubmit = "yes"
 // processurl/wsprocess url triggers if result was successfull
 jenkins.process.on.success = true
 
+/* 0.3 feature 
+* if app has wsprocessurl additional button to buildOnly appears 
+* which can be disabled if this is set to no
+*/
+jenkins.show.build.only.button = "yes"
 
 
 // If once built you wish to send summary enable this as true
@@ -550,6 +558,9 @@ def parseJenPlugin() {
 
 # Jenjir Change information:
 ```
+0.3 - 	Cleanup of config calls within services. Addition just Build button added if end app has processurl name/action defined.
+		Better logics around displaying wsprocessname with Build button.
+		
 0.2 - 	Tidy up - moved getlastBuild as lastBuild into jenService - removed duplicate calls. 
 		Fixed wsprocess/process urls to both include files produced json as output params
 		Added socket/http connection timeouts to HTTPBuilder calls.

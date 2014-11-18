@@ -38,23 +38,15 @@ class JenkinsEndPoint implements ServletContextListener {
 	private JenService jenService
 	private JenSummaryService jenSummaryService
 
-	// strange issue with this service -
-	//private HBuilderService hBuilderService
-	// instantiate it instead
 	HBuilder hBuilder = new HBuilder()
 
 	private JiraRestService jiraRestService
-	//private GrailsApplication grailsApplication
 	private Map config
-
-
 
 	static final Set<Session> jsessions = ([] as Set).asSynchronized()
 
 	private String customParams,jensbuildend, jensprogressive, jensconlog, jensurl, jenserver, jensuser, jenspass, jenschoice, jensconurl = ''
 	private String processurl, wsprocessurl, wsprocessname = ''
-
-
 
 	private String jensApi = '/api/json'
 	private String userbase = '/user/'
@@ -202,9 +194,14 @@ class JenkinsEndPoint implements ServletContextListener {
 		}
 
 		if (cmd.equals('choose')) {
-			jenschoice = data.jenschoice ?: 'build'
+			jenschoice = data.jenschoice ?: 'dashboard'
 			switch (jenschoice) {
 				case 'build':
+					clearPage(userSession)
+					buildJob(userSession)
+					break
+				case 'justBuild': 
+					wsprocessurl='disabled'
 					clearPage(userSession)
 					buildJob(userSession)
 					break
@@ -269,7 +266,7 @@ class JenkinsEndPoint implements ServletContextListener {
 		}
 
 		// However if we see fetchNext within the html then it is likely to be building
-		// So lets attempt to connect to progressiveHtml page within jenkins
+		// attempt to connect to progressiveHtml page within jenkins
 		if (html."**".find{ it.toString().contains("fetchNext") ||it.@id.toString().contains("out")}) {
 
 			// Get api output for the job
@@ -280,9 +277,6 @@ class JenkinsEndPoint implements ServletContextListener {
 			asyncProcess.start()
 			//parseLiveLogs(userSession,bid+jensprogressive)
 
-			// Sendback liveUrl back through sockets
-			// If user wishes they can interact with it this way
-			// Due to CORS - the method was changed to use
 			// httpbuilder this end to do remoteURL processing
 			//def json = new JsonBuilder()
 			//json {
@@ -293,22 +287,15 @@ class JenkinsEndPoint implements ServletContextListener {
 
 		//This means job has finished and jenkins has static results showing in /consoleFull
 		if (start1) {
-			/*html."**".findAll{ it.@class.toString().contains("console-output")}.each {
-			 userSession.basicRemote.sendText(it.toString())
-			 }
-			 */
 			def bn=html."**".findAll{ it.@class.toString().contains("console-output")}
 			if (bn) {
 				bn.each {
 					userSession.getBasicRemote().sendText(it.toString())
 				}
 			}else{
-				//if (html."**".findAll{ it.@href.toString().contains("consoleText")}) {
 				String uri=jenService.stripDouble("${bid}${consoleText}")
 				HttpResponseDecorator html2= http.get(path: "${uri}")
 				userSession.getBasicRemote().sendText(html2?.data.text.toString())
-
-				//}
 			}
 
 		}
@@ -364,21 +351,20 @@ Currently connected to : $job running on $server
 					userSession.basicRemote.sendText("[${newBuild}].")
 					sleep(1000)
 					if (newBuild > currentBuild) {
-
-						/*
-						 * Get hold of config from grails if we have a processurl
-						 * a url defined upon success of a jenkins job that receives values 
-						 * and does something with built jobs 
-						 */
-						//def config = grailsApplication.config
-						String processurl = config.processurl?.toString() ?: ''
-						String wsprocessurl = config.wsprocessurl?.toString() ?: ''
-						String wsprocessname = config.wsprocessname?.toString() ?: ''
-						String showhistory = config.showhistory?.toString() ?: ''
-						if (((wsprocessurl||processurl) && currentBuild)|| ((showhistory.toString().equals('yes')) && currentBuild)) {
+						
+						String processurl1,wsprocessurl1,wsprocessname1 = ''
+						if (wsprocessurl != 'disabled') {
+							processurl1 = processurl ?: config.processurl
+							wsprocessurl1 = wsprocessurl ?: config.wsprocessurl
+							wsprocessname1 = wsprocessname ?: config.wsprocessname
+						}
+							
+						String showsummary = config.showsummary ?: 'no'
+						
+						if (((wsprocessurl1||processurl1) && currentBuild)|| ((showsummary.toString().equals('yes')) && currentBuild)) {
 							//This hogs websocket connection - so lets background it
-							def asyncProcess = new Thread({jenService.workOnBuild(userSession,processurl,wsprocessurl,
-								wsprocessname,newBuild,url,jenserver, jensuser, jenspass,customParams,jensurl,jensApi)} as Runnable)
+							def asyncProcess = new Thread({jenService.workOnBuild(userSession,processurl1,wsprocessurl1,
+								wsprocessname1,newBuild,url,jenserver, jensuser, jenspass,customParams,jensurl,jensApi)} as Runnable)
 							//def asyncProcess = new Thread({jenService.workOnBuild(null,processurl,newBuild,url,jenserver, jensuser, jenspass,customParams,jensurl,jensApi)} as Runnable)
 							asyncProcess.start()
 						}

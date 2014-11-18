@@ -178,11 +178,14 @@ border-color: black;
 	<g:if test="${((!hideButtons) || (!hideButtons.toLowerCase().equals('yes')))}">	
 		<div class="container">
 			<g:if test="${((!hideTriggerButton) || (!hideTriggerButton.toLowerCase().equals('yes')))}">
+				<g:if test="${wsprocessurl && (autoSubmit.equals('yes')) && buildOnlyButton && (buildOnlyButton.equals('yes'))}">
+					<a class="jbutton" onclick="javascript:justBuild${divId}();">Just Build</a> 
+				</g:if>
 				
 				<a class="jbutton" onclick="javascript:newBuild${divId}('build');">Build
-				<g:if test="${wsprocessname}">
-				&amp; ${wsprocessname}
-				</g:if>
+					<g:if test="${wsprocessurl && (autoSubmit.equals('yes'))}">
+						&amp; ${wsprocessname}
+					</g:if>
 				</a> 
 			</g:if>
 			<g:if test="${((!hideDashBoardButton) || (!hideDashBoardButton.toLowerCase().equals('yes')))}">	
@@ -462,11 +465,7 @@ function parseChanges${divId}(bid) {
 
 function parseSendHistory${divId}(bid,jiraSendType) {
 	webSocket${divId}.send(JSON.stringify({'cmd': 'parseSendHistory', 'bid': bid, 'jiraSendType' : jiraSendType }));
-}
-
-
-
-	
+}	
 
 function cdtd${divId}() {
 	var future = new Date(iDate${divId});
@@ -496,6 +495,13 @@ function cdtd${divId}() {
 }
 
 
+function  justBuild${divId}() {
+	webSocket${divId}.send(JSON.stringify({'cmd': 'choose', 'jenschoice': 'justBuild' }));
+	scrollToBottom${divId}();
+}
+function newBuild${divId}(choice) {
+	
+}
 function newBuild${divId}(choice) {
 	webSocket${divId}.send(JSON.stringify({'cmd': 'choose', 'jenschoice': choice }));
 	scrollToBottom${divId}();
