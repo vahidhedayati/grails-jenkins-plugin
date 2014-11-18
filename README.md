@@ -357,6 +357,18 @@ customParams="[appId: '123', appName: 'crazyApp', appEnv: 'test' ]"
 processurl="http://your_process_url/controller/action"
 wsprocessurl="http://your_process_url/controller/action"
 wsprocessname="Deploy code"
+
+// Buttons
+summaryViewButtons = "yes"
+summaryFileButton = "yes"
+summaryChangesButton = "yes"
+
+jiraButtons = "yes"
+jiraOverwriteButton = "yes"
+jiraAppendButton = "yes"
+jiraCommentButton = "yes"
+// if you have wsprocess url - 2 buttons would appear 
+buildOnlyButton = "yes"
 />
  ```
 customParams - if you have configured a processurl in your config you can pass values back
