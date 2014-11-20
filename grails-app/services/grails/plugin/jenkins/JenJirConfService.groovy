@@ -6,6 +6,27 @@ class JenJirConfService {
 	static transactional = false
 	
 	def grailsApplication
+		
+	// Jira config items	
+	String getJiraServer() { 
+		return config.jiraServer
+	}
+		
+	String getJiraUser() { 
+		return config.jiraUser
+	}	
+	
+	String getJiraPass () { 
+		return config.jiraPass
+	}	
+	
+	String getJiraSendType() { 
+		return config.jiraSendType
+	}	 
+	
+	String getJiracustomField() { 
+		return config.customField
+	}	 
 	
 	
 	boolean isConfigEnabled(String config) {

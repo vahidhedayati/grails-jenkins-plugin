@@ -8,11 +8,10 @@ import groovyx.net.http.HttpResponseException
 import groovyx.net.http.Method
 import groovyx.net.http.RESTClient
 
-class JenSummaryService {
+class JenSummaryService  extends JenJirConfService{
 
 	static transactional = false
 
-	def jenJirConfService
 	def jenService
 
 	def jiraRestService
@@ -28,7 +27,7 @@ class JenSummaryService {
 	RESTClient jenSummary(String jenserver, String jenuser,String jenpass,String bid,String sendSummary) {
 		try {
 			HBuilder hBuilder=new HBuilder()
-			RESTClient http = hBuilder.httpConn(jenserver, jenuser ?: '', jenpass ?: '',jenJirConfService.httpConnTimeOut,jenJirConfService.httpSockTimeOut)
+			RESTClient http = hBuilder.httpConn(jenserver, jenuser ?: '', jenpass ?: '',httpConnTimeOut,httpSockTimeOut)
 			jenSummary(http,jenserver,bid,sendSummary)
 		}catch (HttpResponseException e) {
 			log.error "Failed error: $e.statusCode"
@@ -51,9 +50,9 @@ class JenSummaryService {
 			//String url2 = jenserver+"/"+bid+consoleText
 			String cgurl=bid+changes
 
-			boolean sendChanges = jenJirConfService.isConfigEnabled(jenJirConfService.config?.sendChanges.toString())
-			boolean sendApi = jenJirConfService.isConfigEnabled(jenJirConfService.config?.sendApi.toString())
-			boolean sendParseConsole = jenJirConfService.isConfigEnabled(jenJirConfService.config?.sendParseConsole.toString())
+			boolean sendChanges = isConfigEnabled(config?.sendChanges.toString())
+			boolean sendApi = isConfigEnabled(config?.sendApi.toString())
+			boolean sendParseConsole = isConfigEnabled(config?.sendParseConsole.toString())
 
 			String changes,jobstat,jobconsole=''
 
@@ -83,28 +82,22 @@ class JenSummaryService {
 			}
 			output=jobstat+jobconsole+changes
 
-			String sendtoJira = jenJirConfService.config.sendtoJira
+			String sendtoJira = config.sendtoJira
 			if ((sendtoJira && sendtoJira.toLowerCase().equals('yes'))&&((sendSummary) && (!sendSummary.equals('none')))) {
-				String jiraServer = jenJirConfService.config.jiraServer
-				String jiraUser = jenJirConfService.config.jiraUser
-				String jiraPass = jenJirConfService.config.jiraPass
-				String jiraSendType = sendSummary ?: jenJirConfService.config.jiraSendType
-
-				String jiracustomField = jenJirConfService.config.customField
-
+				String jiraSendType = sendSummary ?: config.jiraSendType
+				String jiracustomField = config.customField
 				// different Jira calls
 				if (jiraSendType && jiraSendType.toLowerCase().equals('comment') && jiraTicket) {
-					jiraRestService.addComment(jiraServer,jiraUser,jiraPass,jiraTicket,output)
+					jiraRestService.addComment(jiraTicket,output)
 				}else if (jiraSendType && jiraSendType.toLowerCase().equals('customfield') && jiraTicket && jiracustomField) {
-					jiraRestService.addCustomField(jiraServer,jiraUser,jiraPass,jiraTicket,jiracustomField,output)
+					jiraRestService.addCustomField(jiraTicket,jiracustomField,output)
 				}else if (jiraSendType && jiraSendType.toLowerCase().equals('updatecustomfield') && jiraTicket && jiracustomField) {
-					jiraRestService.updateCustomField(jiraServer,jiraUser,jiraPass,jiraTicket,jiracustomField,output)
+					jiraRestService.updateCustomField(jiraTicket,jiracustomField,output)
 				}else if (jiraSendType && jiraSendType.toLowerCase().equals('description') && jiraTicket && jiracustomField) {
-					jiraRestService.updateDesc(jiraServer,jiraUser,jiraPass,jiraTicket,output)
+					jiraRestService.updateDesc(jiraTicket,output)
 				}else if (jiraSendType && jiraSendType.toLowerCase().equals('comdesc') && jiraTicket && jiracustomField) {
-					jiraRestService.updateDescAddComm(jiraServer,jiraUser,jiraPass,jiraTicket,output,output)
+					jiraRestService.updateDescAddComm(jiraTicket,output,output)
 				}
-
 			}
 		}
 
@@ -119,11 +112,11 @@ class JenSummaryService {
 			uri='/'+uri
 		}
 
-		boolean sendChangeSet = jenJirConfService.isConfigEnabled(jenJirConfService.config?.sendChangeSet.toString())
-		boolean sendCulprits = jenJirConfService.isConfigEnabled(jenJirConfService.config?.sendCulprits.toString())
-		boolean sendFdn = jenJirConfService.isConfigEnabled(jenJirConfService.config?.sendFdn.toString())
-		boolean sendBuildId = jenJirConfService.isConfigEnabled(jenJirConfService.config?.sendBuildId.toString())
-		boolean sendBuildUser = jenJirConfService.isConfigEnabled(jenJirConfService.config?.sendBuildUser.toString())
+		boolean sendChangeSet = isConfigEnabled(config?.sendChangeSet.toString())
+		boolean sendCulprits = isConfigEnabled(config?.sendCulprits.toString())
+		boolean sendFdn = isConfigEnabled(config?.sendFdn.toString())
+		boolean sendBuildId = isConfigEnabled(config?.sendBuildId.toString())
+		boolean sendBuildUser = isConfigEnabled(config?.sendBuildUser.toString())
 
 
 		def changes=parseApiJson(http, uri + jensApi)
@@ -231,10 +224,10 @@ class JenSummaryService {
 	String definedParseJobConsole(RESTClient http, String bid) {
 		String workspace,ftype,file=''
 
-		boolean parseBuildingWorkSpace = jenJirConfService.isConfigEnabled(jenJirConfService.config?.parseBuildingWorkSpace.toString())
-		boolean parseBuilding = jenJirConfService.isConfigEnabled(jenJirConfService.config?.parseBuilding.toString())
-		boolean parseDoneCreating = jenJirConfService.isConfigEnabled(jenJirConfService.config?.parseDoneCreating.toString())
-		boolean parseLastTrans = jenJirConfService.isConfigEnabled(jenJirConfService.config?.parseLastTrans.toString())
+		boolean parseBuildingWorkSpace = isConfigEnabled(config?.parseBuildingWorkSpace.toString())
+		boolean parseBuilding = isConfigEnabled(config?.parseBuilding.toString())
+		boolean parseDoneCreating = isConfigEnabled(config?.parseDoneCreating.toString())
+		boolean parseLastTrans = isConfigEnabled(config?.parseLastTrans.toString())
 
 		def builds=[]
 

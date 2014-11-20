@@ -354,6 +354,12 @@ function processMessage${divId}(message) {
 			iDate${divId}=timeObject;
 			newBuild${divId}('dash');
 		}
+
+		
+		if (jsonData.dash!=null) {
+			dash${divId}();
+		}	
+		
 		
 		if (jsonData.historyQueue!=null) {
 			var sb = [];
@@ -499,21 +505,16 @@ function  justBuild${divId}() {
 	webSocket${divId}.send(JSON.stringify({'cmd': 'choose', 'jenschoice': 'justBuild' }));
 	scrollToBottom${divId}();
 }
-function newBuild${divId}(choice) {
-	
-}
+
 function newBuild${divId}(choice) {
 	webSocket${divId}.send(JSON.stringify({'cmd': 'choose', 'jenschoice': choice }));
 	scrollToBottom${divId}();
 }
-
-/*
-function updateBuilds${divId}() {
-	if (hidebuildTimer!="yes") { 
-		webSocket${divId}.send(JSON.stringify({'cmd': 'histref', 'bid': '0' }));
-	}
+function dash${divId}() {
+	webSocket${divId}.send(JSON.stringify({'cmd': 'choose', 'jenschoice': 'dash' }));
+	scrollToBottom${divId}();
 }
-*/
+
 
 function cancelQueue${divId}(jobid) {
 	webSocket${divId}.send(JSON.stringify({'cmd': 'cancelJob', 'bid': jobid }));

@@ -245,7 +245,8 @@ class JenkinsEndPoint implements ServletContextListener {
 		userSession.basicRemote.sendText('Jenkins plugin connected to: ' + jensconurl)
 		// try to get apiToken if only user has provided
 		if (jensuser && !jenspass) {
-			jenspass = jenService.returnToken(jensuser, jenserver)
+			//jenspass = jenService.returnToken(jensuser, jenserver)
+			jenspass = jenService.returnToken(http,jensuser)
 		}
 		
 	}
