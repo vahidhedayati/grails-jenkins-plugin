@@ -15,7 +15,7 @@ class JenService extends JenJirConfService {
 	static transactional = false
 
 	def jenSummaryService
-	
+
 	HBuilder hBuilder=new HBuilder()
 
 	private String jensApi = '/api/json'
@@ -56,7 +56,7 @@ class JenService extends JenJirConfService {
 		return result
 	}
 
-	
+
 	//This returns the Jenkins APIToken for a given username
 	String returnToken(String user, String jenserver) {
 		def http1 = hBuilder.httpConn(jenserver, '', '',httpConnTimeOut,httpSockTimeOut)
@@ -87,7 +87,7 @@ class JenService extends JenJirConfService {
 		return token
 	}
 
-		
+
 	def asyncBuilder(String url, String jensuser, String jenspass,  String processurl, String customParams) {
 
 		def aurl = new URL(url)
@@ -262,8 +262,8 @@ class JenService extends JenJirConfService {
 							delegate.dash "true"
 						}
 						userSession.basicRemote.sendText(json1.toString())
-						
-					
+
+
 						// Load up build history which also calls jira calls if enabled
 						// if sendSummary as above is also enabled
 						if (showsummary.toLowerCase().equals("yes")) {

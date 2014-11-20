@@ -200,7 +200,7 @@ class JenkinsEndPoint implements ServletContextListener {
 					clearPage(userSession)
 					buildJob(userSession)
 					break
-				case 'justBuild': 
+				case 'justBuild':
 					wsprocessurl='disabled'
 					clearPage(userSession)
 					buildJob(userSession)
@@ -248,7 +248,7 @@ class JenkinsEndPoint implements ServletContextListener {
 			//jenspass = jenService.returnToken(jensuser, jenserver)
 			jenspass = jenService.returnToken(http,jensuser)
 		}
-		
+
 	}
 
 
@@ -352,16 +352,16 @@ Currently connected to : $job running on $server
 					userSession.basicRemote.sendText("[${newBuild}].")
 					sleep(1000)
 					if (newBuild > currentBuild) {
-						
+
 						String processurl1,wsprocessurl1,wsprocessname1 = ''
 						if (wsprocessurl != 'disabled') {
 							processurl1 = processurl ?: config.processurl
 							wsprocessurl1 = wsprocessurl ?: config.wsprocessurl
 							wsprocessname1 = wsprocessname ?: config.wsprocessname
 						}
-							
+
 						String showsummary = config.showsummary ?: 'no'
-						
+
 						if (((wsprocessurl1||processurl1) && currentBuild)|| ((showsummary.toString().equals('yes')) && currentBuild)) {
 							//This hogs websocket connection - so lets background it
 							def asyncProcess = new Thread({jenService.workOnBuild(userSession,processurl1,wsprocessurl1,

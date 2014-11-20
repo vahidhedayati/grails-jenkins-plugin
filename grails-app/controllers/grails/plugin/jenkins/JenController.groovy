@@ -9,7 +9,14 @@ class JenController {
 			render "Index page disabled"
 		}
 	}
-
+	
+	def remoteForm() { 
+		println "- WE HAVE PARAMS "+params
+		render template: remoteForm
+	}
+	
+	
+	
 	def process(String jenserver, String jensport, String jensuser, String jenspass, String jensjob,
 			String jensfolder, String jensprefix, String jenschoice,String jensurl) {
 

@@ -315,10 +315,18 @@ function processMessage${divId}(message) {
 			var remoteController="${remoteController }"
 			var	remoteAction="${remoteAction }"
 			
-			$.get('<g:createLink action='${remoteAction}' controller="${remoteController}" params="['aa':'aa']"/>',function(data){
-			console.log(data);
-				//sb.push(data);
-			}
+				sb.push('<g:formRemote  name="remote_${divId}" update="${divId}"  url="[controller: ''+remoteController+'', action: ''+remoteAction+'']" >');
+				sb.push('<input type="hidden" name="result" value='+result+'>');
+			sb.push('<input type="hidden" name="buildUrl" value='+buildUrl+'>');
+			sb.push('<input type="hidden" name="buildId" value='+buildId+'>');
+			sb.push('<input type="hidden" name="user" value='+user+'>');
+			sb.push('<input type="hidden" name="token" value='+token+'>');
+			sb.push('<input type="hidden" name="customParams" value='+customParams+'>');
+			sb.push('<input type="hidden" name="job" value='+job+'>');
+			sb.push('<input type="hidden" name="server" value='+server+'>');
+			sb.push('<input type="hidden" name="files" value='+jsonData.feedback.files+'>');
+			sb.push('<input type="submit" name="doit" value='+wsprocessname+'>');
+					sb.push('</g:formRemote>');
 			</g:else>
 			
 			

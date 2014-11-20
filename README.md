@@ -320,6 +320,18 @@ jenkins.jiraAppendButton = "yes"
 jenkins.jiraCommentButton = "yes"
 
 
+/*
+* formType can be defined as taglib (overrides Config.groovy )
+* defines the wsprocessurl form type (either normal which takes over page or remote which updates divId)
+* if remote it will use the divId used for current taglib call
+*/
+jenkins.formType = "normal" // either normal or remote
+
+// If you define formType = "remote" you will also need two more config or tag lib calls:
+// Both of these should actually be part of above wsprocess url 
+jenkins.remoteController= 'Your controller that is being called'
+jenkins.remoteAction = 'Your action' 
+
 ```
 
 
@@ -369,6 +381,11 @@ jiraAppendButton = "yes"
 jiraCommentButton = "yes"
 // if you have wsprocess url - 2 buttons would appear 
 buildOnlyButton = "yes"
+
+formType = "normal" // normal or remote
+// if remote define these:
+remoteController = 'Your controller that is being called'
+remoteAction = 'Your action' 
 />
  ```
 customParams - if you have configured a processurl in your config you can pass values back

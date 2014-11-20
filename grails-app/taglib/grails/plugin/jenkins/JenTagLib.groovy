@@ -2,12 +2,12 @@ package grails.plugin.jenkins
 
 import grails.util.Metadata
 
-class JenTagLib {
+class JenTagLib extends JenJirConfService {
 
 	static namespace = "jen"
 
 	def jenService
-	def jenJirConfService
+	//def jenJirConfService
 
 	// Logics to produce requirements put into taglib, controller page loads in taglib
 	// saves writing twice and now end user can interact directly via taglib calls
@@ -24,7 +24,7 @@ class JenTagLib {
 		String jenschoice = attrs.remove('jenschoice')
 
 		// websocket url
-		String wshostname = attrs.wshostname ?: jenJirConfService.config.wshostname ?: 'localhost:8080'
+		String wshostname = attrs.wshostname ?: config.wshostname ?: 'localhost:8080'
 
 		String jenserver = attrs.jenserver ?: 'localhost'
 
@@ -61,36 +61,40 @@ class JenTagLib {
 		// Configuration uris.
 		//Progressive page
 		// Default: '/logText/progressiveHtml'
-		String jensprogressive = attrs.jensprogressive ?: jenJirConfService.config.progressiveuri ?: '/logText/progressiveHtml'
+		String jensprogressive = attrs.jensprogressive ?: config.progressiveuri ?: '/logText/progressiveHtml'
 
 		//Ending uri for when building
 		// Default: '/build?delay=0sec'
-		String jensbuildend = attrs.jensbuildend ?: jenJirConfService.config.buildend ?:  '/build?delay=0sec'
+		String jensbuildend = attrs.jensbuildend ?: config.buildend ?:  '/build?delay=0sec'
 
-		String autoSubmit = attrs.autosubmit ?: jenJirConfService.config.autosubmit ?:  'no'
+		String autoSubmit = attrs.autosubmit ?: config.autosubmit ?:  'no'
 
 		// jens uri to get to full logs:
 		// Default: '/consoleFull'
-		String jensconlog = attrs.jensLog ?: jenJirConfService.config.consoleLog ?: '/consoleFull'
+		String jensconlog = attrs.jensLog ?: config.consoleLog ?: '/consoleFull'
 
-		String processurl = attrs.processurl ?: jenJirConfService.config.processurl
-		String wsprocessurl = attrs.wsprocessurl ?: jenJirConfService.config.wsprocessurl
-		String wsprocessname = attrs.wsprocessname ?: jenJirConfService.config.wsprocessname
+		String processurl = attrs.processurl ?: config.processurl
+		String wsprocessurl = attrs.wsprocessurl ?: config.wsprocessurl
+		String wsprocessname = attrs.wsprocessname ?: config.wsprocessname
 
-		String hideButtons = attrs.hideButtons ?: jenJirConfService.config.hideButtons ?: 'no'
-		String hideTriggerButton = attrs.hideTriggerButton ?: jenJirConfService.config.hideTriggerButton ?: 'no'
-		String hideDashBoardButton = attrs.hideDashBoardButton ?: jenJirConfService.config.hideDashBoardButton ?: 'no'
+		String hideButtons = attrs.hideButtons ?: config.hideButtons ?: 'no'
+		String hideTriggerButton = attrs.hideTriggerButton ?: config.hideTriggerButton ?: 'no'
+		String hideDashBoardButton = attrs.hideDashBoardButton ?: config.hideDashBoardButton ?: 'no'
 
-		String summaryViewButtons = attrs.summaryViewButtons ?: jenJirConfService.config.summaryViewButtons ?: 'yes'
-		String summaryFileButton = attrs.summaryFileButton ?: jenJirConfService.config.summaryFileButton ?: 'yes'
-		String summaryChangesButton = attrs.summaryChangesButton ?: jenJirConfService.config.summaryChangesButton ?: 'yes'
+		String summaryViewButtons = attrs.summaryViewButtons ?: config.summaryViewButtons ?: 'yes'
+		String summaryFileButton = attrs.summaryFileButton ?: config.summaryFileButton ?: 'yes'
+		String summaryChangesButton = attrs.summaryChangesButton ?: config.summaryChangesButton ?: 'yes'
 
-		String jiraButtons = attrs.jiraButtons ?: jenJirConfService.config.jiraButtons ?: 'yes'
-		String jiraOverwriteButton = attrs.jiraOverwriteButton ?: jenJirConfService.config.jiraOverwriteButton ?: 'yes'
-		String jiraAppendButton = attrs.jiraAppendButton ?: jenJirConfService.config.jiraAppendButton ?: 'yes'
-		String jiraCommentButton = attrs.jiraCommentButton ?: jenJirConfService.config.jiraCommentButton ?: 'yes'
+		String jiraButtons = attrs.jiraButtons ?: config.jiraButtons ?: 'yes'
+		String jiraOverwriteButton = attrs.jiraOverwriteButton ?: config.jiraOverwriteButton ?: 'yes'
+		String jiraAppendButton = attrs.jiraAppendButton ?: config.jiraAppendButton ?: 'yes'
+		String jiraCommentButton = attrs.jiraCommentButton ?: config.jiraCommentButton ?: 'yes'
 
-		String buildOnlyButton = attrs.buildOnlyButton ?: jenJirConfService.config.show.build.only.button ?: 'yes'
+		String buildOnlyButton = attrs.buildOnlyButton ?: config.show.build.only.button ?: 'yes'
+		
+		String formType = attrs.formType ?: config.formType?: 'normal'
+		String remoteController = attrs.remoteController ?: config.remoteController?: ''
+		String remoteAction = attrs.remoteAction ?: config.remoteAction?: ''
 		
 		String appname = Metadata.current.getApplicationName()
 		def model = [hideButtons:hideButtons, hideTriggerButton:hideTriggerButton, hideDashBoardButton:hideDashBoardButton,
@@ -102,7 +106,8 @@ class JenTagLib {
 			summaryViewButtons:summaryViewButtons,summaryFileButton:summaryFileButton,
 			summaryChangesButton:summaryChangesButton,jiraButtons:jiraButtons,
 			jiraOverwriteButton:jiraOverwriteButton,jiraAppendButton:jiraAppendButton,
-			jiraCommentButton:jiraCommentButton,buildOnlyButton:buildOnlyButton]
+			jiraCommentButton:jiraCommentButton,buildOnlyButton:buildOnlyButton,
+			formType:formType, remoteController:remoteController, remoteAction:remoteAction ]
 		if (template) {
 			out << g.render(template:template, model: model)
 		}else{
@@ -144,25 +149,29 @@ class JenTagLib {
 		}
 
 
-		def wshostname = attrs.wshostname ?: jenJirConfService.config.wshostname ?: 'localhost:8080'
-		String jensprogressive = attrs.jensprogressive ?: jenJirConfService.config.progressiveuri ?: '/logText/progressiveHtml'
-		String jensbuildend = attrs.jensbuildend ?: jenJirConfService.config.buildend ?:  '/build?delay=0sec'
-		String jensconlog = attrs.jensLog ?: jenJirConfService.config.consoleLog ?: '/consoleFull'
-		String hideButtons = attrs.hideButtons ?: jenJirConfService.config.hideButtons ?: 'no'
-		String hideTriggerButton = attrs.hideTriggerButton ?: jenJirConfService.config.hideTriggerButton ?: 'no'
-		String hideDashBoardButton = attrs.hideDashBoardButton ?: jenJirConfService.config.hideDashBoardButton ?: 'no'
-		String processurl = attrs.processurl ?: jenJirConfService.config.processurl
-		String wsprocessurl = attrs.wsprocessurl ?: jenJirConfService.config.wsprocessurl
-		String wsprocessname = attrs.wsprocessname ?: jenJirConfService.config.wsprocessname
-		String autoSubmit = attrs.autosubmit ?: jenJirConfService.config.autosubmit ?:  'no'
-		String summaryViewButtons = attrs.summaryViewButtons ?: jenJirConfService.config.summaryViewButtons ?: 'yes'
-		String summaryFileButton = attrs.summaryFileButton ?: jenJirConfService.config.summaryFileButton ?: 'yes'
-		String summaryChangesButton = attrs.summaryChangesButton ?: jenJirConfService.config.summaryChangesButton ?: 'yes'
-		String jiraButtons = attrs.jiraButtons ?: jenJirConfService.config.jiraButtons ?: 'yes'
-		String jiraOverwriteButton = attrs.jiraOverwriteButton ?: jenJirConfService.config.jiraOverwriteButton ?: 'yes'
-		String jiraAppendButton = attrs.jiraAppendButton ?: jenJirConfService.config.jiraAppendButton ?: 'yes'
-		String jiraCommentButton = attrs.jiraCommentButton ?: jenJirConfService.config.jiraCommentButton ?: 'yes'
-		String buildOnlyButton = attrs.buildOnlyButton ?: jenJirConfService.config.show.build.only.button ?: 'yes'
+		def wshostname = attrs.wshostname ?: config.wshostname ?: 'localhost:8080'
+		String jensprogressive = attrs.jensprogressive ?: config.progressiveuri ?: '/logText/progressiveHtml'
+		String jensbuildend = attrs.jensbuildend ?: config.buildend ?:  '/build?delay=0sec'
+		String jensconlog = attrs.jensLog ?: config.consoleLog ?: '/consoleFull'
+		String hideButtons = attrs.hideButtons ?: config.hideButtons ?: 'no'
+		String hideTriggerButton = attrs.hideTriggerButton ?: config.hideTriggerButton ?: 'no'
+		String hideDashBoardButton = attrs.hideDashBoardButton ?: config.hideDashBoardButton ?: 'no'
+		String processurl = attrs.processurl ?: config.processurl
+		String wsprocessurl = attrs.wsprocessurl ?: config.wsprocessurl
+		String wsprocessname = attrs.wsprocessname ?: config.wsprocessname
+		String autoSubmit = attrs.autosubmit ?: config.autosubmit ?:  'no'
+		String summaryViewButtons = attrs.summaryViewButtons ?: config.summaryViewButtons ?: 'yes'
+		String summaryFileButton = attrs.summaryFileButton ?: config.summaryFileButton ?: 'yes'
+		String summaryChangesButton = attrs.summaryChangesButton ?: config.summaryChangesButton ?: 'yes'
+		String jiraButtons = attrs.jiraButtons ?: config.jiraButtons ?: 'yes'
+		String jiraOverwriteButton = attrs.jiraOverwriteButton ?: config.jiraOverwriteButton ?: 'yes'
+		String jiraAppendButton = attrs.jiraAppendButton ?: config.jiraAppendButton ?: 'yes'
+		String jiraCommentButton = attrs.jiraCommentButton ?: config.jiraCommentButton ?: 'yes'
+		String buildOnlyButton = attrs.buildOnlyButton ?: config.show.build.only.button ?: 'yes'
+		String formType = attrs.formType ?: config.formType?: 'normal'
+		String remoteController = attrs.remoteController ?: config.remoteController?: ''
+		String remoteAction = attrs.remoteAction ?: config.remoteAction?: ''
+		
 		String appname = Metadata.current.getApplicationName()
 
 		def model = [hideButtons:hideButtons, hideTriggerButton:hideTriggerButton, hideDashBoardButton:hideDashBoardButton,
@@ -172,7 +181,8 @@ class JenTagLib {
 			autoSubmit:autoSubmit, customParams:attrs.customParams,processurl:processurl,wsprocessurl:wsprocessurl,
 			wsprocessname:wsprocessname,summaryViewButtons:summaryViewButtons,summaryFileButton:summaryFileButton,
 			summaryChangesButton:summaryChangesButton,jiraButtons:jiraButtons,jiraOverwriteButton:jiraOverwriteButton,jiraAppendButton:jiraAppendButton,
-			jiraCommentButton:jiraCommentButton,buildOnlyButton:buildOnlyButton]
+			jiraCommentButton:jiraCommentButton,buildOnlyButton:buildOnlyButton, 
+			formType:formType, remoteController:remoteController, remoteAction:remoteAction ]
 		if (template) {
 			out << g.render(template:template, model: model)
 		}else{
@@ -192,7 +202,7 @@ class JenTagLib {
 		String jenserver = attrs.remove('jenserver')
 
 
-		String processurl = attrs.processurl  ?: jenJirConfService.config.processurl
+		String processurl = attrs.processurl  ?: config.processurl
 		if (jensurl&&jenserver) {
 			jenService.asyncBuilder(jensurl, jenserver, url, jensuser, jenspass, processurl, customParams)
 		} else{
