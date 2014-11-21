@@ -175,6 +175,7 @@ border-color: black;
 	<br/><p></p>
 	<h3>${jenschoice } : ${jensjob} on ${jenserver }</h3>
 
+
 	<g:if test="${((!hideButtons) || (!hideButtons.toLowerCase().equals('yes')))}">	
 		<div class="container">
 			<g:if test="${((!hideTriggerButton) || (!hideTriggerButton.toLowerCase().equals('yes')))}">
@@ -205,12 +206,12 @@ border-color: black;
 <span id="jenkinsUser${divId}"></span>
 <br/>
 <div class="BuildHistory">
-<div id="FeedBack${divId}" ></div>
+
 <div id="BuildHistory1${divId}" ></div>
 <div id="BuildHistory${divId}" ></div>
 </div>
 
-
+<div id="FeedBack${divId}" ></div>
 
 <pre id="messagesTextarea${divId}" class="logconsole-sm">
 </pre>
@@ -291,45 +292,92 @@ function processMessage${divId}(message) {
 			var customParams = JSON.stringify(jsonData.feedback.customParams);
 			var job = JSON.stringify(jsonData.feedback.job);
 			var server = JSON.stringify(jsonData.feedback.server);
-
-			
 			var sb = [];
 			var formId="submitForm${divId}";
-	
+			var remoteController="${remoteController }"
+			var	remoteAction="${remoteAction }"
+			var divId="${divId }"
+			var baseapp="${meta(name:'app.name')}";
+			var retId1="return_${divId}";
+			function getApp() {
+				return baseapp;
+			}
+			var submitTo='/'+getApp()+'/'+remoteController+'/'+remoteAction;
+			var autoSubmit="${autoSubmit}";
 			<g:if test="${formType.equals('normal')}">
 				sb.push('<form method="post" id='+formId+' name='+formId+' action='+wsprocessurl+'>');
 				sb.push('<input type="hidden" name="result" value='+result+'>');
-			sb.push('<input type="hidden" name="buildUrl" value='+buildUrl+'>');
-			sb.push('<input type="hidden" name="buildId" value='+buildId+'>');
-			sb.push('<input type="hidden" name="user" value='+user+'>');
-			sb.push('<input type="hidden" name="token" value='+token+'>');
-			sb.push('<input type="hidden" name="customParams" value='+customParams+'>');
-			sb.push('<input type="hidden" name="job" value='+job+'>');
-			sb.push('<input type="hidden" name="server" value='+server+'>');
-			sb.push('<input type="hidden" name="files" value='+jsonData.feedback.files+'>');
-			sb.push('<input type="submit" name="doit" value='+wsprocessname+'>');
+				sb.push('<input type="hidden" name="buildUrl" value='+buildUrl+'>');
+				sb.push('<input type="hidden" name="buildId" value='+buildId+'>');
+				sb.push('<input type="hidden" name="user" value='+user+'>');
+				sb.push('<input type="hidden" name="token" value='+token+'>');
+				sb.push('<input type="hidden" name="customParams" value='+customParams+'>');
+				sb.push('<input type="hidden" name="job" value='+job+'>');
+				sb.push('<input type="hidden" name="server" value='+server+'>');
+				sb.push('<input type="hidden" name="files" value='+jsonData.feedback.files+'>');
+				sb.push('<input type="submit" name="doit" value='+wsprocessname+'>');
 				sb.push('</form>');
-			
+				if (autoSubmit == "yes") {
+					sb.push('<script>\n');
+						sb.push('document.getElementById("'+formId+'").submit();\n');
+						sb.push('<\/script>\n');	
+				}	
+				$('#FeedBack${divId}').html(sb.join(""));	
 			</g:if>
-			<g:else>
-			var remoteController="${remoteController }"
-			var	remoteAction="${remoteAction }"
 			
-			$.get('<g:createLink action='${remoteAction}' controller="${remoteController}" params="['aa':'aa']"/>',function(data){
-			console.log(data);
-				//sb.push(data);
-			}
-			</g:else>
+			<g:if test="${formType.equals('remote')}">
+        		if (autoSubmit == "yes") {
+    				sb.push('<div id="'+retId1+'"></div>\n');
+    				sb.push('<script>\n');
+    				sb.push('var submitTo="/${meta(name:'app.name')}/${remoteController }/${remoteAction }";\n')
+    				sb.push('var result='+result+'\n');
+    				sb.push('var buildUrl='+buildUrl+'\n');
+    				sb.push('var buildId='+buildId+'\n');
+    				sb.push('var user='+user+'\n');
+    				sb.push('var token='+token+'\n');
+    				sb.push('var job='+job+'\n');
+    				sb.push('var customParams='+customParams+'\n');
+    				sb.push('var server='+server+'\n');
+    				sb.push('var files='+jsonData.feedback.files+'\n');
+    				sb.push('var retId='+retId1+'\n');
+    			 	sb.push('var xmlhttp;\n');
+    	        	sb.push('if (window.XMLHttpRequest){\n');
+    	            sb.push('xmlhttp = new XMLHttpRequest();\n');
+    	        	sb.push('}\n');
+    	        	sb.push('else{\n');
+    	            sb.push('xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");\n');
+    	        	sb.push('}\n');
+    	        	sb.push('xmlhttp.onreadystatechange = function(){\n');
+    	            sb.push('if (xmlhttp.readyState == 4 && xmlhttp.status == 200){\n');
+    	            sb.push('document.getElementById("'+retId1+'").innerHTML = xmlhttp.responseText;\n');
+    	            sb.push('}\n');
+    	        	sb.push('}\n');
+    	        	sb.push('xmlhttp.open("POST", submitTo, true);\n');
+    	        	sb.push('xmlhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");\n');
+    	        	sb.push('xmlhttp.send("result="+result+"&buildUrl="+ buildUrl+"&buildId="+buildId+"&user="+user+"&token="+token+"&customParams="+customParams+"&job="+job+"&server="+server+"&files="+files);\n');
+    	        	sb.push('<\/script>\n');	
+    	        	$('#FeedBack${divId}').html(sb.join(""));
+    			}else{
+    				sb.push('<form method="post" id='+formId+' name='+formId+' action='+wsprocessurl+'>');
+    				sb.push('<input type="hidden" name="result" value='+result+'>');
+    				sb.push('<input type="hidden" name="buildUrl" value='+buildUrl+'>');
+    				sb.push('<input type="hidden" name="buildId" value='+buildId+'>');
+    				sb.push('<input type="hidden" name="user" value='+user+'>');
+    				sb.push('<input type="hidden" name="token" value='+token+'>');
+    				sb.push('<input type="hidden" name="customParams" value='+customParams+'>');
+    				sb.push('<input type="hidden" name="job" value='+job+'>');
+    				sb.push('<input type="hidden" name="server" value='+server+'>');
+    				sb.push('<input type="hidden" name="files" value='+jsonData.feedback.files+'>');
+    				sb.push('<input type="submit" name="doit" value='+wsprocessname+'>');
+    				sb.push('</form>');
+    				
+        		}
+    				
+        </g:if>
+
 			
 			
-			var autoSubmit="${autoSubmit}";
 			
-			if (autoSubmit == "yes") {
-				sb.push('<script>\n');
-				sb.push('document.getElementById("'+formId+'").submit();\n');
-				sb.push('<\/script>\n');	
-			}	
-			$('#FeedBack${divId}').html(sb.join(""));	
 		}
 		
 		

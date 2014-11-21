@@ -1,4 +1,4 @@
-jenjir 0.3
+jenjir 0.4
 =========
 
 
@@ -15,7 +15,7 @@ After build summary - which with correct Jira details it will push this summary 
 
 Dependency, in your conf/BuildConfig.groovy under plugins add:
 ```groovy
-	compile ":jenjir:0.3"
+	compile ":jenjir:0.4"
 ```
 
 ###### Plugin will work with tomcat 7.0.54 + (inc. 8) running java 1.7+
@@ -323,7 +323,8 @@ jenkins.jiraCommentButton = "yes"
 /*
 * formType can be defined as taglib (overrides Config.groovy )
 * defines the wsprocessurl form type (either normal which takes over page or remote which updates divId)
-* if remote it will use the divId used for current taglib call
+* if remote it will create new element ID called return_${divId} what ever you defined divId to be 
+* so if multi call - on each call a return_ element is created
 */
 jenkins.formType = "normal" // either normal or remote
 
@@ -587,6 +588,9 @@ def parseJenPlugin() {
 
 # Jenjir Change information:
 ```
+0.4 - 	remote form submission feature enabled meaning on multi build tasks with multi element all results should be 
+		returned/triggered on the same page that did the call. Refer to configuration items for remoteform options (formType)
+		 
 0.3 - 	Cleanup of config calls within services. Addition just Build button added if end app has processurl name/action defined.
 		Better logics around displaying wsprocessname with Build button.
 		
