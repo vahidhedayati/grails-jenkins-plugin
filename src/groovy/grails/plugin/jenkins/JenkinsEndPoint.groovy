@@ -307,7 +307,7 @@ class JenkinsEndPoint implements ServletContextListener {
 		def job = userSession.userProperties.get("job").toString()
 		def server = userSession.userProperties.get("server").toString()
 		userSession.basicRemote.sendText("""
-${jensuser ?: 'Guest'} welcome to Grails Jenkins Plugin
+${jensuser ?: 'Guest'} welcome to Grails Jenjir Plugin
 Currently connected to : $job running on $server
 """)
 

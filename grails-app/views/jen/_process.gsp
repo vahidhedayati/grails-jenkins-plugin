@@ -210,9 +210,8 @@ border-color: black;
 <div id="BuildHistory1${divId}" ></div>
 <div id="BuildHistory${divId}" ></div>
 </div>
-
-<div id="FeedBack${divId}" ></div>
-
+<div id="return_${divId}"></div>
+<div id="FeedBack${divId}"></div>
 <pre id="messagesTextarea${divId}" class="logconsole-sm">
 </pre>
 
@@ -302,32 +301,25 @@ function processMessage${divId}(message) {
 			function getApp() {
 				return baseapp;
 			}
-			var submitTo='/'+getApp()+'/'+remoteController+'/'+remoteAction;
+			var submitTo="/${meta(name:'app.name')}/${remoteController }/${remoteAction }";
 			var autoSubmit="${autoSubmit}";
-			<g:if test="${formType.equals('normal')}">
-				sb.push('<form method="post" id='+formId+' name='+formId+' action='+wsprocessurl+'>');
-				sb.push('<input type="hidden" name="result" value='+result+'>');
-				sb.push('<input type="hidden" name="buildUrl" value='+buildUrl+'>');
-				sb.push('<input type="hidden" name="buildId" value='+buildId+'>');
-				sb.push('<input type="hidden" name="user" value='+user+'>');
-				sb.push('<input type="hidden" name="token" value='+token+'>');
-				sb.push('<input type="hidden" name="customParams" value='+customParams+'>');
-				sb.push('<input type="hidden" name="job" value='+job+'>');
-				sb.push('<input type="hidden" name="server" value='+server+'>');
-				sb.push('<input type="hidden" name="files" value='+jsonData.feedback.files+'>');
-				sb.push('<input type="submit" name="doit" value='+wsprocessname+'>');
-				sb.push('</form>');
-				if (autoSubmit == "yes") {
-					sb.push('<script>\n');
-						sb.push('document.getElementById("'+formId+'").submit();\n');
-						sb.push('<\/script>\n');	
-				}	
-				$('#FeedBack${divId}').html(sb.join(""));	
-			</g:if>
+			sb.push('<form method="post" id='+formId+' name='+formId+' action='+wsprocessurl+'>');
+			sb.push('<input type="hidden" name="result" value='+result+'>');
+			sb.push('<input type="hidden" name="buildUrl" value='+buildUrl+'>');
+			sb.push('<input type="hidden" name="buildId" value='+buildId+'>');
+			sb.push('<input type="hidden" name="user" value='+user+'>');
+			sb.push('<input type="hidden" name="token" value='+token+'>');
+			sb.push('<input type="hidden" name="customParams" value='+customParams+'>');
+			sb.push('<input type="hidden" name="job" value='+job+'>');
+			sb.push('<input type="hidden" name="server" value='+server+'>');
+			sb.push('<input type="hidden" name="files" value='+jsonData.feedback.files+'>');
+			sb.push('<input type="submit" name="doit" value='+wsprocessname+'>');
+			sb.push('</form>');
 			
 			<g:if test="${formType.equals('remote')}">
-        		if (autoSubmit == "yes") {
-    				sb.push('<div id="'+retId1+'"></div>\n');
+				sb.push('<div id="'+retId1+'"></div>\n');
+				// Remote Form functionality pushed out dynamically
+				if (autoSubmit == "yes") { 
     				sb.push('<script>\n');
     				sb.push('var submitTo="/${meta(name:'app.name')}/${remoteController }/${remoteAction }";\n')
     				sb.push('var result='+result+'\n');
@@ -340,7 +332,7 @@ function processMessage${divId}(message) {
     				sb.push('var server='+server+'\n');
     				sb.push('var files='+jsonData.feedback.files+'\n');
     				sb.push('var retId='+retId1+'\n');
-    			 	sb.push('var xmlhttp;\n');
+				 	sb.push('var xmlhttp;\n');
     	        	sb.push('if (window.XMLHttpRequest){\n');
     	            sb.push('xmlhttp = new XMLHttpRequest();\n');
     	        	sb.push('}\n');
@@ -356,35 +348,31 @@ function processMessage${divId}(message) {
     	        	sb.push('xmlhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");\n');
     	        	sb.push('xmlhttp.send("result="+result+"&buildUrl="+ buildUrl+"&buildId="+buildId+"&user="+user+"&token="+token+"&customParams="+customParams+"&job="+job+"&server="+server+"&files="+files);\n');
     	        	sb.push('<\/script>\n');	
-    	        	$('#FeedBack${divId}').html(sb.join(""));
-    			}else{
-    				sb.push('<form method="post" id='+formId+' name='+formId+' action='+wsprocessurl+'>');
-    				sb.push('<input type="hidden" name="result" value='+result+'>');
-    				sb.push('<input type="hidden" name="buildUrl" value='+buildUrl+'>');
-    				sb.push('<input type="hidden" name="buildId" value='+buildId+'>');
-    				sb.push('<input type="hidden" name="user" value='+user+'>');
-    				sb.push('<input type="hidden" name="token" value='+token+'>');
-    				sb.push('<input type="hidden" name="customParams" value='+customParams+'>');
-    				sb.push('<input type="hidden" name="job" value='+job+'>');
-    				sb.push('<input type="hidden" name="server" value='+server+'>');
-    				sb.push('<input type="hidden" name="files" value='+jsonData.feedback.files+'>');
-    				sb.push('<input type="submit" name="doit" value='+wsprocessname+'>');
-    				sb.push('</form>');
-    				
-        		}
-    				
-        </g:if>
-
-			
-			
-			
+				}else{
+					sb.push('<script>\n');
+					sb.push('$(\'#submitForm${divId}\').submit(function () {\n');
+	    			sb.push('$.post('+wsprocessurl+', $(\'#submitForm${divId}\').serialize(), function (data, textStatus) {\n');
+    	    		sb.push(' $(\'#return_${divId}\').append(data);\n');
+  					sb.push('  });\n');
+   					sb.push(' return false;\n');
+ 					sb.push('});\n');
+					sb.push('<\/script>\n');
+				}		
+	    	</g:if>
+	    	<g:else>
+			if (autoSubmit == "yes") {
+				sb.push('<script>\n');
+				sb.push('document.getElementById("'+formId+'").submit();\n');
+				sb.push('<\/script>\n');	
+			}
+			</g:else>	
+			$('#FeedBack${divId}').html(sb.join(""));		
 		}
 		
 		
 		if (jsonData.historytop!=null) {
 			jsonData.historytop.forEach(function(entry) {
 				$('#BuildHistoryTop${divId}').html(entry.bprogress);
-				//updateBuilds(entry.bid)
 				updateBuilds${divId}()
 			});
 		}
@@ -521,6 +509,7 @@ function processMessage${divId}(message) {
 		scrollToBottom${divId}();
 	}
 }
+
 
 function parseHistory${divId}(bid) {
 	webSocket${divId}.send(JSON.stringify({'cmd': 'parseHistory', 'bid': bid }));

@@ -1,4 +1,4 @@
-jenjir 0.4
+jenjir
 =========
 
 
@@ -15,7 +15,7 @@ After build summary - which with correct Jira details it will push this summary 
 
 Dependency, in your conf/BuildConfig.groovy under plugins add:
 ```groovy
-	compile ":jenjir:0.4"
+	compile ":jenjir:0.5"
 ```
 
 ###### Plugin will work with tomcat 7.0.54 + (inc. 8) running java 1.7+
@@ -588,6 +588,9 @@ def parseJenPlugin() {
 
 # Jenjir Change information:
 ```
+0.5 - 	Hoping this be the last update for a while the remoteForm functionality would have only worked on autoSubmit=yes
+		This has now been corrected so remoteForms will work on autosubmit true or not.
+		
 0.4 - 	remote form submission feature enabled meaning on multi build tasks with multi element all results should be 
 		returned/triggered on the same page that did the call. Refer to configuration items for remoteform options (formType)
 		 
