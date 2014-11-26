@@ -15,7 +15,7 @@ After build summary - which with correct Jira details it will push this summary 
 
 Dependency, in your conf/BuildConfig.groovy under plugins add:
 ```groovy
-	compile ":jenjir:0.5"
+	compile ":jenjir:0.6"
 ```
 
 ###### Plugin will work with tomcat 7.0.54 + (inc. 8) running java 1.7+
@@ -366,6 +366,7 @@ jensLog="something"
 wshostname="something"
 jensprogressive="something"
 jensLog="something"
+dynamicParams = "['deployType':['background', 'live']]"
 customParams="[appId: '123', appName: 'crazyApp', appEnv: 'test' ]"
 processurl="http://your_process_url/controller/action"
 wsprocessurl="http://your_process_url/controller/action"
@@ -588,6 +589,14 @@ def parseJenPlugin() {
 
 # Jenjir Change information:
 ```
+0.6	-	DynamicParams added as an additional input to <jen:connect <jen:dirconnect
+		This is defined by a key followed by values  
+		dynamicParams = "['deployType':['background', 'live']]"
+		With this set a select box is created on frontend which when user selects defined option the value is passed back to 
+		processurl or wsprocessurl after build is completed 
+		This is now allowing dynamic value selection alongside the build/deploy task
+		
+		
 0.5 - 	Hoping this be the last update for a while the remoteForm functionality would have only worked on autoSubmit=yes
 		This has now been corrected so remoteForms will work on autosubmit true or not.
 		

@@ -1,7 +1,7 @@
 import grails.plugin.jenkins.JenkinsEndPoint
 
 class JenjirGrailsPlugin {
-	def version = "0.5"
+	def version = "0.6"
 	def grailsVersion = "2.0 > *"
 	def title = "Jenjir plugin"
 	def description = 'Plugin to interact with Jenkins : do real time builds. View build version history of a given job, derive summary information. Push Summary to Jira.'

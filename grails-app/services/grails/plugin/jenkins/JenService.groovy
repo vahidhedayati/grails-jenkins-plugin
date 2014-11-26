@@ -115,14 +115,14 @@ class JenService extends JenJirConfService {
 		sleep(6000)
 
 		// Kick off a job to asynchronously check build and if we have result to trigger processurl
-		def asyncProcess = new Thread({workOnBuild(null,processurl,'','',newBuild,
-			jensurl,jenserver, jensuser, jenspass,customParams,jensurl,jensApi)} as Runnable)
+		def asyncProcess = new Thread({
+				workOnBuild(null,processurl,'','',newBuild,jensurl,jenserver, jensuser, jenspass,customParams,jensurl,jensApi,'',''
+				)} as Runnable)
 		asyncProcess.start()
 
 	}
 
-	def asyncBuilder(String jensurl, String jenserver, String jensuser,
-			String jenspass,  String processurl, String customParams) {
+	def asyncBuilder(String jensurl, String jenserver, String jensuser,String jenspass,  String processurl, String customParams) {
 
 		def jensbuildend = config.jensbuildend  ?: '/build?delay=0sec'
 
@@ -145,9 +145,9 @@ class JenService extends JenJirConfService {
 		sleep(6000)
 
 		// Kick off a job to asynchronously check build and if we have result to trigger processurl
-		def asyncProcess = new Thread({workOnBuild(null,processurl,'','',
-			newBuild,jensurl,jenserver, jensuser, jenspass,customParams,
-			jensurl,jensApi)} as Runnable)
+		def asyncProcess = new Thread({
+				workOnBuild(null,processurl,'','',newBuild,jensurl,jenserver, jensuser, jenspass,customParams,jensurl,jensApi,'',''
+				)} as Runnable)
 		asyncProcess.start()
 
 	}
@@ -217,7 +217,7 @@ class JenService extends JenJirConfService {
 	// defined processcontrol url.
 	def workOnBuild(Session userSession, String processurl, String wsprocessurl,
 			String wsprocessname, int bid,String uri, String jenserver, String jensuser,
-			String jenspass, String customParams,	String jensurl, String jensApi) {
+			String jenspass, String customParams,	String jensurl, String jensApi, String dynamicName, String dynamicValue) {
 
 		boolean go = false
 		def result
@@ -288,12 +288,21 @@ class JenService extends JenJirConfService {
 								delegate.result "$result"
 								delegate.buildUrl  "$jenserver$ubi"
 								delegate.buildId "${bid as String}"
-								delegate.customParams "${customParams}"
 								delegate.server  "${jenserver}"
 								delegate.user "${jensuser}"
 								delegate.token "${jenspass}"
 								delegate.job "${jensurl}"
-								delegate.files "${myFiles as JSON}"
+								if (dynamicName && dynamicValue) {
+									//delegate."${dynamicName}" "${dynamicValue}"
+									delegate.dynamicName "${dynamicName}"
+									delegate.dynamicValue "${dynamicValue}"
+								}
+								if (customParams) {
+									delegate.customParams "${customParams}"
+								}
+								if (myFiles) {
+									delegate.files "${myFiles as JSON}"
+								}
 							}
 							userSession.basicRemote.sendText(ajson.toString())
 						}
@@ -301,7 +310,7 @@ class JenService extends JenJirConfService {
 							String buildUrl = jenserver+ubi
 							String buildId = bid as String
 							String job=jensurl
-							sendToProcess(processurl,result,buildUrl,buildId,customParams,jenserver, jensuser,jenspass,job,myFiles)
+							sendToProcess(processurl,result,buildUrl,buildId,customParams,jenserver, jensuser,jenspass,job,myFiles,dynamicName,dynamicValue)
 						}
 
 						go = true
@@ -319,7 +328,7 @@ class JenService extends JenJirConfService {
 
 
 	private void sendToProcess(String processurl, String result, String buildUrl,String buildId,String customParams,
-			String server,	String user,String pass,String  job, Map myFiles) {
+			String server,	String user,String pass,String  job, Map myFiles,String dynamicName,String dynamicValue) {
 		def http2 = hBuilder.httpConn(processurl,'','',httpConnTimeOut,httpSockTimeOut)
 		http2.request( POST ) { req1 ->
 			requestContentType = URLENC
@@ -332,6 +341,8 @@ class JenService extends JenJirConfService {
 				user : user,
 				token : pass,
 				job : job,
+				dynamicName: dynamicName,
+				dynamicValue: dynamicValue,
 				files: "${myFiles as JSON}"
 			]
 			response.success = { resp1 ->

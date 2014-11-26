@@ -45,8 +45,8 @@ class JenkinsEndPoint implements ServletContextListener {
 
 	static final Set<Session> jsessions = ([] as Set).asSynchronized()
 
-	private String customParams,jensbuildend, jensprogressive, jensconlog, jensurl, jenserver, jensuser, jenspass, jenschoice, jensconurl = ''
-	private String processurl, wsprocessurl, wsprocessname = ''
+	private String customParams, jensbuildend, jensprogressive, jensconlog, jensurl, jenserver, jensuser, jenspass, jenschoice, jensconurl = ''
+	private String processurl, wsprocessurl, wsprocessname, dynamicName, dynamicValue = ''
 
 	private String jensApi = '/api/json'
 	private String userbase = '/user/'
@@ -130,6 +130,13 @@ class JenkinsEndPoint implements ServletContextListener {
 			jenkinsConnect(userSession)
 		}
 
+		if (cmd.equals('dynamicAction'))  {
+			if (data.name && data.value) {
+				dynamicName=data.name
+				dynamicValue=data.value
+			}	
+		}
+		
 		if (cmd.equals('viewHistory')) {
 			if (data.bid) {
 				clearPage(userSession)
@@ -365,7 +372,7 @@ Currently connected to : $job running on $server
 						if (((wsprocessurl1||processurl1) && currentBuild)|| ((showsummary.toString().equals('yes')) && currentBuild)) {
 							//This hogs websocket connection - so lets background it
 							def asyncProcess = new Thread({jenService.workOnBuild(userSession,processurl1,wsprocessurl1,
-								wsprocessname1,newBuild,url,jenserver, jensuser, jenspass,customParams,jensurl,jensApi)} as Runnable)
+								wsprocessname1,newBuild,url,jenserver, jensuser, jenspass,customParams,jensurl,jensApi,dynamicName,dynamicValue)} as Runnable)
 							//def asyncProcess = new Thread({jenService.workOnBuild(null,processurl,newBuild,url,jenserver, jensuser, jenspass,customParams,jensurl,jensApi)} as Runnable)
 							asyncProcess.start()
 						}

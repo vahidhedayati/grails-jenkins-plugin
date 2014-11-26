@@ -96,13 +96,22 @@ class JenTagLib extends JenJirConfService {
 		String remoteController = attrs.remoteController ?: config.remoteController?: ''
 		String remoteAction = attrs.remoteAction ?: config.remoteAction?: ''
 		
+		
+		def dynamicName,dynamicValues
+		if (attrs.dynamicParams) {
+			attrs.dynamicParams.each { k,v ->  
+				dynamicName=k
+				dynamicValues=v
+			}
+		}
+	
 		String appname = Metadata.current.getApplicationName()
 		def model = [hideButtons:hideButtons, hideTriggerButton:hideTriggerButton, hideDashBoardButton:hideDashBoardButton,
 			jenschoice:jenschoice, divId:divId, jenfullserver:jenfullserver, jensconurl:jensconurl,
 			jensjob:attrs.jensjob, jensuser:jensuser, jenspass:jenspass, appname:appname, wshostname:wshostname,
 			jenserver:jenserver, jensurl:jensurl, jensprogressive:jensprogressive, jensbuildend:jensbuildend,
 			jensconlog:jensconlog, customParams:attrs.customParams,processurl:processurl,wsprocessurl:wsprocessurl,
-			autoSubmit:autoSubmit, wsprocessname:wsprocessname,
+			autoSubmit:autoSubmit, wsprocessname:wsprocessname, dynamicName:dynamicName, dynamicValues:dynamicValues,
 			summaryViewButtons:summaryViewButtons,summaryFileButton:summaryFileButton,
 			summaryChangesButton:summaryChangesButton,jiraButtons:jiraButtons,
 			jiraOverwriteButton:jiraOverwriteButton,jiraAppendButton:jiraAppendButton,
@@ -147,8 +156,16 @@ class JenTagLib extends JenJirConfService {
 		if (!validurl.startsWith('Success')) {
 			return
 		}
-
-
+		
+		
+		def dynamicName,dynamicValues
+		if (attrs.dynamicParams) {
+			attrs.dynamicParams.each { k,v ->  
+				dynamicName=k
+				dynamicValues=v
+			}
+		}
+	
 		def wshostname = attrs.wshostname ?: config.wshostname ?: 'localhost:8080'
 		String jensprogressive = attrs.jensprogressive ?: config.progressiveuri ?: '/logText/progressiveHtml'
 		String jensbuildend = attrs.jensbuildend ?: config.buildend ?:  '/build?delay=0sec'
@@ -181,7 +198,7 @@ class JenTagLib extends JenJirConfService {
 			autoSubmit:autoSubmit, customParams:attrs.customParams,processurl:processurl,wsprocessurl:wsprocessurl,
 			wsprocessname:wsprocessname,summaryViewButtons:summaryViewButtons,summaryFileButton:summaryFileButton,
 			summaryChangesButton:summaryChangesButton,jiraButtons:jiraButtons,jiraOverwriteButton:jiraOverwriteButton,jiraAppendButton:jiraAppendButton,
-			jiraCommentButton:jiraCommentButton,buildOnlyButton:buildOnlyButton, 
+			jiraCommentButton:jiraCommentButton,buildOnlyButton:buildOnlyButton, dynamicName:dynamicName, dynamicValues:dynamicValues,
 			formType:formType, remoteController:remoteController, remoteAction:remoteAction ]
 		if (template) {
 			out << g.render(template:template, model: model)

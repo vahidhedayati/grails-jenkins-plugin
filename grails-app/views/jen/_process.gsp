@@ -203,6 +203,12 @@ border-color: black;
 </div>
 </g:if>
 
+<g:if test="${dynamicName}">
+<div class="jbutton">
+${dynamicName} <g:select name="${dynamicName }" from="${dynamicValues }" onclick="setDynamicAction('${dynamicName}', this.value);"/>
+</div>
+</g:if>
+
 <span id="jenkinsUser${divId}"></span>
 <br/>
 <div class="BuildHistory">
@@ -253,7 +259,7 @@ webSocket${divId}.onmessage=function(message) {processMessage${divId}(message);	
 function processOpen${divId}(message) {
 	$('#messagesTextarea${divId}').append('Server Connect....\n');
 	webSocket${divId}.send(JSON.stringify({'cmd':'connect','jensuser':"${jensuser }",'jensconurl':"${jensconurl }",
-		'hideBuildTimer':"${hideBuildTimer }",'customParams':"${customParams}", 
+		'hideBuildTimer':"${hideBuildTimer }",'customParams':"${customParams}" , 
 		'processurl':"${processurl}",'wsprocessurl':"${wsprocessurl}",'wsprocessname':"${wsprocessname}",
 		'jenspass':"${jenspass }",'jenserver':"${jenfullserver }",'jensurl':"${jensurl }",
 		'jensbuildend':"${jensbuildend }",'jensprogressive': "${jensprogressive }", 'jensconlog':"${jensconlog }"}));
@@ -291,6 +297,9 @@ function processMessage${divId}(message) {
 			var customParams = JSON.stringify(jsonData.feedback.customParams);
 			var job = JSON.stringify(jsonData.feedback.job);
 			var server = JSON.stringify(jsonData.feedback.server);
+			var dynamicName = JSON.stringify(jsonData.feedback.dynamicName);
+			var dynamicValue = JSON.stringify(jsonData.feedback.dynamicValue);
+			
 			var sb = [];
 			var formId="submitForm${divId}";
 			var remoteController="${remoteController }"
@@ -312,8 +321,14 @@ function processMessage${divId}(message) {
 			sb.push('<input type="hidden" name="customParams" value='+customParams+'>');
 			sb.push('<input type="hidden" name="job" value='+job+'>');
 			sb.push('<input type="hidden" name="server" value='+server+'>');
+			sb.push('<input type="hidden" name="dynamicName" value='+dynamicName+'>');
+			sb.push('<input type="hidden" name="dynamicValue" value='+dynamicValue+'>');
+			
 			sb.push('<input type="hidden" name="files" value='+jsonData.feedback.files+'>');
 			sb.push('<input type="submit" name="doit" value='+wsprocessname+'>');
+			
+			sb.push('<input type="submit" name="doit" value='+wsprocessname+'>');
+			
 			sb.push('</form>');
 			
 			<g:if test="${formType.equals('remote')}">
@@ -328,6 +343,8 @@ function processMessage${divId}(message) {
     				sb.push('var user='+user+'\n');
     				sb.push('var token='+token+'\n');
     				sb.push('var job='+job+'\n');
+    				sb.push('var dynamicName='+dynamicName+'\n');
+    				sb.push('var dynamicValue='+dynamicValue+'\n');
     				sb.push('var customParams='+customParams+'\n');
     				sb.push('var server='+server+'\n');
     				sb.push('var files='+jsonData.feedback.files+'\n');
@@ -346,7 +363,7 @@ function processMessage${divId}(message) {
     	        	sb.push('}\n');
     	        	sb.push('xmlhttp.open("POST", submitTo, true);\n');
     	        	sb.push('xmlhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");\n');
-    	        	sb.push('xmlhttp.send("result="+result+"&buildUrl="+ buildUrl+"&buildId="+buildId+"&user="+user+"&token="+token+"&customParams="+customParams+"&job="+job+"&server="+server+"&files="+files);\n');
+    	        	sb.push('xmlhttp.send("result="+result+"&dynamicName="+ dynamicName+"&dynamicValue="+ dynamicValue+"&buildUrl="+ buildUrl+"&buildId="+buildId+"&user="+user+"&token="+token+"&customParams="+customParams+"&job="+job+"&server="+server+"&files="+files);\n');
     	        	sb.push('<\/script>\n');	
 				}else{
 					sb.push('<script>\n');
@@ -510,6 +527,9 @@ function processMessage${divId}(message) {
 	}
 }
 
+function setDynamicAction(name, value) {
+	webSocket${divId}.send(JSON.stringify({'cmd': 'dynamicAction', 'name': name, 'value': value}));
+}
 
 function parseHistory${divId}(bid) {
 	webSocket${divId}.send(JSON.stringify({'cmd': 'parseHistory', 'bid': bid }));
