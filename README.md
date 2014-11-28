@@ -15,7 +15,7 @@ After build summary - which with correct Jira details it will push this summary 
 
 Dependency, in your conf/BuildConfig.groovy under plugins add:
 ```groovy
-	compile ":jenjir:0.6"
+	compile ":jenjir:0.7"
 ```
 
 ###### Plugin will work with tomcat 7.0.54 + (inc. 8) running java 1.7+
@@ -589,6 +589,11 @@ def parseJenPlugin() {
 
 # Jenjir Change information:
 ```
+0.7	-	Bug in appendCustomField + customField functions fixed. New button added labelled as wsprocessname Value. This gives addtional functionality 
+		to first in list - or last Build ID - if it built successfully a trigger to trigger secondary action is now available.
+		If a build is triggered this icon disappears since the workspace is likely to no longer include last built file.
+		
+		
 0.6	-	DynamicParams added as an additional input to <jen:connect <jen:dirconnect
 		This is defined by a key followed by values  
 		dynamicParams = "['deployType':['background', 'live']]"

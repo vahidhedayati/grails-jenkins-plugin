@@ -21,7 +21,9 @@ class JiraRestService extends JenJirConfService {
 	def addCustomField(ArrayList jiraticket,String input1) {
 		addCustomField(jiraServer, jiraUser, jiraPass, jiraticket, jiracustomField, input1)
 	}
-
+	def addCustomField(ArrayList jiraticket,String customField, String input1) {
+		addCustomField(jiraServer, jiraUser, jiraPass, jiraticket, customField, input1)
+	}
 	def addCustomField(String jiraserver, String jirauser, String jirapass, ArrayList jiraticket, String customfield, String input1) {
 		jiraticket.each { jt ->
 			String url=jrapi+jt
@@ -34,6 +36,9 @@ class JiraRestService extends JenJirConfService {
 	def viewCustomField(String jiraticket) {
 		viewCustomField(jiraServer, jiraUser, jiraPass, jiraticket, jiracustomField)
 	}
+	def viewCustomField(String jiraticket,String customField) {
+		viewCustomField(jiraServer, jiraUser, jiraPass, jiraticket,customField)
+	}
 
 	def viewCustomField(String jiraserver, String jirauser, String jirapass, String jiraticket, String customfield ) {
 		String url=jrapi+jiraticket
@@ -44,6 +49,10 @@ class JiraRestService extends JenJirConfService {
 	// viewCustomField and if different to input put together and repost it
 	def updateCustomField(ArrayList jiraticket, String input1) { 
 		updateCustomField(jiraServer, jiraUser, jiraPass, jiraticket, jiracustomField, input1)
+	}
+	
+	def updateCustomField(ArrayList jiraticket,String customField, String input1) {
+		updateCustomField(jiraServer, jiraUser, jiraPass, jiraticket, customField, input1)
 	}
 	
 	def updateCustomField(String jiraserver, String jirauser, String jirapass, ArrayList jiraticket, String customfield, String input1) {

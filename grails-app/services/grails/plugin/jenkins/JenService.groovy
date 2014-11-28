@@ -257,62 +257,8 @@ class JenService extends JenJirConfService {
 					}
 
 					if (goahead) {
-						def json1 = new JsonBuilder()
-						json1 {
-							delegate.dash "true"
-						}
-						userSession.basicRemote.sendText(json1.toString())
-
-
-						// Load up build history which also calls jira calls if enabled
-						// if sendSummary as above is also enabled
-						if (showsummary.toLowerCase().equals("yes")) {
-							def output=jenSummaryService?.jenSummary(http1, jenserver, ubi, jiraSendType)
-							if (userSession && output) {
-								userSession.basicRemote.sendText(output)
-							}
-						}
-
-						def files=jenSummaryService?.generatedFiles(http1,jenserver,ubi)
-						def myFiles=[:]
-						files.each {k,v ->
-							//	myFiles += [file:[type: k,name:v]]
-							myFiles += [type: k,name:v]
-						}
-
-						if (userSession && wsprocessurl) {
-							def ajson = new JsonBuilder()
-							ajson.feedback{
-								delegate.wsprocessurl "$wsprocessurl"
-								delegate.wsprocessname "$wsprocessname"
-								delegate.result "$result"
-								delegate.buildUrl  "$jenserver$ubi"
-								delegate.buildId "${bid as String}"
-								delegate.server  "${jenserver}"
-								delegate.user "${jensuser}"
-								delegate.token "${jenspass}"
-								delegate.job "${jensurl}"
-								if (dynamicName && dynamicValue) {
-									//delegate."${dynamicName}" "${dynamicValue}"
-									delegate.dynamicName "${dynamicName}"
-									delegate.dynamicValue "${dynamicValue}"
-								}
-								if (customParams) {
-									delegate.customParams "${customParams}"
-								}
-								if (myFiles) {
-									delegate.files "${myFiles as JSON}"
-								}
-							}
-							userSession.basicRemote.sendText(ajson.toString())
-						}
-						if (result && processurl) {
-							String buildUrl = jenserver+ubi
-							String buildId = bid as String
-							String job=jensurl
-							sendToProcess(processurl,result,buildUrl,buildId,customParams,jenserver, jensuser,jenspass,job,myFiles,dynamicName,dynamicValue)
-						}
-
+						//TODO
+						successProcess(userSession,http1, showsummary,result,jenserver,jensuser,jenspass,jensurl,ubi,wsprocessurl, wsprocessname, bid, dynamicName, dynamicValue, processurl,customParams )
 						go = true
 					}
 					sleep(10000)
@@ -327,6 +273,67 @@ class JenService extends JenJirConfService {
 	}
 
 
+	def successProcess(Session userSession, RESTClient http1, String showsummary, String result,String jenserver,String jensuser, String jenspass,String jensurl, 
+		String ubi,String wsprocessurl, String wsprocessname,String bid, String dynamicName, String  dynamicValue, String processurl,String customParams ) { 
+		
+		def json1 = new JsonBuilder()
+		json1 {
+			delegate.dash "true"
+		}
+		userSession.basicRemote.sendText(json1.toString())
+
+
+		// Load up build history which also calls jira calls if enabled
+		// if sendSummary as above is also enabled
+		if (showsummary.toLowerCase().equals("yes")) {
+			def output=jenSummaryService?.jenSummary(http1, jenserver, ubi, jiraSendType)
+			if (userSession && output) {
+				userSession.basicRemote.sendText(output)
+			}
+		}
+
+		def files=jenSummaryService?.generatedFiles(http1,jenserver,ubi)
+		def myFiles=[:]
+		files.each {k,v ->
+			//	myFiles += [file:[type: k,name:v]]
+			myFiles += [type: k,name:v]
+		}
+
+		if (userSession && wsprocessurl) {
+			def ajson = new JsonBuilder()
+			ajson.feedback{
+				delegate.wsprocessurl "$wsprocessurl"
+				delegate.wsprocessname "$wsprocessname"
+				delegate.result "$result"
+				delegate.buildUrl  "$jenserver$ubi"
+				delegate.buildId "${bid as String}"
+				delegate.server  "${jenserver}"
+				delegate.user "${jensuser}"
+				delegate.token "${jenspass}"
+				delegate.job "${jensurl}"
+				if (dynamicName && dynamicValue) {
+					//delegate."${dynamicName}" "${dynamicValue}"
+					delegate.dynamicName "${dynamicName}"
+					delegate.dynamicValue "${dynamicValue}"
+				}
+				if (customParams) {
+					delegate.customParams "${customParams}"
+				}
+				if (myFiles) {
+					delegate.files "${myFiles as JSON}"
+				}
+			}
+			userSession.basicRemote.sendText(ajson.toString())
+		}
+		if (result && processurl) {
+			String buildUrl = jenserver+ubi
+			String buildId = bid as String
+			String job=jensurl
+			sendToProcess(processurl,result,buildUrl,buildId,customParams,jenserver, jensuser,jenspass,job,myFiles,dynamicName,dynamicValue)
+		}
+
+		
+	}
 	private void sendToProcess(String processurl, String result, String buildUrl,String buildId,String customParams,
 			String server,	String user,String pass,String  job, Map myFiles,String dynamicName,String dynamicValue) {
 		def http2 = hBuilder.httpConn(processurl,'','',httpConnTimeOut,httpSockTimeOut)

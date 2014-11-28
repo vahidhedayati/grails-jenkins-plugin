@@ -187,6 +187,13 @@ class JenkinsEndPoint implements ServletContextListener {
 			}
 		}
 
+		if (cmd.equals('processAct')) {
+			def bid=data.bid
+			def ubi=jenService.stripDouble(bid.toString())
+			String cjobId=jenService.currentJob(bid)
+			jenService.successProcess(userSession,http, 'yes','SUCCESS',jenserver,jensuser,jenspass,jensurl,ubi,wsprocessurl, wsprocessname, cjobId, dynamicName, dynamicValue, processurl,customParams )
+		}
+		
 		if (cmd.equals('stopBuild')) {
 			if (data.bid) {
 				jenService.jobControl(jenService.stripDouble(data.bid+'/stop'),data.bid,jenserver, jensuser, jenspass)
@@ -212,6 +219,7 @@ class JenkinsEndPoint implements ServletContextListener {
 					clearPage(userSession)
 					buildJob(userSession)
 					break
+						
 				case 'dash':
 					dashboard(userSession)
 					break

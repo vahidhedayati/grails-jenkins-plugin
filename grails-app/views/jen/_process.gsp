@@ -242,6 +242,8 @@ var jiraAppendButton="${jiraAppendButton }";
 var jiraCommentButton="${jiraCommentButton }";
 // end buttons
 
+var building="false";
+
 var hidebuildTimer="${hideBuildTimer}";
 
 if (!window.WebSocket) {
@@ -460,8 +462,14 @@ function processMessage${divId}(message) {
 				var cclass=''
 					switch(entry.bstatus) {
 						case 'passed':
+							
 							sb.push('\n<li class='+entry.bstatus+'><span class="heading"><a onclick="javascript:viewHistory${divId}('+wrapIt(entry.bid)+');">'+entry.jobid+' : ');
 							sb.push('<small>'+entry.bstatus+' '+entry.bdate+'</small></span></a>');
+							<g:if test="${wsprocessurl}">
+							if (building=="false") {
+								sb.push(' <br><small><a onclick="javascript:processAct${divId}('+wrapIt(entry.bid)+');">${wsprocessname}</a></small>');
+							}
+							</g:if>
 							if (summaryViewButtons == "yes") {
 								sb.push(' <br><small><span class="summary">SUMMARY: | <a onclick="javascript:parseHistory${divId}('+wrapIt(entry.bid)+');">View</a> |');
 								if (summaryFileButton == "yes") {
@@ -499,6 +507,7 @@ function processMessage${divId}(message) {
 							sb.push('\n</li>');						
 							break;
 						case 'building':
+							building="true";
 							sb.push('\n<li class='+entry.bstatus+'><span class="heading"><a onclick="javascript:viewHistory${divId}('+wrapIt(entry.bid)+');">'+entry.jobid+' : <small>'+entry.bstatus+' '+entry.bdate+'</small></a>\n');
 							sb.push('\n<a onclick="javascript:stopBuild${divId}('+wrapIt(entry.bid)+');"></span><small>STOP</small></a>\n');
 							sb.push('<br/><small><span id="BuildEstimation${divId}" class="redfont">');
@@ -537,6 +546,10 @@ function parseHistory${divId}(bid) {
 
 function parseFiles${divId}(bid) {
 	webSocket${divId}.send(JSON.stringify({'cmd': 'parseFiles', 'bid': bid }));
+}
+
+function processAct${divId}(bid) {
+	webSocket${divId}.send(JSON.stringify({'cmd': 'processAct', 'bid': bid }));
 }
 
 function parseChanges${divId}(bid) {
