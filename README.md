@@ -15,7 +15,7 @@ After build summary - which with correct Jira details it will push this summary 
 
 Dependency, in your conf/BuildConfig.groovy under plugins add:
 ```groovy
-	compile ":jenjir:0.7"
+	compile ":jenjir:0.8"
 ```
 
 ###### Plugin will work with tomcat 7.0.54 + (inc. 8) running java 1.7+
@@ -589,6 +589,10 @@ def parseJenPlugin() {
 
 # Jenjir Change information:
 ```
+0.8 - 	Minor bugs : if jira front end buttons disabled -small tag was left open making list smaller and smaller - fixed.
+		Newly introduced successProcess in jenService required bid as String from the local call - causing issues doing next phase action
+		Newly added Additional function button appeared on all passed jobs - only first requires this value. - fixed
+		
 0.7	-	Bug in appendCustomField + customField functions fixed. New button added labelled as wsprocessname Value. This gives addtional functionality 
 		to first in list - or last Build ID - if it built successfully a trigger to trigger secondary action is now available.
 		If a build is triggered this icon disappears since the workspace is likely to no longer include last built file.

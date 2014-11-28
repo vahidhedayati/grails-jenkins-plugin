@@ -258,7 +258,7 @@ class JenService extends JenJirConfService {
 
 					if (goahead) {
 						//TODO
-						successProcess(userSession,http1, showsummary,result,jenserver,jensuser,jenspass,jensurl,ubi,wsprocessurl, wsprocessname, bid, dynamicName, dynamicValue, processurl,customParams )
+						successProcess(userSession,http1, showsummary,result,jenserver,jensuser,jenspass,jensurl,ubi,wsprocessurl, wsprocessname, bid as String, dynamicName, dynamicValue, processurl,customParams )
 						go = true
 					}
 					sleep(10000)
@@ -271,7 +271,8 @@ class JenService extends JenJirConfService {
 
 
 	}
-
+			 
+	
 
 	def successProcess(Session userSession, RESTClient http1, String showsummary, String result,String jenserver,String jensuser, String jenspass,String jensurl, 
 		String ubi,String wsprocessurl, String wsprocessname,String bid, String dynamicName, String  dynamicValue, String processurl,String customParams ) { 

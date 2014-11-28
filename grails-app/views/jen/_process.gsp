@@ -455,6 +455,7 @@ function processMessage${divId}(message) {
 			//$('#BuildHistory${divId}').html("");
 			var sb = [];
 			sb.push('<ul>');
+			var y=0;
 			jsonData.history.forEach(function(entry) {
 				var ci=entry.bid.length;
 				var cc=entry.bid.substring(0,ci - 1);	
@@ -462,11 +463,11 @@ function processMessage${divId}(message) {
 				var cclass=''
 					switch(entry.bstatus) {
 						case 'passed':
-							
+							y++
 							sb.push('\n<li class='+entry.bstatus+'><span class="heading"><a onclick="javascript:viewHistory${divId}('+wrapIt(entry.bid)+');">'+entry.jobid+' : ');
 							sb.push('<small>'+entry.bstatus+' '+entry.bdate+'</small></span></a>');
 							<g:if test="${wsprocessurl}">
-							if (building=="false") {
+							if ((building=="false") && (y==1)) {
 								sb.push(' <br><small><a onclick="javascript:processAct${divId}('+wrapIt(entry.bid)+');">${wsprocessname}</a></small>');
 							}
 							</g:if>
@@ -478,11 +479,11 @@ function processMessage${divId}(message) {
 								if (summaryChangesButton == "yes") {
 									sb.push(' <a onclick="javascript:parseChanges${divId}('+wrapIt(entry.bid)+');">Changes</a> | ');
 								}
-								sb.push('</span>');
+								sb.push('</span></small>');
 							}
 							if (jiraButtons == "yes") {
 								
-								sb.push('<br><span class="jira"> JIRA: | ');
+								sb.push('<br><small><span class="jira"> JIRA: | ');
 								if (jiraOverwriteButton == "yes") {
 									sb.push('<a  title="Overwrite content of custom field" onclick="javascript:parseSendHistory${divId}('+wrapIt(entry.bid)+', \'customfield\');">customField</a> | ');
 								}
@@ -498,15 +499,18 @@ function processMessage${divId}(message) {
 							sb.push('\n</li>');
 							break;
 						//case 'queued':
+						//y++
 						//	sb.push('\n<li class='+entry.bstatus+' ><span class="heading">'+entry.jobid+' : <small>has been queued </span>| <a onclick="javascript:cancelQueue${divId}('+wrapIt(entry.bid)+');">CANCEL</a></small>\n</li>');			
 						//	break;
 						case 'failed':
+							y++
 							sb.push('\n<li class='+entry.bstatus+'><span class="heading"><a onclick="javascript:viewHistory${divId}('+wrapIt(entry.bid)+');">'+entry.jobid+' : ');
 							sb.push('<small>'+entry.bstatus+' '+entry.bdate+'</small></span></a>');
 							//sb.push(' | Other Act');
 							sb.push('\n</li>');						
 							break;
 						case 'building':
+							y++
 							building="true";
 							sb.push('\n<li class='+entry.bstatus+'><span class="heading"><a onclick="javascript:viewHistory${divId}('+wrapIt(entry.bid)+');">'+entry.jobid+' : <small>'+entry.bstatus+' '+entry.bdate+'</small></a>\n');
 							sb.push('\n<a onclick="javascript:stopBuild${divId}('+wrapIt(entry.bid)+');"></span><small>STOP</small></a>\n');
@@ -523,6 +527,7 @@ function processMessage${divId}(message) {
 							//},600);			
 							break;
 						case 'cancelled':
+							y++
 							sb.push('\n<li class='+entry.bstatus+' ><span class="heading"><a onclick="javascript:viewHistory${divId}('+wrapIt(entry.bid)+');">'+entry.jobid+' : <small>'+entry.bstatus+' '+entry.bdate+'</small></span></a>\n</li>');
 							break;			
 					}			
