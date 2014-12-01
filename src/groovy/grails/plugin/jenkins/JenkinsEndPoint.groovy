@@ -370,9 +370,9 @@ Currently connected to : $job running on $server
 
 						String processurl1,wsprocessurl1,wsprocessname1 = ''
 						if (wsprocessurl != 'disabled') {
-							processurl1 = processurl ?: config.processurl
-							wsprocessurl1 = wsprocessurl ?: config.wsprocessurl
-							wsprocessname1 = wsprocessname ?: config.wsprocessname
+							processurl1 = processurl ?: config.processurl ?: ''
+							wsprocessurl1 = wsprocessurl ?: config.wsprocessurl ?: ''
+							wsprocessname1 = wsprocessname ?: config.wsprocessname ?: ''
 						}
 
 						String showsummary = config.showsummary ?: 'no'

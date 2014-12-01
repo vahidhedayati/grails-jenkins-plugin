@@ -204,8 +204,10 @@ border-color: black;
 </g:if>
 
 <g:if test="${dynamicName}">
+
 <div class="jbutton">
-${dynamicName} <g:select name="${dynamicName }" from="${dynamicValues }" onclick="setDynamicAction('${dynamicName}', this.value);"/>
+${dynamicName} <g:select name="${dynamicName }" from="${dynamicValues }" onclick="setDynamicAction${divId}('${dynamicName}', this.value);"/>
+
 </div>
 </g:if>
 
@@ -265,7 +267,14 @@ function processOpen${divId}(message) {
 		'processurl':"${processurl}",'wsprocessurl':"${wsprocessurl}",'wsprocessname':"${wsprocessname}",
 		'jenspass':"${jenspass }",'jenserver':"${jenfullserver }",'jensurl':"${jensurl }",
 		'jensbuildend':"${jensbuildend }",'jensprogressive': "${jensprogressive }", 'jensconlog':"${jensconlog }"}));
-	newBuild${divId}("${jenschoice }");
+		
+		<g:if test="${dynamicValues.size==1}">
+		setDynamicAction${divId}('${dynamicName}', '${dynamicValues[0]}');
+		</g:if>
+		
+		newBuild${divId}("${jenschoice }");
+	
+	 
 }
 
 function processMessage${divId}(message) {
@@ -541,7 +550,7 @@ function processMessage${divId}(message) {
 	}
 }
 
-function setDynamicAction(name, value) {
+function setDynamicAction${divId}(name, value) {
 	webSocket${divId}.send(JSON.stringify({'cmd': 'dynamicAction', 'name': name, 'value': value}));
 }
 

@@ -15,7 +15,7 @@ After build summary - which with correct Jira details it will push this summary 
 
 Dependency, in your conf/BuildConfig.groovy under plugins add:
 ```groovy
-	compile ":jenjir:0.8"
+	compile ":jenjir:0.9"
 ```
 
 ###### Plugin will work with tomcat 7.0.54 + (inc. 8) running java 1.7+
@@ -589,6 +589,9 @@ def parseJenPlugin() {
 
 # Jenjir Change information:
 ```
+0.9	-	Minor issues - config options in endpoint set to default to '' if not set - was returning object before.
+		Check to see if dynamicValues size = 1 if so then set this to be the default value via websockets on _process.gsp
+		
 0.8 - 	Minor bugs : if jira front end buttons disabled -small tag was left open making list smaller and smaller - fixed.
 		Newly introduced successProcess in jenService required bid as String from the local call - causing issues doing next phase action
 		Newly added Additional function button appeared on all passed jobs - only first requires this value. - fixed
