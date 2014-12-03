@@ -207,7 +207,6 @@ border-color: black;
 
 <div class="jbutton">
 ${dynamicName} <g:select name="${dynamicName }" from="${dynamicValues }" onclick="setDynamicAction${divId}('${dynamicName}', this.value);"/>
-
 </div>
 </g:if>
 
@@ -232,21 +231,21 @@ function wrapIt(value) {
 }
 
 // Various websocket buttons configured via config.groovy as jenkins.name below
-var summaryViewButtons="${summaryViewButtons }";
-var summaryFileButton="${summaryFileButton }";
-var summaryChangesButton="${summaryChangesButton }";
+var summaryViewButtons${divId}="${summaryViewButtons }";
+var summaryFileButton${divId}="${summaryFileButton }";
+var summaryChangesButton${divId}="${summaryChangesButton }";
 
 var divId="${divId}";
 
-var jiraButtons="${jiraButtons }";
-var jiraOverwriteButton="${jiraOverwriteButton }";
-var jiraAppendButton="${jiraAppendButton }";
-var jiraCommentButton="${jiraCommentButton }";
+var jiraButtons${divId}="${jiraButtons }";
+var jiraOverwriteButton${divId}="${jiraOverwriteButton }";
+var jiraAppendButton${divId}="${jiraAppendButton }";
+var jiraCommentButton${divId}="${jiraCommentButton }";
 // end buttons
 
-var building="false";
+var building${divId}="false";
 
-var hidebuildTimer="${hideBuildTimer}";
+
 
 if (!window.WebSocket) {
 	var msg = "Your browser does not have WebSocket support";
@@ -263,13 +262,13 @@ webSocket${divId}.onmessage=function(message) {processMessage${divId}(message);	
 function processOpen${divId}(message) {
 	$('#messagesTextarea${divId}').append('Server Connect....\n');
 	webSocket${divId}.send(JSON.stringify({'cmd':'connect','jensuser':"${jensuser }",'jensconurl':"${jensconurl }",
-		'hideBuildTimer':"${hideBuildTimer }",'customParams':"${customParams}" , 
-		'processurl':"${processurl}",'wsprocessurl':"${wsprocessurl}",'wsprocessname':"${wsprocessname}",
-		'jenspass':"${jenspass }",'jenserver':"${jenfullserver }",'jensurl':"${jensurl }",
-		'jensbuildend':"${jensbuildend }",'jensprogressive': "${jensprogressive }", 'jensconlog':"${jensconlog }"}));
+		'customParams':"${customParams}" , 'processurl':"${processurl}",'wsprocessurl':"${wsprocessurl}",
+		'wsprocessname':"${wsprocessname}",	'jenspass':"${jenspass }",'jenserver':"${jenfullserver }",
+		'jensurl':"${jensurl }", 'jensbuildend':"${jensbuildend }",'jensprogressive': "${jensprogressive }",
+	 	'jensconlog':"${jensconlog }"}));
 		
-		<g:if test="${dynamicValues.size==1}">
-		setDynamicAction${divId}('${dynamicName}', '${dynamicValues[0]}');
+		<g:if test="${dynamicName && dynamicValues}">
+			setDynamicAction${divId}('${dynamicName}', '${dynamicValues[0]}');
 		</g:if>
 		
 		newBuild${divId}("${jenschoice }");
@@ -476,30 +475,30 @@ function processMessage${divId}(message) {
 							sb.push('\n<li class='+entry.bstatus+'><span class="heading"><a onclick="javascript:viewHistory${divId}('+wrapIt(entry.bid)+');">'+entry.jobid+' : ');
 							sb.push('<small>'+entry.bstatus+' '+entry.bdate+'</small></span></a>');
 							<g:if test="${wsprocessurl}">
-							if ((building=="false") && (y==1)) {
+							if ((building${divId}=="false") && (y==1)) {
 								sb.push(' <br><small><a onclick="javascript:processAct${divId}('+wrapIt(entry.bid)+');">${wsprocessname}</a></small>');
 							}
 							</g:if>
-							if (summaryViewButtons == "yes") {
+							if (summaryViewButtons${divId} == "yes") {
 								sb.push(' <br><small><span class="summary">SUMMARY: | <a onclick="javascript:parseHistory${divId}('+wrapIt(entry.bid)+');">View</a> |');
-								if (summaryFileButton == "yes") {
+								if (summaryFileButton${divId} == "yes") {
 									sb.push(' <a onclick="javascript:parseFiles${divId}('+wrapIt(entry.bid)+');">Files</a> | ');
 								}
-								if (summaryChangesButton == "yes") {
+								if (summaryChangesButton${divId} == "yes") {
 									sb.push(' <a onclick="javascript:parseChanges${divId}('+wrapIt(entry.bid)+');">Changes</a> | ');
 								}
 								sb.push('</span></small>');
 							}
-							if (jiraButtons == "yes") {
+							if (jiraButtons${divId} == "yes") {
 								
 								sb.push('<br><small><span class="jira"> JIRA: | ');
-								if (jiraOverwriteButton == "yes") {
+								if (jiraOverwriteButton${divId} == "yes") {
 									sb.push('<a  title="Overwrite content of custom field" onclick="javascript:parseSendHistory${divId}('+wrapIt(entry.bid)+', \'customfield\');">customField</a> | ');
 								}
-								if (jiraAppendButton == "yes") {
+								if (jiraAppendButton${divId} == "yes") {
 									sb.push('<a title="Append to your custom field" onclick="javascript:parseSendHistory${divId}('+wrapIt(entry.bid)+', \'updatecustomfield\');">Append CF</a> | ');
 								}
-								if (jiraCommentButton == "yes") {
+								if (jiraCommentButton${divId} == "yes") {
 									sb.push('<a title="add as a comment to Jira" onclick="javascript:parseSendHistory${divId}('+wrapIt(entry.bid)+', \'comment\');">Comment</a>');							
 								}
 								sb.push(' | </span></small>');
@@ -520,7 +519,7 @@ function processMessage${divId}(message) {
 							break;
 						case 'building':
 							y++
-							building="true";
+							building${divId}="true";
 							sb.push('\n<li class='+entry.bstatus+'><span class="heading"><a onclick="javascript:viewHistory${divId}('+wrapIt(entry.bid)+');">'+entry.jobid+' : <small>'+entry.bstatus+' '+entry.bdate+'</small></a>\n');
 							sb.push('\n<a onclick="javascript:stopBuild${divId}('+wrapIt(entry.bid)+');"></span><small>STOP</small></a>\n');
 							sb.push('<br/><small><span id="BuildEstimation${divId}" class="redfont">');
