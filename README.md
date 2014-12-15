@@ -15,7 +15,7 @@ After build summary - which with correct Jira details it will push this summary 
 
 Dependency, in your conf/BuildConfig.groovy under plugins add:
 ```groovy
-	compile ":jenjir:0.10"
+	compile ":jenjir:0.10-SNAPSHOT"
 ```
 
 ###### Plugin will work with tomcat 7.0.54 + (inc. 8) running java 1.7+
@@ -589,6 +589,8 @@ def parseJenPlugin() {
 
 # Jenjir Change information:
 ```
+0.10-SNAPSHOT - Environment Issue if attempting to run as a plugin within development project
+
 0.10 - 	Issues with gsp javascript - variables not bound to dynamic call - issue with previous size - 
 		now defaulted to first array value for any amount of input. Since initial value may not be default action
 		
