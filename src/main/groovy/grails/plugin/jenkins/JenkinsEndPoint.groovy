@@ -1,5 +1,8 @@
 package grails.plugin.jenkins
 
+import grails.core.GrailsApplication
+import grails.util.Holders
+
 import static groovyx.net.http.ContentType.*
 import static groovyx.net.http.Method.*
 import grails.converters.JSON
@@ -22,9 +25,7 @@ import javax.websocket.server.PathParam
 import javax.websocket.server.ServerContainer
 import javax.websocket.server.ServerEndpoint
 
-import org.codehaus.groovy.grails.commons.GrailsApplication
-import org.codehaus.groovy.grails.web.context.ServletContextHolder as SCH
-import org.codehaus.groovy.grails.web.servlet.GrailsApplicationAttributes as GA
+
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -69,13 +70,8 @@ class JenkinsEndPoint implements ServletContextListener {
 				serverContainer.addEndpoint(JenkinsEndPoint)
 			}
 			
-			def ctx = servletContext.getAttribute(GA.APPLICATION_CONTEXT)
 
-			def grailsApplication = ctx.grailsApplication
-
-			config = grailsApplication.config.jenkins
-			int defaultMaxSessionIdleTimeout = config.timeout ?: 0
-			serverContainer.defaultMaxSessionIdleTimeout = defaultMaxSessionIdleTimeout
+			serverContainer.defaultMaxSessionIdleTimeout = 0
 		}
 		catch (IOException e) {
 			log.error e.message, e
@@ -91,14 +87,14 @@ class JenkinsEndPoint implements ServletContextListener {
 		userSession.userProperties.job = job
 		jsessions.add(userSession)
 
-		def ctx = SCH.servletContext.getAttribute(GA.APPLICATION_CONTEXT)
+		def ctx = Holders.applicationContext
 
 		jenService = ctx.jenService
 		//hBuilderService = ctx.hBuilderService
 		jiraRestService = ctx.jiraRestService
 		jenSummaryService = ctx.jenSummaryService
 
-		def grailsApplication = ctx.grailsApplication
+		GrailsApplication grailsApplication = ctx.grailsApplication
 		config = grailsApplication.config.jenkins
 
 		httpConnTimeOut = config.http.connection.timeout ?: 10

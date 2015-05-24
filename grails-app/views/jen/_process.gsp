@@ -236,7 +236,7 @@ var summaryFileButton${divId}="${summaryFileButton }";
 var summaryChangesButton${divId}="${summaryChangesButton }";
 
 var divId="${divId}";
-
+var uri="${uri}";
 var jiraButtons${divId}="${jiraButtons }";
 var jiraOverwriteButton${divId}="${jiraOverwriteButton }";
 var jiraAppendButton${divId}="${jiraAppendButton }";
@@ -253,7 +253,7 @@ if (!window.WebSocket) {
 }
 
 
-var webSocket${divId}=new WebSocket("ws://${wshostname}/${appname}/JenkinsEndPoint/${jenserver}/${jensjob}");
+var webSocket${divId}=new WebSocket(uri);
 webSocket${divId}.onopen=function(message) {processOpen${divId}(message);};
 webSocket${divId}.onclose=function(message) {processClose${divId}(message);};
 webSocket${divId}.onerror=function(message) {processError${divId}(message);};

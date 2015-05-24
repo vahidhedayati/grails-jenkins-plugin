@@ -104,8 +104,15 @@ class JenTagLib extends JenJirConfService {
 				dynamicValues=v
 			}
 		}
-	
+
+
 		String appname = Metadata.current.getApplicationName()
+
+		String addAppName = config.addAppName ?: 'no'
+		String uri="ws://${wshostname}/${appname}/JenkinsEndPoint/${jenserver}/${attrs.jensjob}"
+		if (addAppName=='no') {
+			uri="ws://${wshostname}/JenkinsEndPoint/${jenserver}/${attrs.jensjob}'"
+		}
 		def model = [hideButtons:hideButtons, hideTriggerButton:hideTriggerButton, hideDashBoardButton:hideDashBoardButton,
 			jenschoice:jenschoice, divId:divId, jenfullserver:jenfullserver, jensconurl:jensconurl,
 			jensjob:attrs.jensjob, jensuser:jensuser, jenspass:jenspass, appname:appname, wshostname:wshostname,
@@ -113,7 +120,7 @@ class JenTagLib extends JenJirConfService {
 			jensconlog:jensconlog, customParams:attrs.customParams,processurl:processurl,wsprocessurl:wsprocessurl,
 			autoSubmit:autoSubmit, wsprocessname:wsprocessname, dynamicName:dynamicName, dynamicValues:dynamicValues,
 			summaryViewButtons:summaryViewButtons,summaryFileButton:summaryFileButton,
-			summaryChangesButton:summaryChangesButton,jiraButtons:jiraButtons,
+			summaryChangesButton:summaryChangesButton,jiraButtons:jiraButtons, uri:uri,
 			jiraOverwriteButton:jiraOverwriteButton,jiraAppendButton:jiraAppendButton,
 			jiraCommentButton:jiraCommentButton,buildOnlyButton:buildOnlyButton,
 			formType:formType, remoteController:remoteController, remoteAction:remoteAction ]

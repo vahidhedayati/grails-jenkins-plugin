@@ -1,11 +1,15 @@
 package grails.plugin.jenkins
 
+import grails.core.GrailsApplication
+import grails.core.support.GrailsApplicationAware
 
-class JenJirConfService {
+
+class JenJirConfService implements GrailsApplicationAware {
 
 	static transactional = false
 
-	def grailsApplication
+	def config
+	GrailsApplication grailsApplication
 
 	// Jira config items
 	String getJiraServer() {
@@ -41,7 +45,7 @@ class JenJirConfService {
 		return config.http.socket.timeout ?: 30
 	}
 
-	def getConfig() {
-		grailsApplication.config.jenkins
+	void setGrailsApplication(GrailsApplication ga) {
+		config = ga.config.jenkins
 	}
 }
