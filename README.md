@@ -13,29 +13,38 @@ After build trigger known as processurl or if via websocket wsprocessurl
 After build summary - which with correct Jira details it will push this summary to all defined tickets within the changelog.  
 
 
-Dependency, in your conf/BuildConfig.groovy under plugins add:
+###### Dependency (Grails 2.X), in your conf/BuildConfig.groovy under plugins add :
 ```groovy
 	compile ":jenjir:0.10-SNAPSHOT"
 ```
+
+[codebase for grails 2.X](https://github.com/vahidhedayati/grails-jenkins-plugin/tree/grails2)
+
+
+###### Dependency (Grails 3.X), in your build.gradle under plugins add :
+```groovy
+	compile "org.grails.plugins:jenjir:3.0.1"
+```
+
 
 ###### Plugin will work with tomcat 7.0.54 + (inc. 8) running java 1.7+
 
 
 ### Video
 
-[Jenijr Part 1 : Older look](https://www.youtube.com/watch?v=XfsrBAa8aAg&index=5&list=PLfZr1vB6p8XJEQD5Dmox_PM_Y-_0y1Hz1)
+[Jenjir Part 1 : Older look](https://www.youtube.com/watch?v=XfsrBAa8aAg&index=5&list=PLfZr1vB6p8XJEQD5Dmox_PM_Y-_0y1Hz1)
 
-[Jenijr Part 2 : Update showing multiple builds, basic grails build in Jenkins](https://www.youtube.com/watch?v=CKv3TqWq4AQ&list=PLfZr1vB6p8XJEQD5Dmox_PM_Y-_0y1Hz1&index=4)
+[Jenjir Part 2 : Update showing multiple builds, basic grails build in Jenkins](https://www.youtube.com/watch?v=CKv3TqWq4AQ&list=PLfZr1vB6p8XJEQD5Dmox_PM_Y-_0y1Hz1&index=4)
 
-[Jenijr Part 3 : Update showing Jenkins authentication](https://www.youtube.com/watch?v=LOREp25Vz2Y&list=PLfZr1vB6p8XJEQD5Dmox_PM_Y-_0y1Hz1&index=3)
+[Jenjir Part 3 : Update showing Jenkins authentication](https://www.youtube.com/watch?v=LOREp25Vz2Y&list=PLfZr1vB6p8XJEQD5Dmox_PM_Y-_0y1Hz1&index=3)
 
-[Jenijr Part 4 : Non token authentication, custom Parameters](https://www.youtube.com/watch?v=bO3s8e4Qakc&index=2&list=PLfZr1vB6p8XJEQD5Dmox_PM_Y-_0y1Hz1)
+[Jenjir Part 4 : Non token authentication, custom Parameters](https://www.youtube.com/watch?v=bO3s8e4Qakc&index=2&list=PLfZr1vB6p8XJEQD5Dmox_PM_Y-_0y1Hz1)
 
-[Jenijr part 5 : Automated build/deploy via jssh websockets async non websocket build ](https://www.youtube.com/watch?v=665QHQ-8q0U&index=1&list=PLfZr1vB6p8XJEQD5Dmox_PM_Y-_0y1Hz1)
+[Jenjir part 5 : Automated build/deploy via jssh websockets async non websocket build ](https://www.youtube.com/watch?v=665QHQ-8q0U&index=1&list=PLfZr1vB6p8XJEQD5Dmox_PM_Y-_0y1Hz1)
 
-[Jenijr part 6 : Automated summary to Jira - From Jenkins change log to Jira ticket(s)](https://www.youtube.com/watch?v=5LYrnobvLns&index=8&list=PLfZr1vB6p8XJEQD5Dmox_PM_Y-_0y1Hz1)
+[Jenjir part 6 : Automated summary to Jira - From Jenkins change log to Jira ticket(s)](https://www.youtube.com/watch?v=5LYrnobvLns&index=8&list=PLfZr1vB6p8XJEQD5Dmox_PM_Y-_0y1Hz1)
 
-[Jenijr Test website testjenkins - used in videos](https://github.com/vahidhedayati/testjenkins)
+[Jenjir Test website testjenkins - used in videos](https://github.com/vahidhedayati/testjenkins)
 
 
 ### Walkthrough
@@ -630,7 +639,7 @@ def parseJenPlugin() {
 0.1 - release
 ```
 
-### Jenijr Issues/Bugs:
+### Jenjir Issues/Bugs:
 
 ##### 1. Prefix jenkins servers.
 If you have a server with a prefix then you will find the quick connect method will not work for you, you need to use the manaully full detail connection method since the prefix is required for the url and uri.
