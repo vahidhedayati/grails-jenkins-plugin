@@ -197,13 +197,17 @@ class JenTagLib extends JenJirConfService {
 		String remoteAction = attrs.remoteAction ?: config.remoteAction?: ''
 		
 		String appname = Metadata.current.getApplicationName()
-
+		String addAppName = config.addAppName ?: 'no'
+		String uri="ws://${wshostname}/${appname}/JenkinsEndPoint/${jenserver}/${attrs.jensjob}"
+		if (addAppName=='no') {
+			uri="ws://${wshostname}/JenkinsEndPoint/${jenserver}/${attrs.jensjob}'"
+		}
 		def model = [hideButtons:hideButtons, hideTriggerButton:hideTriggerButton, hideDashBoardButton:hideDashBoardButton,
 			jenschoice:jenschoice, divId:divId, jenfullserver:jensconurl, jensconurl:jensconurl, jensjob:attrs.jensjob,
 			jensuser:jensuser, jenspass:jenspass, appname:appname, wshostname:wshostname, jenserver:jenserver,
 			jensurl:jenspath, jensprogressive:jensprogressive, jensbuildend:jensbuildend, jensconlog:jensconlog,
 			autoSubmit:autoSubmit, customParams:attrs.customParams,processurl:processurl,wsprocessurl:wsprocessurl,
-			wsprocessname:wsprocessname,summaryViewButtons:summaryViewButtons,summaryFileButton:summaryFileButton,
+			wsprocessname:wsprocessname,summaryViewButtons:summaryViewButtons,summaryFileButton:summaryFileButton,uri:uri,
 			summaryChangesButton:summaryChangesButton,jiraButtons:jiraButtons,jiraOverwriteButton:jiraOverwriteButton,jiraAppendButton:jiraAppendButton,
 			jiraCommentButton:jiraCommentButton,buildOnlyButton:buildOnlyButton, dynamicName:dynamicName, dynamicValues:dynamicValues,
 			formType:formType, remoteController:remoteController, remoteAction:remoteAction ]

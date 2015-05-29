@@ -438,14 +438,14 @@ Currently connected to : $job running on $server
 					col2 = bn.collect {
 						[
 							bid : jenService.verifyBuild(it.A[0].@href.text()),
-							//bstatus : verifyStatus(it.A[0].IMG[0].@class.text().toString()),
-							bstatus : jenService.verifyStatus(it.A[0].IMG.@src.text().toString()),
-							//bimgUrl : it.A[0].IMG[0].@src.text(),
+							//newer style jenkins now put img in another DIv
+							bstatus : jenService.verifyStatus(it.A[0].IMG[0].@class.text().toString()?:it.DIV.A.IMG.@src.text().toString()),
 							jobid : it.toString().trim().replaceAll('[\n|\r|#|\t| ]+', '').replaceAll("\\s","")
 						]
 					}
 				}
 			}else{
+
 				// Going to try parse older html styles - provided by a default jenkins install
 				bd = html."**".findAll {it.@class.toString().contains("tip")}
 				if (bd) {
@@ -461,7 +461,7 @@ Currently connected to : $job running on $server
 					col2 = bn.collect {
 						[
 							bid : jenService.verifyBuild(it.TD[0].A.@href.text().toString()),
-							bstatus : jenService.verifyStatus(it.TD[0].A.IMG.@src.text().toString()),
+							bstatus : jenService.verifyStatus(it.TD[0].A.IMG.@src.text().toString()?:it.TD[1].A.IMG.@src.text().toString()),
 							jobid : jenService.verifyJob(it.TD[0].A.@href.text().toString()).replaceAll("\\s","")
 						]
 					}

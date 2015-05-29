@@ -119,11 +119,11 @@ resize:both;
  font-size: 0.8em;
 }
 
-.failed {
+.failed .unknown{
 	background: #FFB2B2;
 	border-style: solid;
-border-width: thin;
-border-color: black;
+	border-width: thin;
+	border-color: black;
 }
 
 .queued {
@@ -537,7 +537,14 @@ function processMessage${divId}(message) {
 						case 'cancelled':
 							y++
 							sb.push('\n<li class='+entry.bstatus+' ><span class="heading"><a onclick="javascript:viewHistory${divId}('+wrapIt(entry.bid)+');">'+entry.jobid+' : <small>'+entry.bstatus+' '+entry.bdate+'</small></span></a>\n</li>');
-							break;			
+							break;
+						case 'unknown':
+                        	y++
+                        	sb.push('\n<li class='+entry.bstatus+'><span class="heading"><a onclick="javascript:viewHistory${divId}('+wrapIt(entry.bid)+');">'+entry.jobid+' : ');
+                        	sb.push('<small>'+entry.bstatus+' '+entry.bdate+'</small></span></a>');
+                        	//sb.push(' | Other Act');
+                        	sb.push('\n</li>');
+                        	break;
 					}			
 			});
 			sb.push('</ul>')

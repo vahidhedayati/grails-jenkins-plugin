@@ -32,7 +32,6 @@ class JenSummaryService  extends JenJirConfService{
 		}catch (HttpResponseException e) {
 			log.error "Failed error: $e.statusCode"
 		}
-
 	}
 
 
@@ -160,7 +159,6 @@ class JenSummaryService  extends JenJirConfService{
 			if (culprits && sendCulprits) {
 				sb.append("Changes by: ${culprits}\n")
 			}
-
 		}
 		sb.toString()
 	}
