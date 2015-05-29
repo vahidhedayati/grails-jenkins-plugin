@@ -15,7 +15,7 @@ After build summary - which with correct Jira details it will push this summary 
 
 ###### Dependency (Grails 2.X), in your conf/BuildConfig.groovy under plugins add :
 ```groovy
-	compile ":jenjir:0.10-SNAPSHOT"
+	compile ":jenjir:0.11"
 ```
 
 [codebase for grails 2.X](https://github.com/vahidhedayati/grails-jenkins-plugin/tree/grails2)
