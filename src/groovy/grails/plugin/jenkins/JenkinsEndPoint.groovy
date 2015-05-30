@@ -442,9 +442,9 @@ Currently connected to : $job running on $server
 					col2 = bn.collect {
 						[
 							bid : jenService.verifyBuild(it.A[0].@href.text()),
-							//bstatus : verifyStatus(it.A[0].IMG[0].@class.text().toString()),
 							bstatus : jenService.verifyStatus(it.A[0].IMG.@src.text().toString()),
-							//bimgUrl : it.A[0].IMG[0].@src.text(),
+							//newer style jenkins now put img in another DIV
+							bstatus : jenService.verifyStatus(it.A[0].IMG[0].@class.text().toString()?:it.DIV.A.IMG.@src.text().toString()),
 							jobid : it.toString().trim().replaceAll('[\n|\r|#|\t| ]+', '').replaceAll("\\s","")
 						]
 					}

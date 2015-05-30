@@ -15,7 +15,7 @@ After build summary - which with correct Jira details it will push this summary 
 
 ###### Dependency (Grails 2.X), in your conf/BuildConfig.groovy under plugins add :
 ```groovy
-	compile ":jenjir:0.10-SNAPSHOT"
+	compile ":jenjir:0.11"
 ```
 
 [codebase for grails 2.X](https://github.com/vahidhedayati/grails-jenkins-plugin/tree/grails2)
@@ -44,8 +44,8 @@ After build summary - which with correct Jira details it will push this summary 
 
 [Jenjir part 6 : Automated summary to Jira - From Jenkins change log to Jira ticket(s)](https://www.youtube.com/watch?v=5LYrnobvLns&index=8&list=PLfZr1vB6p8XJEQD5Dmox_PM_Y-_0y1Hz1)
 
-[Jenjir Test website testjenkins - used in videos](https://github.com/vahidhedayati/testjenkins)
-
+[Jenjir Test website testjenkins Grails 2X - used in videos](https://github.com/vahidhedayati/testjenkins)
+[Jenjir Test website testjenkins Grails 3X ](https://github.com/vahidhedayati/testjenkins)
 
 ### Walkthrough
 once plugin dependency added to  BuildConfig, refreshed dependencies upon run-appp, you will be able to access this plugin via this url:
