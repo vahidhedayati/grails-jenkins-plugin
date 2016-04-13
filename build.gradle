@@ -75,8 +75,8 @@ grailsPublish {
     license {
         name = 'Apache-2.0'
     }
-    title = "Grails jssh Plugin"
-    desc = "Grails jssh Plugin based on j2ssh library, provides ssh connection with features/facilities to execute remote shell commands. Provides connection via websockets as well as ajax/polling."
+    title = "Grails jenjir Plugin"
+    desc = "Grails Jenjir plugin, will interact with Jenkins front end html interface using HTTPBuilder and push summary information to Jira if configured."
     developers = [vahid:"Vahid Hedayati"]
     portalUser = ""
     portalPassword = ""
