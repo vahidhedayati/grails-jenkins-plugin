@@ -23,7 +23,7 @@ After build summary - which with correct Jira details it will push this summary 
 
 ###### Dependency (Grails 3.X), in your build.gradle under plugins add :
 ```groovy
-	compile "org.grails.plugins:jenjir:3.0.1"
+	compile "org.grails.plugins:jenjir:3.0.2"
 ```
 
 
